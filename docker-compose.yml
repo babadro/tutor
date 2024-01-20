@@ -1,0 +1,37 @@
+version: "3.5"
+
+services:
+
+  ngrok:
+   image: ngrok/ngrok:alpine
+   env_file: .env.ngrok
+   ports:
+     - "4040:4040"
+   command: [ "http", "service:8080" ]
+   healthcheck:
+     test: ["CMD", "nc", "-z", "-v", "localhost", "4040"]
+     interval: 1s
+     timeout: 5s
+     retries: 10
+     start_period: 0s
+
+  service:
+    build:
+        context: .
+        dockerfile: Dockerfile.dev
+    #restart: unless-stopped
+    depends_on:
+        ngrok:
+          condition: service_healthy
+    ports:
+      - "8080:8080"
+      - "8083:8083"
+    env_file:
+      - .env
+      - .env.secrets
+    #environment:
+    volumes:
+      - ./:/app
+#volumes:
+#  db-data-tutor:
+#    driver: local
