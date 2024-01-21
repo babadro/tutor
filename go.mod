@@ -3,6 +3,7 @@ module github.com/babadro/tutor
 go 1.21.0
 
 require (
+	github.com/caarlos0/env v3.5.0+incompatible
 	github.com/go-openapi/errors v0.21.0
 	github.com/go-openapi/loads v0.21.5
 	github.com/go-openapi/runtime v0.26.2
@@ -11,6 +12,8 @@ require (
 	github.com/go-openapi/swag v0.22.7
 	github.com/go-openapi/validate v0.22.6
 	github.com/jessevdk/go-flags v1.5.0
+	github.com/justinas/alice v1.2.0
+	github.com/rs/zerolog v1.31.0
 	golang.org/x/net v0.20.0
 )
 
@@ -23,6 +26,8 @@ require (
 	github.com/google/uuid v1.5.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
 	go.mongodb.org/mongo-driver v1.13.1 // indirect
