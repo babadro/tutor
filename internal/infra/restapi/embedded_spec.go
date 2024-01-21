@@ -25,7 +25,7 @@ func init() {
     "version": "1.0.0"
   },
   "paths": {
-    "/chat_message": {
+    "/chat_messages": {
       "post": {
         "description": "This endpoint receives a user's message and returns the AI's response.",
         "consumes": [
@@ -35,6 +35,7 @@ func init() {
           "application/json"
         ],
         "summary": "Sends a message to the AI and receives a response.",
+        "operationId": "SendChatMessage",
         "parameters": [
           {
             "description": "User message and additional information",
@@ -114,7 +115,7 @@ func init() {
     "version": "1.0.0"
   },
   "paths": {
-    "/chat_message": {
+    "/chat_messages": {
       "post": {
         "description": "This endpoint receives a user's message and returns the AI's response.",
         "consumes": [
@@ -124,6 +125,7 @@ func init() {
           "application/json"
         ],
         "summary": "Sends a message to the AI and receives a response.",
+        "operationId": "SendChatMessage",
         "parameters": [
           {
             "description": "User message and additional information",

@@ -4,9 +4,10 @@ info:
   title: "Tutor"
   description: "API for AI-powered functionality in a language learning app"
 paths:
-  /chat_message:
+  /chat_messages:
     post:
       summary: Sends a message to the AI and receives a response.
+      operationId: "SendChatMessage"
       description: This endpoint receives a user's message and returns the AI's response.
       consumes:
         - application/json
