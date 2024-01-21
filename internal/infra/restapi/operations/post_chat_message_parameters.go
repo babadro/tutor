@@ -16,18 +16,18 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// NewPostChatParams creates a new PostChatParams object
+// NewPostChatMessageParams creates a new PostChatMessageParams object
 // no default values defined in spec.
-func NewPostChatParams() PostChatParams {
+func NewPostChatMessageParams() PostChatMessageParams {
 
-	return PostChatParams{}
+	return PostChatMessageParams{}
 }
 
-// PostChatParams contains all the bound params for the post chat operation
+// PostChatMessageParams contains all the bound params for the post chat message operation
 // typically these are obtained from a http.Request
 //
-// swagger:parameters PostChat
-type PostChatParams struct {
+// swagger:parameters PostChatMessage
+type PostChatMessageParams struct {
 
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
@@ -36,21 +36,21 @@ type PostChatParams struct {
 	  Required: true
 	  In: body
 	*/
-	Body PostChatBody
+	Body PostChatMessageBody
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
 // for simple values it will use straight method calls.
 //
-// To ensure default values, the struct must have been initialized with NewPostChatParams() beforehand.
-func (o *PostChatParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
+// To ensure default values, the struct must have been initialized with NewPostChatMessageParams() beforehand.
+func (o *PostChatMessageParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
 
 	o.HTTPRequest = r
 
 	if runtime.HasBody(r) {
 		defer r.Body.Close()
-		var body PostChatBody
+		var body PostChatMessageBody
 		if err := route.Consumer.Consume(r.Body, &body); err != nil {
 			if err == io.EOF {
 				res = append(res, errors.Required("body", "body", ""))

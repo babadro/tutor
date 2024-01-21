@@ -25,7 +25,7 @@ func init() {
     "version": "1.0.0"
   },
   "paths": {
-    "/chat": {
+    "/chat_message": {
       "post": {
         "description": "This endpoint receives a user's message and returns the AI's response.",
         "consumes": [
@@ -114,7 +114,7 @@ func init() {
     "version": "1.0.0"
   },
   "paths": {
-    "/chat": {
+    "/chat_message": {
       "post": {
         "description": "This endpoint receives a user's message and returns the AI's response.",
         "consumes": [

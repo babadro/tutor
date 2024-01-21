@@ -42,8 +42,8 @@ func NewTutorAPI(spec *loads.Document) *TutorAPI {
 
 		JSONProducer: runtime.JSONProducer(),
 
-		PostChatHandler: PostChatHandlerFunc(func(params PostChatParams) middleware.Responder {
-			return middleware.NotImplemented("operation PostChat has not yet been implemented")
+		PostChatMessageHandler: PostChatMessageHandlerFunc(func(params PostChatMessageParams) middleware.Responder {
+			return middleware.NotImplemented("operation PostChatMessage has not yet been implemented")
 		}),
 	}
 }
@@ -79,8 +79,8 @@ type TutorAPI struct {
 	//   - application/json
 	JSONProducer runtime.Producer
 
-	// PostChatHandler sets the operation handler for the post chat operation
-	PostChatHandler PostChatHandler
+	// PostChatMessageHandler sets the operation handler for the post chat message operation
+	PostChatMessageHandler PostChatMessageHandler
 	// ServeError is called when an error is received, there is a default handler
 	// but you can set your own with this
 	ServeError func(http.ResponseWriter, *http.Request, error)
@@ -157,8 +157,8 @@ func (o *TutorAPI) Validate() error {
 		unregistered = append(unregistered, "JSONProducer")
 	}
 
-	if o.PostChatHandler == nil {
-		unregistered = append(unregistered, "PostChatHandler")
+	if o.PostChatMessageHandler == nil {
+		unregistered = append(unregistered, "PostChatMessageHandler")
 	}
 
 	if len(unregistered) > 0 {
@@ -251,7 +251,7 @@ func (o *TutorAPI) initHandlerCache() {
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
-	o.handlers["POST"]["/chat"] = NewPostChat(o.context, o.PostChatHandler)
+	o.handlers["POST"]["/chat_message"] = NewPostChatMessage(o.context, o.PostChatMessageHandler)
 }
 
 // Serve creates a http handler to serve the API over HTTP
