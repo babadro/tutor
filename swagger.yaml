@@ -4,7 +4,7 @@ info:
   title: "Tutor"
   description: "API for AI-powered functionality in a language learning app"
 paths:
-  /chat:
+  /chat_message:
     post:
       summary: Sends a message to the AI and receives a response.
       description: This endpoint receives a user's message and returns the AI's response.
