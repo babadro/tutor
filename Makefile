@@ -35,8 +35,8 @@ run-test-env-with-bot:
 test:
 	 (source .env.tests && go test ./... -p 1 -testify.m=$(filter) -v)
 
-sleep-filter ?= TestPolls_Options
-# example: make test-sleep sleep-filter=TestPolls_Options
+sleep-filter ?= <name_test>
+# example: make test-sleep sleep-filter=name_test
 test-sleep:
 	(source .env.tests && SLEEP_MODE=true go test ./... -testify.m=$(sleep-filter) -v)
 
