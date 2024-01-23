@@ -6,3 +6,4 @@ release/
 .env.ngrok
 
 cmd/server/server
+secrets
