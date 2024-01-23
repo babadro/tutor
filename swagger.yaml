@@ -3,6 +3,13 @@ info:
   version: "1.0.0"
   title: "Tutor"
   description: "API for AI-powered functionality in a language learning app"
+securityDefinitions:
+  key:
+    type: apiKey
+    in: header
+    name: Authorization
+security:
+  - key: []
 paths:
   /chat_messages:
     post:
@@ -40,6 +47,10 @@ paths:
           description: "Bad request"
           schema:
             $ref: "#/definitions/error"
+        '401':
+          description: unauthorized
+          schema:
+            $ref: "#/definitions/error"
         500:
           description: "Internal server error"
           schema:
@@ -58,3 +69,8 @@ definitions:
         format: int64
       message:
         type: string
+  principal:
+    type: "object"
+    properties:
+      email:
+        type: "string"

@@ -18,6 +18,8 @@ import (
 	"github.com/go-openapi/spec"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+
+	"github.com/babadro/tutor/models"
 )
 
 // NewTutorAPI creates a new Tutor instance
@@ -42,9 +44,16 @@ func NewTutorAPI(spec *loads.Document) *TutorAPI {
 
 		JSONProducer: runtime.JSONProducer(),
 
-		SendChatMessageHandler: SendChatMessageHandlerFunc(func(params SendChatMessageParams) middleware.Responder {
+		SendChatMessageHandler: SendChatMessageHandlerFunc(func(params SendChatMessageParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation SendChatMessage has not yet been implemented")
 		}),
+
+		// Applies when the "Authorization" header is set
+		KeyAuth: func(token string) (*models.Principal, error) {
+			return nil, errors.NotImplemented("api key auth (key) Authorization from header param [Authorization] has not yet been implemented")
+		},
+		// default authorizer is authorized meaning no requests are blocked
+		APIAuthorizer: security.Authorized(),
 	}
 }
 
@@ -78,6 +87,13 @@ type TutorAPI struct {
 	// JSONProducer registers a producer for the following mime types:
 	//   - application/json
 	JSONProducer runtime.Producer
+
+	// KeyAuth registers a function that takes a token and returns a principal
+	// it performs authentication based on an api key Authorization provided in the header
+	KeyAuth func(string) (*models.Principal, error)
+
+	// APIAuthorizer provides access control (ACL/RBAC/ABAC) by providing access to the request and authenticated principal
+	APIAuthorizer runtime.Authorizer
 
 	// SendChatMessageHandler sets the operation handler for the send chat message operation
 	SendChatMessageHandler SendChatMessageHandler
@@ -157,6 +173,10 @@ func (o *TutorAPI) Validate() error {
 		unregistered = append(unregistered, "JSONProducer")
 	}
 
+	if o.KeyAuth == nil {
+		unregistered = append(unregistered, "AuthorizationAuth")
+	}
+
 	if o.SendChatMessageHandler == nil {
 		unregistered = append(unregistered, "SendChatMessageHandler")
 	}
@@ -175,12 +195,23 @@ func (o *TutorAPI) ServeErrorFor(operationID string) func(http.ResponseWriter, *
 
 // AuthenticatorsFor gets the authenticators for the specified security schemes
 func (o *TutorAPI) AuthenticatorsFor(schemes map[string]spec.SecurityScheme) map[string]runtime.Authenticator {
-	return nil
+	result := make(map[string]runtime.Authenticator)
+	for name := range schemes {
+		switch name {
+		case "key":
+			scheme := schemes[name]
+			result[name] = o.APIKeyAuthenticator(scheme.Name, scheme.In, func(token string) (interface{}, error) {
+				return o.KeyAuth(token)
+			})
+
+		}
+	}
+	return result
 }
 
 // Authorizer returns the registered authorizer
 func (o *TutorAPI) Authorizer() runtime.Authorizer {
-	return nil
+	return o.APIAuthorizer
 }
 
 // ConsumersFor gets the consumers for the specified media types.

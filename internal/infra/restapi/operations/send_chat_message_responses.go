@@ -103,6 +103,51 @@ func (o *SendChatMessageBadRequest) WriteResponse(rw http.ResponseWriter, produc
 	}
 }
 
+// SendChatMessageUnauthorizedCode is the HTTP code returned for type SendChatMessageUnauthorized
+const SendChatMessageUnauthorizedCode int = 401
+
+/*
+SendChatMessageUnauthorized unauthorized
+
+swagger:response sendChatMessageUnauthorized
+*/
+type SendChatMessageUnauthorized struct {
+
+	/*
+	  In: Body
+	*/
+	Payload *swagger.Error `json:"body,omitempty"`
+}
+
+// NewSendChatMessageUnauthorized creates SendChatMessageUnauthorized with default headers values
+func NewSendChatMessageUnauthorized() *SendChatMessageUnauthorized {
+
+	return &SendChatMessageUnauthorized{}
+}
+
+// WithPayload adds the payload to the send chat message unauthorized response
+func (o *SendChatMessageUnauthorized) WithPayload(payload *swagger.Error) *SendChatMessageUnauthorized {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the send chat message unauthorized response
+func (o *SendChatMessageUnauthorized) SetPayload(payload *swagger.Error) {
+	o.Payload = payload
+}
+
+// WriteResponse to the client
+func (o *SendChatMessageUnauthorized) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.WriteHeader(401)
+	if o.Payload != nil {
+		payload := o.Payload
+		if err := producer.Produce(rw, payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
+	}
+}
+
 // SendChatMessageInternalServerErrorCode is the HTTP code returned for type SendChatMessageInternalServerError
 const SendChatMessageInternalServerErrorCode int = 500
 

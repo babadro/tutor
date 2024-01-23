@@ -76,6 +76,12 @@ func init() {
               "$ref": "#/definitions/error"
             }
           },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
           "500": {
             "description": "Internal server error",
             "schema": {
@@ -104,8 +110,29 @@ func init() {
           "type": "string"
         }
       }
+    },
+    "principal": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        }
+      }
     }
-  }
+  },
+  "securityDefinitions": {
+    "key": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header",
+      "authorizationUrl": ""
+    }
+  },
+  "security": [
+    {
+      "key": []
+    }
+  ]
 }`))
 	FlatSwaggerJSON = json.RawMessage([]byte(`{
   "swagger": "2.0",
@@ -166,6 +193,12 @@ func init() {
               "$ref": "#/definitions/error"
             }
           },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
           "500": {
             "description": "Internal server error",
             "schema": {
@@ -194,7 +227,28 @@ func init() {
           "type": "string"
         }
       }
+    },
+    "principal": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        }
+      }
     }
-  }
+  },
+  "securityDefinitions": {
+    "key": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header",
+      "authorizationUrl": ""
+    }
+  },
+  "security": [
+    {
+      "key": []
+    }
+  ]
 }`))
 }

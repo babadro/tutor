@@ -12,19 +12,21 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+
+	"github.com/babadro/tutor/models"
 )
 
 // SendChatMessageHandlerFunc turns a function with the right signature into a send chat message handler
-type SendChatMessageHandlerFunc func(SendChatMessageParams) middleware.Responder
+type SendChatMessageHandlerFunc func(SendChatMessageParams, *models.Principal) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn SendChatMessageHandlerFunc) Handle(params SendChatMessageParams) middleware.Responder {
-	return fn(params)
+func (fn SendChatMessageHandlerFunc) Handle(params SendChatMessageParams, principal *models.Principal) middleware.Responder {
+	return fn(params, principal)
 }
 
 // SendChatMessageHandler interface for that can handle valid send chat message params
 type SendChatMessageHandler interface {
-	Handle(SendChatMessageParams) middleware.Responder
+	Handle(SendChatMessageParams, *models.Principal) middleware.Responder
 }
 
 // NewSendChatMessage creates a new http.Handler for the send chat message operation
@@ -51,12 +53,25 @@ func (o *SendChatMessage) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	}
 	var Params = NewSendChatMessageParams()
 
+	uprinc, aCtx, err := o.Context.Authorize(r, route)
+	if err != nil {
+		o.Context.Respond(rw, r, route.Produces, route, err)
+		return
+	}
+	if aCtx != nil {
+		r = aCtx
+	}
+	var principal *models.Principal
+	if uprinc != nil {
+		principal = uprinc.(*models.Principal) // this is really a models.Principal, I promise
+	}
+
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params) // actually handle the request
+	res := o.Handler.Handle(Params, principal) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
