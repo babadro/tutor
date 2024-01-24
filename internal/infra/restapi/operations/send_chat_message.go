@@ -13,7 +13,7 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 
-	"github.com/babadro/tutor/models"
+	"github.com/babadro/tutor/internal/models"
 )
 
 // SendChatMessageHandlerFunc turns a function with the right signature into a send chat message handler

@@ -110,14 +110,6 @@ func init() {
           "type": "string"
         }
       }
-    },
-    "principal": {
-      "type": "object",
-      "properties": {
-        "email": {
-          "type": "string"
-        }
-      }
     }
   },
   "securityDefinitions": {
@@ -224,14 +216,6 @@ func init() {
           "format": "int64"
         },
         "message": {
-          "type": "string"
-        }
-      }
-    },
-    "principal": {
-      "type": "object",
-      "properties": {
-        "email": {
           "type": "string"
         }
       }

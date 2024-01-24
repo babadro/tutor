@@ -19,7 +19,7 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 
-	"github.com/babadro/tutor/models"
+	"github.com/babadro/tutor/internal/models"
 )
 
 // NewTutorAPI creates a new Tutor instance

@@ -69,8 +69,3 @@ definitions:
         format: int64
       message:
         type: string
-  principal:
-    type: "object"
-    properties:
-      email:
-        type: "string"
