@@ -23,6 +23,9 @@ import (
 	"github.com/justinas/alice"
 	"github.com/rs/zerolog"
 	"google.golang.org/api/option"
+
+	"github.com/babadro/tutor/internal/core/service"
+	"github.com/tmc/langchaingo/llms/openai"
 )
 
 //go:generate swagger generate server --target ../../../../tutor --name Tutor --spec ../../../swagger.yaml --model-package internal/models/swagger --server-package internal/infra/restapi --principal interface{} --exclude-main
@@ -47,8 +50,6 @@ func configureAPI(api *operations.TutorAPI) http.Handler {
 	}
 
 	_ = context.Background()
-
-	tutorAPI := tutor.NewTutor(nil)
 
 	// configure the api here
 	api.ServeError = errors.ServeError
@@ -98,6 +99,14 @@ func configureAPI(api *operations.TutorAPI) http.Handler {
 
 		return nil, errors.New(401, "Unauthorized")
 	}
+
+	lim, err := openai.New()
+	if err != nil {
+		l.Fatal().Err(err).Msg("Unable to init openai client")
+	}
+
+	tutorService := service.NewService(lim)
+	tutorAPI := tutor.NewTutor(tutorService)
 
 	api.SendChatMessageHandler = operations.SendChatMessageHandlerFunc(tutorAPI.SendChatMessage)
 
