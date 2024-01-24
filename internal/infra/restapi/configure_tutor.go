@@ -28,7 +28,8 @@ import (
 //go:generate swagger generate server --target ../../../../tutor --name Tutor --spec ../../../swagger.yaml --model-package internal/models/swagger --server-package internal/infra/restapi --principal interface{} --exclude-main
 
 type envVars struct {
-	NgrokAgentAddr string `env:"NGROK_AGENT_ADDR,required"`
+	NgrokAgentAddr string   `env:"NGROK_AGENT_ADDR,required"`
+	AllowedUsers   []string `env:"ALLOWED_USERS,required"`
 }
 
 func configureFlags(api *operations.TutorAPI) {
@@ -85,9 +86,17 @@ func configureAPI(api *operations.TutorAPI) http.Handler {
 			return nil, fmt.Errorf("error getting email from token")
 		}
 
-		return &models.Principal{
-			Email: email,
-		}, nil
+		for _, user := range envs.AllowedUsers {
+			if user == email {
+				return &models.Principal{
+					Email: email,
+				}, nil
+			}
+		}
+
+		l.Error().Msgf("Unauthorized user: %s", email)
+
+		return nil, errors.New(401, "Unauthorized")
 	}
 
 	api.SendChatMessageHandler = operations.SendChatMessageHandlerFunc(tutorAPI.SendChatMessage)
