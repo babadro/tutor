@@ -20,6 +20,6 @@ type llm interface {
 	CreateEmbedding(ctx context.Context, inputTexts []string) ([][]float32, error)
 }
 
-func (s *Service) Call(ctx context.Context, prompt string, options ...llms.CallOption) (string, error) {
-	return s.llm.Call(ctx, prompt, options...)
+func (s *Service) SendMessage(ctx context.Context, message string) (string, error) {
+	return s.llm.Call(ctx, message)
 }
