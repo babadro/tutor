@@ -44,6 +44,9 @@ func init() {
             "required": true,
             "schema": {
               "type": "object",
+              "required": [
+                "message"
+              ],
               "properties": {
                 "message": {
                   "description": "The message text sent by the user.",
@@ -153,6 +156,9 @@ func init() {
             "required": true,
             "schema": {
               "type": "object",
+              "required": [
+                "message"
+              ],
               "properties": {
                 "message": {
                   "description": "The message text sent by the user.",

@@ -9,9 +9,11 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 
 	"github.com/babadro/tutor/internal/models"
 )
@@ -83,7 +85,8 @@ func (o *SendChatMessage) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 type SendChatMessageBody struct {
 
 	// The message text sent by the user.
-	Message string `json:"message,omitempty"`
+	// Required: true
+	Message *string `json:"message"`
 
 	// Unique identifier for the user.
 	UserID string `json:"userId,omitempty"`
@@ -91,6 +94,24 @@ type SendChatMessageBody struct {
 
 // Validate validates this send chat message body
 func (o *SendChatMessageBody) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := o.validateMessage(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (o *SendChatMessageBody) validateMessage(formats strfmt.Registry) error {
+
+	if err := validate.Required("body"+"."+"message", "body", o.Message); err != nil {
+		return err
+	}
+
 	return nil
 }
 

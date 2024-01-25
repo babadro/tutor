@@ -27,6 +27,8 @@ paths:
           required: true
           schema:
             type: object
+            required:
+              - message
             properties:
               userId:
                 type: string
