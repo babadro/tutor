@@ -60,6 +60,55 @@ paths:
           schema:
             $ref: "#/definitions/error"
 
+  /voice_messages:
+    post:
+      summary: Processes a voice message and returns a response.
+      operationId: "SendVoiceMessage"
+      consumes:
+        - multipart/form-data
+      produces:
+        - application/json
+      parameters:
+        - in: formData
+          name: voiceMessage
+          type: file
+          description: The voice message file from the user.
+          required: true
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            type: object
+            properties:
+              voiceMessageUrl:
+                type: string
+                description: URL of the voice message input file.
+              voiceMessageTranscript:
+                type: string
+                description: Transcription of the input voice message.
+              voiceResponseUrl:
+                type: string
+                description: URL to the voice response file.
+              voiceResponseTranscript:
+                type: string
+                description: Text transcription of the voice response.
+        400:
+          description: "Bad request"
+          schema:
+            $ref: "#/definitions/error"
+        '401':
+          description: unauthorized
+          schema:
+            $ref: "#/definitions/error"
+        500:
+          description: "Internal server error"
+          schema:
+            $ref: "#/definitions/error"
+        default:
+          description: error
+          schema:
+            $ref: "#/definitions/error"
+
 definitions:
   error:
     type: object
