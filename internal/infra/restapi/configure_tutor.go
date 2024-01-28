@@ -109,6 +109,7 @@ func configureAPI(api *operations.TutorAPI) http.Handler {
 	tutorAPI := tutor.NewTutor(tutorService)
 
 	api.SendChatMessageHandler = operations.SendChatMessageHandlerFunc(tutorAPI.SendChatMessage)
+	api.SendVoiceMessageHandler = operations.SendVoiceMessageHandlerFunc(tutorAPI.SendVoiceMessage)
 
 	api.PreServerShutdown = func() {}
 

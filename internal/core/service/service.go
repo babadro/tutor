@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"github.com/babadro/tutor/internal/models"
 	"github.com/tmc/langchaingo/llms"
 )
 
@@ -22,4 +23,13 @@ type llm interface {
 
 func (s *Service) SendMessage(ctx context.Context, message string) (string, error) {
 	return s.llm.Call(ctx, message)
+}
+
+func (s *Service) SendVoiceMessage(ctx context.Context, voiceMsgFile []byte, userEmail string) (models.SendVoiceMessageResult, error) {
+	return models.SendVoiceMessageResult{
+		VoiceMessageURL:         "https://example.com/voice_message.wav",
+		VoiceResponseURL:        "https://example.com/voice_response.wav",
+		VoiceMessageTranscript:  "Hello, how are you?",
+		VoiceResponseTranscript: "I'm fine, thank you.",
+	}, nil
 }
