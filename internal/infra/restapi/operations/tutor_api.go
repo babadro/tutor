@@ -40,12 +40,16 @@ func NewTutorAPI(spec *loads.Document) *TutorAPI {
 		APIKeyAuthenticator: security.APIKeyAuth,
 		BearerAuthenticator: security.BearerAuth,
 
-		JSONConsumer: runtime.JSONConsumer(),
+		JSONConsumer:          runtime.JSONConsumer(),
+		MultipartformConsumer: runtime.DiscardConsumer,
 
 		JSONProducer: runtime.JSONProducer(),
 
 		SendChatMessageHandler: SendChatMessageHandlerFunc(func(params SendChatMessageParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation SendChatMessage has not yet been implemented")
+		}),
+		SendVoiceMessageHandler: SendVoiceMessageHandlerFunc(func(params SendVoiceMessageParams, principal *models.Principal) middleware.Responder {
+			return middleware.NotImplemented("operation SendVoiceMessage has not yet been implemented")
 		}),
 
 		// Applies when the "Authorization" header is set
@@ -83,6 +87,9 @@ type TutorAPI struct {
 	// JSONConsumer registers a consumer for the following mime types:
 	//   - application/json
 	JSONConsumer runtime.Consumer
+	// MultipartformConsumer registers a consumer for the following mime types:
+	//   - multipart/form-data
+	MultipartformConsumer runtime.Consumer
 
 	// JSONProducer registers a producer for the following mime types:
 	//   - application/json
@@ -97,6 +104,8 @@ type TutorAPI struct {
 
 	// SendChatMessageHandler sets the operation handler for the send chat message operation
 	SendChatMessageHandler SendChatMessageHandler
+	// SendVoiceMessageHandler sets the operation handler for the send voice message operation
+	SendVoiceMessageHandler SendVoiceMessageHandler
 	// ServeError is called when an error is received, there is a default handler
 	// but you can set your own with this
 	ServeError func(http.ResponseWriter, *http.Request, error)
@@ -168,6 +177,9 @@ func (o *TutorAPI) Validate() error {
 	if o.JSONConsumer == nil {
 		unregistered = append(unregistered, "JSONConsumer")
 	}
+	if o.MultipartformConsumer == nil {
+		unregistered = append(unregistered, "MultipartformConsumer")
+	}
 
 	if o.JSONProducer == nil {
 		unregistered = append(unregistered, "JSONProducer")
@@ -179,6 +191,9 @@ func (o *TutorAPI) Validate() error {
 
 	if o.SendChatMessageHandler == nil {
 		unregistered = append(unregistered, "SendChatMessageHandler")
+	}
+	if o.SendVoiceMessageHandler == nil {
+		unregistered = append(unregistered, "SendVoiceMessageHandler")
 	}
 
 	if len(unregistered) > 0 {
@@ -222,6 +237,8 @@ func (o *TutorAPI) ConsumersFor(mediaTypes []string) map[string]runtime.Consumer
 		switch mt {
 		case "application/json":
 			result["application/json"] = o.JSONConsumer
+		case "multipart/form-data":
+			result["multipart/form-data"] = o.MultipartformConsumer
 		}
 
 		if c, ok := o.customConsumers[mt]; ok {
@@ -283,6 +300,10 @@ func (o *TutorAPI) initHandlerCache() {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
 	o.handlers["POST"]["/chat_messages"] = NewSendChatMessage(o.context, o.SendChatMessageHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/voice_messages"] = NewSendVoiceMessage(o.context, o.SendVoiceMessageHandler)
 }
 
 // Serve creates a http handler to serve the API over HTTP

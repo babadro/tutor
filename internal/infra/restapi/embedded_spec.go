@@ -96,6 +96,77 @@ func init() {
           }
         }
       }
+    },
+    "/voice_messages": {
+      "post": {
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Processes a voice message and returns a response.",
+        "operationId": "SendVoiceMessage",
+        "parameters": [
+          {
+            "type": "file",
+            "description": "The voice message file from the user.",
+            "name": "voiceMessage",
+            "in": "formData",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "voiceMessageTranscript": {
+                  "description": "Transcription of the input voice message.",
+                  "type": "string"
+                },
+                "voiceMessageUrl": {
+                  "description": "URL of the voice message input file.",
+                  "type": "string"
+                },
+                "voiceResponseTranscript": {
+                  "description": "Text transcription of the voice response.",
+                  "type": "string"
+                },
+                "voiceResponseUrl": {
+                  "description": "URL to the voice response file.",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -174,6 +245,77 @@ func init() {
               "properties": {
                 "reply": {
                   "description": "AI's response to the user's message.",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
+    "/voice_messages": {
+      "post": {
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Processes a voice message and returns a response.",
+        "operationId": "SendVoiceMessage",
+        "parameters": [
+          {
+            "type": "file",
+            "description": "The voice message file from the user.",
+            "name": "voiceMessage",
+            "in": "formData",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "voiceMessageTranscript": {
+                  "description": "Transcription of the input voice message.",
+                  "type": "string"
+                },
+                "voiceMessageUrl": {
+                  "description": "URL of the voice message input file.",
+                  "type": "string"
+                },
+                "voiceResponseTranscript": {
+                  "description": "Text transcription of the voice response.",
+                  "type": "string"
+                },
+                "voiceResponseUrl": {
+                  "description": "URL to the voice response file.",
                   "type": "string"
                 }
               }
