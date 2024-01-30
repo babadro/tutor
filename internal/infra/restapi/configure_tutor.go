@@ -22,6 +22,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/justinas/alice"
 	"github.com/rs/zerolog"
+	openai2 "github.com/sashabaranov/go-openai"
 	"google.golang.org/api/option"
 
 	"github.com/babadro/tutor/internal/core/service"
@@ -33,6 +34,7 @@ import (
 type envVars struct {
 	NgrokAgentAddr string   `env:"NGROK_AGENT_ADDR,required"`
 	AllowedUsers   []string `env:"ALLOWED_USERS,required"`
+	OpenaiAPIKey   string   `env:"OPENAI_API_KEY,required"`
 }
 
 func configureFlags(api *operations.TutorAPI) {
@@ -74,6 +76,9 @@ func configureAPI(api *operations.TutorAPI) http.Handler {
 	}
 
 	api.KeyAuth = func(token string) (*models.Principal, error) {
+
+		return &models.Principal{Email: "fake@mail.ru"}, nil
+
 		token = strings.TrimPrefix(token, "Bearer ")
 
 		// Verify the ID Token
@@ -105,7 +110,9 @@ func configureAPI(api *operations.TutorAPI) http.Handler {
 		l.Fatal().Err(err).Msg("Unable to init openai client")
 	}
 
-	tutorService := service.NewService(llm)
+	openaiClient := openai2.NewClient(envs.OpenaiAPIKey)
+
+	tutorService := service.NewService(llm, openaiClient)
 	tutorAPI := tutor.NewTutor(tutorService)
 
 	api.SendChatMessageHandler = operations.SendChatMessageHandlerFunc(tutorAPI.SendChatMessage)

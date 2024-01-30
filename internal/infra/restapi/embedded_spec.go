@@ -100,7 +100,7 @@ func init() {
     "/voice_messages": {
       "post": {
         "consumes": [
-          "multipart/form-data"
+          "application/json"
         ],
         "produces": [
           "application/json"
@@ -109,11 +109,19 @@ func init() {
         "operationId": "SendVoiceMessage",
         "parameters": [
           {
-            "type": "file",
-            "description": "The voice message file from the user.",
-            "name": "voiceMessage",
-            "in": "formData",
-            "required": true
+            "description": "User message containing a voice message url",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "voiceMessageUrl": {
+                  "description": "URL of the voice message file",
+                  "type": "string"
+                }
+              }
+            }
           }
         ],
         "responses": {
@@ -280,7 +288,7 @@ func init() {
     "/voice_messages": {
       "post": {
         "consumes": [
-          "multipart/form-data"
+          "application/json"
         ],
         "produces": [
           "application/json"
@@ -289,11 +297,19 @@ func init() {
         "operationId": "SendVoiceMessage",
         "parameters": [
           {
-            "type": "file",
-            "description": "The voice message file from the user.",
-            "name": "voiceMessage",
-            "in": "formData",
-            "required": true
+            "description": "User message containing a voice message url",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "voiceMessageUrl": {
+                  "description": "URL of the voice message file",
+                  "type": "string"
+                }
+              }
+            }
           }
         ],
         "responses": {

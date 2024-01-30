@@ -75,6 +75,43 @@ func (o *SendVoiceMessage) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 }
 
+// SendVoiceMessageBody send voice message body
+//
+// swagger:model SendVoiceMessageBody
+type SendVoiceMessageBody struct {
+
+	// URL of the voice message file
+	VoiceMessageURL string `json:"voiceMessageUrl,omitempty"`
+}
+
+// Validate validates this send voice message body
+func (o *SendVoiceMessageBody) Validate(formats strfmt.Registry) error {
+	return nil
+}
+
+// ContextValidate validates this send voice message body based on context it is used
+func (o *SendVoiceMessageBody) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	return nil
+}
+
+// MarshalBinary interface implementation
+func (o *SendVoiceMessageBody) MarshalBinary() ([]byte, error) {
+	if o == nil {
+		return nil, nil
+	}
+	return swag.WriteJSON(o)
+}
+
+// UnmarshalBinary interface implementation
+func (o *SendVoiceMessageBody) UnmarshalBinary(b []byte) error {
+	var res SendVoiceMessageBody
+	if err := swag.ReadJSON(b, &res); err != nil {
+		return err
+	}
+	*o = res
+	return nil
+}
+
 // SendVoiceMessageOKBody send voice message o k body
 //
 // swagger:model SendVoiceMessageOKBody

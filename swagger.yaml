@@ -65,15 +65,20 @@ paths:
       summary: Processes a voice message and returns a response.
       operationId: "SendVoiceMessage"
       consumes:
-        - multipart/form-data
+        - application/json
       produces:
         - application/json
       parameters:
-        - in: formData
-          name: voiceMessage
-          type: file
-          description: The voice message file from the user.
+        - in: body
+          name: body
+          description: User message containing a voice message url
           required: true
+          schema:
+            type: object
+            properties:
+              voiceMessageUrl:
+                type: string
+                description: URL of the voice message file
       responses:
         '200':
           description: Successful response

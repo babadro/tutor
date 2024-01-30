@@ -1,7 +1,6 @@
 package tutor
 
 import (
-	"bytes"
 	"context"
 
 	"github.com/babadro/tutor/internal/infra/restapi/operations"
@@ -12,7 +11,7 @@ import (
 
 type service interface {
 	SendMessage(ctx context.Context, message string) (string, error)
-	SendVoiceMessage(ctx context.Context, voiceMsgFile []byte, userEmail string) (models.SendVoiceMessageResult, error)
+	SendVoiceMessage(ctx context.Context, voiceMsgFileUrl string, userEmail string) (models.SendVoiceMessageResult, error)
 }
 
 type Tutor struct {
@@ -40,23 +39,12 @@ func (t *Tutor) SendChatMessage(params operations.SendChatMessageParams, princip
 }
 
 func (t *Tutor) SendVoiceMessage(params operations.SendVoiceMessageParams, principal *models.Principal) middleware.Responder {
-	voiceMessage := params.VoiceMessage
+	voiceMessage := params.Body.VoiceMessageURL
 
-	buf := new(bytes.Buffer)
-	_, err := buf.ReadFrom(voiceMessage)
-	if err != nil {
-		hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to read voice message")
-		return operations.NewSendVoiceMessageBadRequest()
-	}
+	// log voice message
+	hlog.FromRequest(params.HTTPRequest).Info().Msgf("Voice message: %s", voiceMessage)
 
-	voiceMsgFile := buf.Bytes()
-
-	if len(voiceMsgFile) == 0 {
-		hlog.FromRequest(params.HTTPRequest).Error().Msg("Empty voice message")
-		return operations.NewSendVoiceMessageBadRequest()
-	}
-
-	result, err := t.svc.SendVoiceMessage(params.HTTPRequest.Context(), voiceMsgFile, principal.Email)
+	result, err := t.svc.SendVoiceMessage(params.HTTPRequest.Context(), voiceMessage, principal.Email)
 	if err != nil {
 		hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to send voice message")
 		return operations.NewSendVoiceMessageBadRequest()
