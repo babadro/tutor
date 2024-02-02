@@ -51,15 +51,15 @@ func (s *Service) SendVoiceMessage(ctx context.Context, voiceMsgFileUrl string, 
 		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to transcribe voice message: %s", err.Error())
 	}
 
-	voiceMessageTranscript, err := s.llm.Call(ctx, transcriptionResp.Text)
+	llmTextResponse, err := s.llm.Call(ctx, transcriptionResp.Text)
 	if err != nil {
-		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to voiceMessageTranscript from llm: %s", err.Error())
+		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to get llmTextResponse from llm: %s", err.Error())
 	}
 
 	return models.SendVoiceMessageResult{
 		VoiceMessageURL:         "https://firebasestorage.googleapis.com/v0/b/tutor-fq8fmu.appspot.com/o/How-are-you.mp3?alt=media&token=b1339bfe-6cf8-44ae-bda5-6bb6dcb43c5b",
 		VoiceResponseURL:        "https://firebasestorage.googleapis.com/v0/b/tutor-fq8fmu.appspot.com/o/I-m-fine-thank-you.mp3?alt=media&token=ce525989-7c66-4ee3-8e21-68e4619fccc0",
-		VoiceMessageTranscript:  voiceMessageTranscript,
+		VoiceMessageTranscript:  llmTextResponse,
 		VoiceResponseTranscript: "I'm fine, thank you.",
 	}, nil
 }
