@@ -4,6 +4,8 @@ go 1.21.0
 
 require (
 	firebase.google.com/go v3.13.0+incompatible
+	github.com/Azure/azure-sdk-for-go/sdk/ai/azopenai v0.4.1
+	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.9.1
 	github.com/caarlos0/env v3.5.0+incompatible
 	github.com/go-openapi/errors v0.21.0
 	github.com/go-openapi/loads v0.21.5
@@ -15,7 +17,6 @@ require (
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/justinas/alice v1.2.0
 	github.com/rs/zerolog v1.31.0
-	github.com/sashabaranov/go-openai v1.19.2
 	github.com/tmc/langchaingo v0.1.3
 	golang.org/x/net v0.20.0
 	google.golang.org/api v0.157.0
@@ -29,6 +30,7 @@ require (
 	cloud.google.com/go/iam v1.1.5 // indirect
 	cloud.google.com/go/longrunning v0.5.4 // indirect
 	cloud.google.com/go/storage v1.36.0 // indirect
+	github.com/Azure/azure-sdk-for-go/sdk/internal v1.5.1 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
 	github.com/dlclark/regexp2 v1.8.1 // indirect
 	github.com/docker/go-units v0.5.0 // indirect

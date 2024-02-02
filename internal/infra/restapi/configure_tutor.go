@@ -12,6 +12,8 @@ import (
 
 	firebase "firebase.google.com/go"
 	"firebase.google.com/go/auth"
+	"github.com/Azure/azure-sdk-for-go/sdk/ai/azopenai"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/babadro/tutor/internal/infra/restapi/handlers/tutor"
 	"github.com/babadro/tutor/internal/infra/restapi/middlewares"
 	"github.com/babadro/tutor/internal/infra/restapi/operations"
@@ -22,7 +24,6 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/justinas/alice"
 	"github.com/rs/zerolog"
-	openai2 "github.com/sashabaranov/go-openai"
 	"google.golang.org/api/option"
 
 	"github.com/babadro/tutor/internal/core/service"
@@ -77,13 +78,14 @@ func configureAPI(api *operations.TutorAPI) http.Handler {
 
 	api.KeyAuth = func(token string) (*models.Principal, error) {
 
-		return &models.Principal{Email: "fake@mail.ru"}, nil
+		//return &models.Principal{Email: "fake@mail.ru"}, nil
 
 		token = strings.TrimPrefix(token, "Bearer ")
 
 		// Verify the ID Token
 		decodedToken, err := firebaseClient.VerifyIDToken(context.Background(), token)
 		if err != nil {
+			l.Error().Msgf("error verifying ID token: %v", err)
 			return nil, fmt.Errorf("error verifying ID token: %v", err)
 		}
 
@@ -107,10 +109,14 @@ func configureAPI(api *operations.TutorAPI) http.Handler {
 
 	llm, err := openai.New()
 	if err != nil {
-		l.Fatal().Err(err).Msg("Unable to init openai client")
+		l.Fatal().Err(err).Msg("Unable to init llm client")
 	}
 
-	openaiClient := openai2.NewClient(envs.OpenaiAPIKey)
+	openAICredential := azcore.NewKeyCredential(envs.OpenaiAPIKey)
+	openaiClient, err := azopenai.NewClientForOpenAI("https://api.openai.com/v1", openAICredential, nil)
+	if err != nil {
+		l.Fatal().Err(err).Msg("Unable to init openai client")
+	}
 
 	tutorService := service.NewService(llm, openaiClient)
 	tutorAPI := tutor.NewTutor(tutorService)
