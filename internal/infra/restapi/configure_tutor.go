@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	firebase "firebase.google.com/go"
-	"firebase.google.com/go/auth"
 	"github.com/Azure/azure-sdk-for-go/sdk/ai/azopenai"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/babadro/tutor/internal/infra/restapi/handlers/tutor"
@@ -24,6 +23,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/justinas/alice"
 	"github.com/rs/zerolog"
+	baranovOpenai "github.com/sashabaranov/go-openai"
 	"google.golang.org/api/option"
 
 	"github.com/babadro/tutor/internal/core/service"
@@ -36,6 +36,7 @@ type envVars struct {
 	NgrokAgentAddr string   `env:"NGROK_AGENT_ADDR,required"`
 	AllowedUsers   []string `env:"ALLOWED_USERS,required"`
 	OpenaiAPIKey   string   `env:"OPENAI_API_KEY,required"`
+	StorageBucket  string   `env:"STORAGE_BUCKET,required"`
 }
 
 func configureFlags(api *operations.TutorAPI) {
@@ -43,6 +44,8 @@ func configureFlags(api *operations.TutorAPI) {
 }
 
 func configureAPI(api *operations.TutorAPI) http.Handler {
+	ctx := context.Background()
+
 	l := zerolog.New(os.Stdout).With().
 		Timestamp().
 		Logger()
@@ -57,12 +60,6 @@ func configureAPI(api *operations.TutorAPI) http.Handler {
 	// configure the api here
 	api.ServeError = errors.ServeError
 
-	// Set your custom logger if needed. Default one is log.Printf
-	// Expected interface func(string, ...interface{})
-	//
-	// Example:
-	// api.Logger = log.Printf
-
 	api.UseSwaggerUI()
 	// To continue using redoc as your UI, uncomment the following line
 	// api.UseRedoc()
@@ -71,15 +68,23 @@ func configureAPI(api *operations.TutorAPI) http.Handler {
 
 	api.JSONProducer = runtime.JSONProducer()
 
-	firebaseClient, err := initFirebaseClient()
+	// Initialize Firebase SDK
+	firebaseConfig := &firebase.Config{
+		StorageBucket: envs.StorageBucket,
+	}
+	opt := option.WithCredentialsFile("/app/secrets/tutor.json")
+	firebaseApp, err := firebase.NewApp(context.Background(), firebaseConfig, opt)
+	if err != nil {
+		l.Fatal().Err(err).Msg("Unable to init firebase app")
+	}
+
+	// Get a Firebase Auth client from the Firebase App
+	firebaseClient, err := firebaseApp.Auth(context.Background())
 	if err != nil {
 		l.Fatal().Err(err).Msg("Unable to init firebase client")
 	}
 
 	api.KeyAuth = func(token string) (*models.Principal, error) {
-
-		//return &models.Principal{Email: "fake@mail.ru"}, nil
-
 		token = strings.TrimPrefix(token, "Bearer ")
 
 		// Verify the ID Token
@@ -97,7 +102,8 @@ func configureAPI(api *operations.TutorAPI) http.Handler {
 		for _, user := range envs.AllowedUsers {
 			if user == email {
 				return &models.Principal{
-					Email: email,
+					Email:  email,
+					UserID: decodedToken.UID,
 				}, nil
 			}
 		}
@@ -118,7 +124,14 @@ func configureAPI(api *operations.TutorAPI) http.Handler {
 		l.Fatal().Err(err).Msg("Unable to init openai client")
 	}
 
-	tutorService := service.NewService(llm, openaiClient)
+	baranovClient := baranovOpenai.NewClient(envs.OpenaiAPIKey)
+
+	storageClient, err := firebaseApp.Storage(ctx)
+	if err != nil {
+		l.Fatal().Err(err).Msg("Unable to init storage client")
+	}
+
+	tutorService := service.NewService(llm, openaiClient, baranovClient, storageClient)
 	tutorAPI := tutor.NewTutor(tutorService)
 
 	api.SendChatMessageHandler = operations.SendChatMessageHandlerFunc(tutorAPI.SendChatMessage)
@@ -156,21 +169,4 @@ func setupMiddlewares(l zerolog.Logger) middleware.Builder {
 // So this is a good place to plug in a panic handling middleware, logging and metrics.
 func setupGlobalMiddleware(handler http.Handler) http.Handler {
 	return handler
-}
-
-func initFirebaseClient() (*auth.Client, error) {
-	// Initialize Firebase SDK
-	opt := option.WithCredentialsFile("/app/secrets/tutor.json")
-	app, err := firebase.NewApp(context.Background(), nil, opt)
-	if err != nil {
-		return nil, fmt.Errorf("error initializing app: %v", err)
-	}
-
-	// Get a Firebase Auth client from the Firebase App
-	client, err := app.Auth(context.Background())
-	if err != nil {
-		return nil, fmt.Errorf("error getting Auth client: %v", err)
-	}
-
-	return client, nil
 }

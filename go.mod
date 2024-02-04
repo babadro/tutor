@@ -17,6 +17,7 @@ require (
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/justinas/alice v1.2.0
 	github.com/rs/zerolog v1.31.0
+	github.com/sashabaranov/go-openai v1.19.2
 	github.com/tmc/langchaingo v0.1.3
 	golang.org/x/net v0.20.0
 	google.golang.org/api v0.157.0

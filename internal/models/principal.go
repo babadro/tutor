@@ -1,5 +1,6 @@
 package models
 
 type Principal struct {
-	Email string
+	Email  string
+	UserID string
 }
