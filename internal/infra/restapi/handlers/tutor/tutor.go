@@ -11,7 +11,7 @@ import (
 
 type service interface {
 	SendMessage(ctx context.Context, message string) (string, error)
-	SendVoiceMessage(ctx context.Context, voiceMsgFileUrl string, userEmail string) (models.SendVoiceMessageResult, error)
+	SendVoiceMessage(ctx context.Context, voiceMsgFileUrl string, userID string) (models.SendVoiceMessageResult, error)
 }
 
 type Tutor struct {
@@ -44,7 +44,7 @@ func (t *Tutor) SendVoiceMessage(params operations.SendVoiceMessageParams, princ
 	// log voice message
 	hlog.FromRequest(params.HTTPRequest).Info().Msgf("Voice message: %s", voiceMessage)
 
-	result, err := t.svc.SendVoiceMessage(params.HTTPRequest.Context(), voiceMessage, principal.Email)
+	result, err := t.svc.SendVoiceMessage(params.HTTPRequest.Context(), voiceMessage, principal.UserID)
 	if err != nil {
 		hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to send voice message")
 		return operations.NewSendVoiceMessageBadRequest()

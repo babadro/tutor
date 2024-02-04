@@ -47,7 +47,7 @@ func (s *Service) SendMessage(ctx context.Context, message string) (string, erro
 	return s.llm.Call(ctx, message)
 }
 
-func (s *Service) SendVoiceMessage(ctx context.Context, voiceMsgFileUrl string, userEmail string) (models.SendVoiceMessageResult, error) {
+func (s *Service) SendVoiceMessage(ctx context.Context, voiceMsgFileUrl string, userID string) (models.SendVoiceMessageResult, error) {
 	resp, err := http.Get(voiceMsgFileUrl)
 	if err != nil {
 		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to download voice message: %s", err.Error())
@@ -88,7 +88,7 @@ func (s *Service) SendVoiceMessage(ctx context.Context, voiceMsgFileUrl string, 
 
 	textToSpeechReq := openai.CreateSpeechRequest{
 		Model:          "tts-1",
-		Input:          "I like to play football.",
+		Input:          llmTextResponse,
 		Voice:          openai.VoiceFable,
 		ResponseFormat: "mp3",
 	}
@@ -109,7 +109,7 @@ func (s *Service) SendVoiceMessage(ctx context.Context, voiceMsgFileUrl string, 
 		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to get default bucket: %s", err.Error())
 	}
 
-	fileName := fmt.Sprintf("users/%s/backend_uploads/%d", userEmail, time.Now().UnixNano())
+	fileName := fmt.Sprintf("users/%s/backend_uploads/%d.mp3", userID, time.Now().UnixNano())
 
 	object := bucket.Object(fileName)
 	wc := object.NewWriter(ctx)
@@ -124,9 +124,10 @@ func (s *Service) SendVoiceMessage(ctx context.Context, voiceMsgFileUrl string, 
 
 	voiceResponseURL := generateFirebaseStorageURL(object.BucketName(), object.ObjectName())
 
+	fmt.Println("voice response url: ", voiceResponseURL)
+
 	return models.SendVoiceMessageResult{
-		// todo delete voiceMessageURL as we get it from the request
-		VoiceMessageURL:         "https://firebasestorage.googleapis.com/v0/b/tutor-fq8fmu.appspot.com/o/How-are-you.mp3?alt=media&token=b1339bfe-6cf8-44ae-bda5-6bb6dcb43c5b",
+		VoiceMessageURL:         "",
 		VoiceResponseURL:        voiceResponseURL,
 		VoiceMessageTranscript:  responseTranscript,
 		VoiceResponseTranscript: llmTextResponse,
