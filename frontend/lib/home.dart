@@ -60,11 +60,9 @@ class HomeScreen extends StatelessWidget {
                         icon: Icon(Icons.chat),
                         label: Text('New Chat'),
                       ),
-
                     ],
                     selectedIndex: 0,
                     onDestinationSelected: (value) {
-
                     },
                   ),
                 ),
