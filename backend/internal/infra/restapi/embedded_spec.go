@@ -97,164 +97,42 @@ func init() {
         }
       }
     },
-    "/voice_messages": {
-      "post": {
-        "consumes": [
-          "application/json"
-        ],
+    "/chat_messages/{chatId}": {
+      "get": {
+        "description": "Get chat messages",
         "produces": [
           "application/json"
         ],
-        "summary": "Processes a voice message and returns a response.",
-        "operationId": "SendVoiceMessage",
+        "operationId": "GetChatMessages",
         "parameters": [
           {
-            "description": "User message containing a voice message url",
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "type": "object",
-              "properties": {
-                "voiceMessageUrl": {
-                  "description": "URL of the voice message file",
-                  "type": "string"
-                }
-              }
-            }
+            "type": "string",
+            "name": "chatId",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "format": "int32",
+            "default": 10,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "default": 0,
+            "name": "before_timestamp",
+            "in": "query"
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful response",
+            "description": "A list of chat messages",
             "schema": {
-              "type": "object",
-              "properties": {
-                "voiceMessageTranscript": {
-                  "description": "Transcription of the input voice message.",
-                  "type": "string"
-                },
-                "voiceMessageUrl": {
-                  "description": "URL of the voice message input file.",
-                  "type": "string"
-                },
-                "voiceResponseTranscript": {
-                  "description": "Text transcription of the voice response.",
-                  "type": "string"
-                },
-                "voiceResponseUrl": {
-                  "description": "URL to the voice response file.",
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          },
-          "401": {
-            "description": "unauthorized",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
-      }
-    }
-  },
-  "definitions": {
-    "error": {
-      "type": "object",
-      "properties": {
-        "code": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "message": {
-          "type": "string"
-        }
-      }
-    }
-  },
-  "securityDefinitions": {
-    "key": {
-      "type": "apiKey",
-      "name": "Authorization",
-      "in": "header",
-      "authorizationUrl": ""
-    }
-  },
-  "security": [
-    {
-      "key": []
-    }
-  ]
-}`))
-	FlatSwaggerJSON = json.RawMessage([]byte(`{
-  "swagger": "2.0",
-  "info": {
-    "description": "API for AI-powered functionality in a language learning app",
-    "title": "Tutor",
-    "version": "1.0.0"
-  },
-  "paths": {
-    "/chat_messages": {
-      "post": {
-        "description": "This endpoint receives a user's message and returns the AI's response.",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "summary": "Sends a message to the AI and receives a response.",
-        "operationId": "SendChatMessage",
-        "parameters": [
-          {
-            "description": "User message and additional information",
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "type": "object",
-              "properties": {
-                "message": {
-                  "description": "The message text sent by the user.",
-                  "type": "string"
-                },
-                "userId": {
-                  "description": "Unique identifier for the user.",
-                  "type": "string"
-                }
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "reply": {
-                  "description": "AI's response to the user's message.",
-                  "type": "string"
-                }
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ChatMessage"
               }
             }
           },
@@ -366,6 +244,296 @@ func init() {
     }
   },
   "definitions": {
+    "ChatMessage": {
+      "type": "object",
+      "properties": {
+        "isFromAi": {
+          "type": "boolean"
+        },
+        "text": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "userId": {
+          "type": "string"
+        }
+      }
+    },
+    "error": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "key": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header",
+      "authorizationUrl": ""
+    }
+  },
+  "security": [
+    {
+      "key": []
+    }
+  ]
+}`))
+	FlatSwaggerJSON = json.RawMessage([]byte(`{
+  "swagger": "2.0",
+  "info": {
+    "description": "API for AI-powered functionality in a language learning app",
+    "title": "Tutor",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/chat_messages": {
+      "post": {
+        "description": "This endpoint receives a user's message and returns the AI's response.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Sends a message to the AI and receives a response.",
+        "operationId": "SendChatMessage",
+        "parameters": [
+          {
+            "description": "User message and additional information",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "description": "The message text sent by the user.",
+                  "type": "string"
+                },
+                "userId": {
+                  "description": "Unique identifier for the user.",
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "reply": {
+                  "description": "AI's response to the user's message.",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
+    "/chat_messages/{chatId}": {
+      "get": {
+        "description": "Get chat messages",
+        "produces": [
+          "application/json"
+        ],
+        "operationId": "GetChatMessages",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "chatId",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "format": "int32",
+            "default": 10,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "default": 0,
+            "name": "before_timestamp",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of chat messages",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ChatMessage"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
+    "/voice_messages": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Processes a voice message and returns a response.",
+        "operationId": "SendVoiceMessage",
+        "parameters": [
+          {
+            "description": "User message containing a voice message url",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "voiceMessageUrl": {
+                  "description": "URL of the voice message file",
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "voiceMessageTranscript": {
+                  "description": "Transcription of the input voice message.",
+                  "type": "string"
+                },
+                "voiceMessageUrl": {
+                  "description": "URL of the voice message input file.",
+                  "type": "string"
+                },
+                "voiceResponseTranscript": {
+                  "description": "Text transcription of the voice response.",
+                  "type": "string"
+                },
+                "voiceResponseUrl": {
+                  "description": "URL to the voice response file.",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "ChatMessage": {
+      "type": "object",
+      "properties": {
+        "isFromAi": {
+          "type": "boolean"
+        },
+        "text": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "userId": {
+          "type": "string"
+        }
+      }
+    },
     "error": {
       "type": "object",
       "properties": {

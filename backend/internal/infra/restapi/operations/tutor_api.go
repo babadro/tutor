@@ -44,6 +44,9 @@ func NewTutorAPI(spec *loads.Document) *TutorAPI {
 
 		JSONProducer: runtime.JSONProducer(),
 
+		GetChatMessagesHandler: GetChatMessagesHandlerFunc(func(params GetChatMessagesParams, principal *models.Principal) middleware.Responder {
+			return middleware.NotImplemented("operation GetChatMessages has not yet been implemented")
+		}),
 		SendChatMessageHandler: SendChatMessageHandlerFunc(func(params SendChatMessageParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation SendChatMessage has not yet been implemented")
 		}),
@@ -98,6 +101,8 @@ type TutorAPI struct {
 	// APIAuthorizer provides access control (ACL/RBAC/ABAC) by providing access to the request and authenticated principal
 	APIAuthorizer runtime.Authorizer
 
+	// GetChatMessagesHandler sets the operation handler for the get chat messages operation
+	GetChatMessagesHandler GetChatMessagesHandler
 	// SendChatMessageHandler sets the operation handler for the send chat message operation
 	SendChatMessageHandler SendChatMessageHandler
 	// SendVoiceMessageHandler sets the operation handler for the send voice message operation
@@ -182,6 +187,9 @@ func (o *TutorAPI) Validate() error {
 		unregistered = append(unregistered, "AuthorizationAuth")
 	}
 
+	if o.GetChatMessagesHandler == nil {
+		unregistered = append(unregistered, "GetChatMessagesHandler")
+	}
 	if o.SendChatMessageHandler == nil {
 		unregistered = append(unregistered, "SendChatMessageHandler")
 	}
@@ -287,6 +295,10 @@ func (o *TutorAPI) initHandlerCache() {
 		o.handlers = make(map[string]map[string]http.Handler)
 	}
 
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/chat_messages/{chatId}"] = NewGetChatMessages(o.context, o.GetChatMessagesHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
