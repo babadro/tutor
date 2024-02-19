@@ -5,6 +5,7 @@ import (
 
 	"github.com/babadro/tutor/internal/infra/restapi/operations"
 	"github.com/babadro/tutor/internal/models"
+	"github.com/babadro/tutor/internal/models/swagger"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/rs/zerolog/hlog"
 )
@@ -56,4 +57,8 @@ func (t *Tutor) SendVoiceMessage(params operations.SendVoiceMessageParams, princ
 		VoiceResponseTranscript: result.VoiceResponseTranscript,
 		VoiceResponseURL:        result.VoiceResponseURL,
 	})
+}
+
+func (t *Tutor) GetChatMessages(params operations.GetChatMessagesParams, principal *models.Principal) middleware.Responder {
+	return operations.NewGetChatMessagesOK().WithPayload([]*swagger.ChatMessage{}) // todo
 }
