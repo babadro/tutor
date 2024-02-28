@@ -60,5 +60,47 @@ func (t *Tutor) SendVoiceMessage(params operations.SendVoiceMessageParams, princ
 }
 
 func (t *Tutor) GetChatMessages(params operations.GetChatMessagesParams, principal *models.Principal) middleware.Responder {
-	return operations.NewGetChatMessagesOK().WithPayload([]*swagger.ChatMessage{}) // todo
+	// return mocked messages
+	messages := []*swagger.ChatMessage{
+		{
+			IsFromAi:  true,
+			Text:      "Hello, I'm a tutor bot. How can I help you?",
+			Timestamp: 1631535500,
+		},
+		{
+			IsFromAi:  false,
+			Text:      "I need help with my homework",
+			Timestamp: 1631535510,
+			UserID:    "user1",
+		},
+		{
+			IsFromAi:  true,
+			Text:      "Sure, I can help you with that. What's the problem?",
+			Timestamp: 1631535520,
+		},
+		{
+			IsFromAi:  false,
+			Text:      "I don't understand the question",
+			Timestamp: 1631535530,
+			UserID:    "user1",
+		},
+		{
+			IsFromAi:  true,
+			Text:      "Let me see the question",
+			Timestamp: 1631535540,
+		},
+		{
+			IsFromAi:  false,
+			Text:      "Here it is",
+			Timestamp: 1631535550,
+			UserID:    "user1",
+		},
+		{
+			IsFromAi:  true,
+			Text:      "I see. The question is asking for the derivative of the function. Let me calculate that for you",
+			Timestamp: 1631535560,
+		},
+	}
+
+	return operations.NewGetChatMessagesOK().WithPayload(messages)
 }
