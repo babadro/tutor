@@ -5,7 +5,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
-import 'types/chat_message.dart';
 import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
@@ -24,7 +23,7 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
-  List<ChatMessage> _messages = [];
+  List<types.Message> _messages = [];
   final _user = const types.User(
     id: '82091008-a484-4a89-ae75-a22bf8d6f3ac',
   );
@@ -35,13 +34,12 @@ class _ChatPageState extends State<ChatPage> {
     _loadMessages();
   }
 
-  void _addMessage(ChatMessage message) {
+  void _addMessage(types.Message message) {
     setState(() {
       _messages.insert(0, message);
     });
   }
 
-/*
   void _handleAttachmentPressed() {
     showModalBottomSheet<void>(
       context: context,
@@ -84,7 +82,6 @@ class _ChatPageState extends State<ChatPage> {
       ),
     );
   }
-
 
   void _handleFileSelection() async {
     final result = await FilePicker.platform.pickFiles(
@@ -131,8 +128,6 @@ class _ChatPageState extends State<ChatPage> {
       _addMessage(message);
     }
   }
-
-   */
 
   void _handleMessageTap(BuildContext _, types.Message message) async {
     if (message is types.FileMessage) {
@@ -205,34 +200,14 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   void _loadMessages() async {
-    const chatId = 'your_chat_id_here'; // Use the appropriate chatId for your use case
-    const apiUrl = 'https://yourbackend.com/chat_messages/$chatId';
-    // Assuming `limit` and `before_timestamp` are optional, you can include them in the query if needed
-    final uri = Uri.parse(apiUrl).replace(queryParameters: {
-      'limit': '10', // Example of adding limit, remove or modify as needed
-      // 'before_timestamp': 'your_timestamp_here', // Uncomment and modify if you need to use it
+    final response = await rootBundle.loadString('assets/messages.json');
+    final messages = (jsonDecode(response) as List)
+        .map((e) => types.Message.fromJson(e as Map<String, dynamic>))
+        .toList();
+
+    setState(() {
+      _messages = messages;
     });
-
-    try {
-      final response = await http.get(uri);
-      if (response.statusCode == 200) {
-        // Parse the JSON data
-        final messages = (jsonDecode(response.body) as List)
-            .map((e) => ChatMessage.fromJson(e as Map<String, dynamic>))
-            .toList();
-
-        // Update the state with the fetched messages
-        setState(() {
-          _messages = messages;
-        });
-      } else {
-        // Handle server errors or invalid responses
-        print('Server error: ${response.body}');
-      }
-    } catch (e) {
-      // Handle any errors that occur during the fetch
-      print('Error fetching messages: $e');
-    }
   }
 
   @override
