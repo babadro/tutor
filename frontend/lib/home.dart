@@ -1,4 +1,4 @@
-import 'package:complete/chat_page.dart';
+import 'screens/chatDetailPage.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -21,7 +21,7 @@ class _HomeScreenState extends State<HomeScreen> {
         page = Placeholder();
         break;
       case 1:
-        page = ChatPage();
+        page = ChatDetailPage();
         break;
       default:
         throw UnimplementedError('no widget for $selectedIndex');
