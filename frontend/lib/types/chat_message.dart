@@ -4,8 +4,8 @@ part 'chat_message.g.dart';
 
 @JsonSerializable()
 class ChatMessage {
-  @JsonKey(name: 'isFromAi')
-  final bool IsFromAi;
+  @JsonKey(name: 'isFromCurrentUser')
+  final bool IsFromCurrentUser;
 
   @JsonKey(name: 'text')
   final String Text;
@@ -17,7 +17,7 @@ class ChatMessage {
   final String UserId;
 
   ChatMessage({
-    required this.IsFromAi,
+    required this.IsFromCurrentUser,
     required this.Text,
     required this.Timestamp,
     required this.UserId,
