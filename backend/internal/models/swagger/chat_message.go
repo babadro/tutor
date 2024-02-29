@@ -18,7 +18,7 @@ import (
 type ChatMessage struct {
 
 	// is from current user
-	IsFromCurrentUser bool `json:"isFromCurrentUser,omitempty"`
+	IsFromCurrentUser bool `json:"curUsr,omitempty"`
 
 	// text
 	Text string `json:"text,omitempty"`

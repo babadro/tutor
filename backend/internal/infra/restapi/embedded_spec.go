@@ -247,8 +247,9 @@ func init() {
     "ChatMessage": {
       "type": "object",
       "properties": {
-        "isFromCurrentUser": {
-          "type": "boolean"
+        "curUsr": {
+          "type": "boolean",
+          "x-go-name": "IsFromCurrentUser"
         },
         "text": {
           "type": "string"
@@ -519,8 +520,9 @@ func init() {
     "ChatMessage": {
       "type": "object",
       "properties": {
-        "isFromCurrentUser": {
-          "type": "boolean"
+        "curUsr": {
+          "type": "boolean",
+          "x-go-name": "IsFromCurrentUser"
         },
         "text": {
           "type": "string"

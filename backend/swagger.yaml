@@ -179,5 +179,6 @@ definitions:
       timestamp:
         type: integer
         format: int64
-      isFromCurrentUser:
+      curUsr:
         type: boolean
+        x-go-name: IsFromCurrentUser
