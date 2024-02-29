@@ -1,13 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/chatMessageModel.dart';
-
-List<ChatMessage> messages = [
-  ChatMessage(messageContent: "Hello, Will", messageType: "receiver"),
-  ChatMessage(messageContent: "How have you been?", messageType: "receiver"),
-  ChatMessage(messageContent: "Hey Kriss, I am doing fine dude. wbu?", messageType: "sender"),
-  ChatMessage(messageContent: "ehhhh, doing OK.", messageType: "receiver"),
-  ChatMessage(messageContent: "Is there any thing wrong?", messageType: "sender"),
-];
+import '../models/chat_message.dart';
 
 class ChatDetailPage extends StatefulWidget{
   @override
@@ -16,6 +8,13 @@ class ChatDetailPage extends StatefulWidget{
 
 
 class _ChatDetailPageState extends State<ChatDetailPage> {
+  List<ChatMessage> _messages = [
+    ChatMessage(text: "Hello, Will", ),
+    ChatMessage(text: "How have you been?", ),
+    ChatMessage(text: "Hey Kriss, I am doing fine dude. wbu?", ),
+    ChatMessage(text: "I am also doing fine, thank you.", ),
+    ChatMessage(text: "Can you do a favor for me?", ),
+  ];
 
   @override
   Widget build(BuildContext context) {
