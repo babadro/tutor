@@ -179,5 +179,5 @@ definitions:
       timestamp:
         type: integer
         format: int64
-      isFromAi:
+      isFromCurrentUser:
         type: boolean

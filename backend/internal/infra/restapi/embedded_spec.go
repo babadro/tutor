@@ -247,7 +247,7 @@ func init() {
     "ChatMessage": {
       "type": "object",
       "properties": {
-        "isFromAi": {
+        "isFromCurrentUser": {
           "type": "boolean"
         },
         "text": {
@@ -519,7 +519,7 @@ func init() {
     "ChatMessage": {
       "type": "object",
       "properties": {
-        "isFromAi": {
+        "isFromCurrentUser": {
           "type": "boolean"
         },
         "text": {

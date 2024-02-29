@@ -17,8 +17,8 @@ import (
 // swagger:model ChatMessage
 type ChatMessage struct {
 
-	// is from ai
-	IsFromAi bool `json:"isFromAi,omitempty"`
+	// is from current user
+	IsFromCurrentUser bool `json:"isFromCurrentUser,omitempty"`
 
 	// text
 	Text string `json:"text,omitempty"`
