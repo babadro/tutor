@@ -1,42 +1,42 @@
 [
   {
-    "isFromCurrentUser": false,
+    "curUsr": false,
     "text": "Hello, I'm a tutor bot. How can I help you?",
     "timestamp": 1631535500,
     "userId": "bot1"
   },
   {
-    "isFromCurrentUser": true,
+    "curUsr": true,
     "text": "I need help with my homework",
     "timestamp": 1631535510,
     "userId": "user1"
   },
   {
-    "isFromCurrentUser": false,
+    "curUsr": false,
     "text": "Sure, I can help you with that. What's the problem?",
     "timestamp": 1631535520,
     "userId": "bot1"
   },
   {
-    "isFromCurrentUser": true,
+    "curUsr": true,
     "text": "I don't understand the question",
     "timestamp": 1631535530,
     "userId": "user1"
   },
   {
-    "isFromCurrentUser": false,
+    "curUsr": false,
     "text": "Let me see the question",
     "timestamp": 1631535540,
     "userId": "bot1"
   },
   {
-    "isFromCurrentUser": true,
+    "curUsr": true,
     "text": "Here it is",
     "timestamp": 1631535550,
     "userId": "user1"
   },
   {
-    "isFromCurrentUser": false,
+    "curUsr": false,
     "text": "I see. The question is asking for the derivative of the function. Let me calculate that for you",
     "timestamp": 1631535560,
     "userId": "bot1"

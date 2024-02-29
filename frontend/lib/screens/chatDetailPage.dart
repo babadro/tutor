@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../models/chat_message.dart';
+import 'dart:convert';
 
 class ChatDetailPage extends StatefulWidget{
   @override
@@ -8,13 +10,24 @@ class ChatDetailPage extends StatefulWidget{
 
 
 class _ChatDetailPageState extends State<ChatDetailPage> {
-  List<ChatMessage> _messages = [
-    ChatMessage(text: "Hello, Will", ),
-    ChatMessage(text: "How have you been?", ),
-    ChatMessage(text: "Hey Kriss, I am doing fine dude. wbu?", ),
-    ChatMessage(text: "I am also doing fine, thank you.", ),
-    ChatMessage(text: "Can you do a favor for me?", ),
-  ];
+  List<ChatMessage> _messages = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMessages();
+  }
+
+  void _loadMessages() async {
+    final response  = await rootBundle.loadString('assets/messages.json');
+    final messages = (jsonDecode(response) as List)
+        .map((e) => ChatMessage.fromJson(e as Map<String, dynamic>))
+        .toList();
+
+    setState(() {
+      _messages = messages;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +35,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       body: Stack(
         children: <Widget>[
           ListView.builder(
-            itemCount: messages.length,
+            itemCount: _messages.length,
             shrinkWrap: true,
             padding: EdgeInsets.only(top: 10,bottom: 10),
             physics: NeverScrollableScrollPhysics(),
@@ -30,14 +43,14 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
               return Container(
                 padding: EdgeInsets.only(left: 14,right: 14,top: 10,bottom: 10),
                 child: Align(
-                  alignment: (messages[index].messageType == "receiver"?Alignment.topLeft:Alignment.topRight),
+                  alignment: (_messages[index].IsFromCurrentUser?Alignment.topRight:Alignment.topLeft),
                   child: Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
-                      color: (messages[index].messageType  == "receiver"?Colors.grey.shade200:Colors.blue[200]),
+                      color: (_messages[index].IsFromCurrentUser?Colors.blue[200]:Colors.grey.shade200),
                     ),
                     padding: EdgeInsets.all(16),
-                    child: Text(messages[index].messageContent, style: TextStyle(fontSize: 15),),
+                    child: Text(_messages[index].Text, style: TextStyle(fontSize: 15),),
                   ),
                 ),
               );
