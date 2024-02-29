@@ -4,7 +4,7 @@ part 'chat_message.g.dart';
 
 @JsonSerializable()
 class ChatMessage {
-  @JsonKey(name: 'isFromCurrentUser', defaultValue: false)
+  @JsonKey(name: 'curUsr', defaultValue: false)
   final bool IsFromCurrentUser;
 
   @JsonKey(name: 'text')

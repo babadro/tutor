@@ -7,7 +7,7 @@ part of 'chat_message.dart';
 // **************************************************************************
 
 ChatMessage _$ChatMessageFromJson(Map<String, dynamic> json) => ChatMessage(
-      IsFromCurrentUser: json['isFromCurrentUser'] as bool? ?? false,
+      IsFromCurrentUser: json['curUsr'] as bool? ?? false,
       Text: json['text'] as String,
       Timestamp: json['timestamp'] as int,
       UserId: json['userId'] as String? ?? '',
@@ -15,7 +15,7 @@ ChatMessage _$ChatMessageFromJson(Map<String, dynamic> json) => ChatMessage(
 
 Map<String, dynamic> _$ChatMessageToJson(ChatMessage instance) =>
     <String, dynamic>{
-      'isFromCurrentUser': instance.IsFromCurrentUser,
+      'curUsr': instance.IsFromCurrentUser,
       'text': instance.Text,
       'timestamp': instance.Timestamp,
       'userId': instance.UserId,
