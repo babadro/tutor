@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: build run run-test-env run-test-env-with-bot test test-sleep down start-colima gen_mocks swag proto build-debug-binary
+.PHONY: build run run-test-env test test-sleep down start-colima gen_mocks swag proto build-debug-binary
 
 # check OS type
 UNAME_M := $(shell uname -m)
@@ -24,11 +24,8 @@ build-debug-binary:
 run:
 	docker-compose down -v && docker-compose build service && docker-compose up
 
-# example: make run-test-env start-bot=true
+# example: make run-test-env
 run-test-env:
-	docker-compose down -v && docker-compose build service && docker-compose up
-
-run-test-env-with-bot:
 	docker-compose down -v && docker-compose build service && docker-compose up
 
 # example: make test filter=TestPolls
