@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import '../models/chat_message.dart';
 import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:tutor/services/auth_service.dart';
 
 class ChatDetailPage extends StatefulWidget{
   @override
@@ -12,6 +15,8 @@ class ChatDetailPage extends StatefulWidget{
 class _ChatDetailPageState extends State<ChatDetailPage> {
   List<ChatMessage> _messages = [];
 
+  final AuthService _authService = AuthService();
+
   @override
   void initState() {
     super.initState();
@@ -19,14 +24,40 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   }
 
   void _loadMessages() async {
-    final response  = await rootBundle.loadString('assets/messages.json');
-    final messages = (jsonDecode(response) as List)
-        .map((e) => ChatMessage.fromJson(e as Map<String, dynamic>))
-        .toList();
-
-    setState(() {
-      _messages = messages;
+    const chatId = 'your_chat_id_here'; // Use the appropriate chatId for your use case
+    const apiUrl = 'http://localhost:8080/chat_messages/1234';
+    final uri = Uri.parse(apiUrl).replace(queryParameters: {
+     'limit': '10', // Example, adjust as needed
+      // 'before_timestamp': 'your_timestamp_here', // Uncomment and adjust if needed
     });
+
+    final authService = Provider.of<AuthService>(context, listen: false);
+
+    String? authToken = await authService.getCurrentUserIdToken();
+
+    try {
+      print('Fetching messages from $uri');
+      final response = await http.get(
+          uri,
+          headers: {
+            'Authorization': 'Bearer $authToken', // Include the authorization header
+            'Content-Type': 'application/json',
+          },
+      ).timeout(Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        final messages = (jsonDecode(response.body) as List)
+            .map((e) => ChatMessage.fromJson(e as Map<String, dynamic>))
+            .toList();
+
+        setState(() {
+          _messages = messages;
+        });
+      } else {
+        print('Server error: ${response.body}');
+      }
+    } catch (e) {
+      print('Error fetching messages: $e');
+    }
   }
 
   @override
