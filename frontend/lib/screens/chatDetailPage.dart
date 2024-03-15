@@ -15,7 +15,7 @@ class ChatDetailPage extends StatefulWidget{
 class _ChatDetailPageState extends State<ChatDetailPage> {
   List<ChatMessage> _messages = [];
 
-  final AuthService _authService = AuthService();
+  TextEditingController _messageController = TextEditingController();
 
   @override
   void initState() {
@@ -58,6 +58,22 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     } catch (e) {
       print('Error fetching messages: $e');
     }
+  }
+
+  void _addMessage(ChatMessage message) {
+    setState(() {
+      _messages.add(message);
+    });
+  }
+
+  void _handleSendPressed(String text) {
+    final message = ChatMessage(
+      IsFromCurrentUser: true,
+      Text: text,
+      Timestamp: DateTime.now().millisecondsSinceEpoch,
+      UserId: 'your_user_id_here', // Use the appropriate userId for your use case
+    );
+    _addMessage(message);
   }
 
   @override
@@ -117,11 +133,17 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                           hintStyle: TextStyle(color: Colors.black54),
                           border: InputBorder.none
                       ),
+                      controller: _messageController,
                     ),
                   ),
                   SizedBox(width: 15,),
                   FloatingActionButton(
-                    onPressed: (){},
+                    onPressed: (){
+                      if (_messageController.text.trim().isNotEmpty) {
+                        _handleSendPressed(_messageController.text.trim());
+                        _messageController.clear();
+                      }
+                    },
                     child: Icon(Icons.send,color: Colors.white,size: 18,),
                     backgroundColor: Colors.blue,
                     elevation: 0,
