@@ -45,7 +45,7 @@ func init() {
             "schema": {
               "type": "object",
               "properties": {
-                "message": {
+                "text": {
                   "description": "The message text sent by the user.",
                   "type": "string"
                 },
@@ -318,7 +318,7 @@ func init() {
             "schema": {
               "type": "object",
               "properties": {
-                "message": {
+                "text": {
                   "description": "The message text sent by the user.",
                   "type": "string"
                 },
