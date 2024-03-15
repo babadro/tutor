@@ -60,6 +60,38 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     }
   }
 
+  // send post request to server for adding message
+  Future<ChatMessage> _sendMessage(ChatMessage message) async {
+    const apiUrl = 'http://localhost:8080/chat_messages/1234';
+    final uri = Uri.parse(apiUrl);
+
+    final authService = Provider.of<AuthService>(context, listen: false);
+
+    String? authToken = await authService.getCurrentUserIdToken();
+
+    try {
+      print('Sending message to $uri');
+      final response = await http.post(
+        uri,
+        headers: {
+          'Authorization': 'Bearer $authToken', // Include the authorization header
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(message.toJson()),
+      ).timeout(Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        final message = ChatMessage.fromJson(jsonDecode(response.body));
+        return message;
+      } else {
+        print('Server error: ${response.body}');
+        throw Exception('Failed to send message');
+      }
+    } catch (e) {
+      print('Error sending message: $e');
+      throw Exception('Failed to send message');
+    }
+  }
+
   void _addMessage(ChatMessage message) {
     setState(() {
       _messages.add(message);
@@ -74,6 +106,13 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       UserId: 'your_user_id_here', // Use the appropriate userId for your use case
     );
     _addMessage(message);
+
+    // Send the message to the server
+    _sendMessage(message).then((sentMessage) {
+      print('Message sent: $sentMessage');
+    }).catchError((e) {
+      print('Error sending message: $e');
+    });
   }
 
   @override
