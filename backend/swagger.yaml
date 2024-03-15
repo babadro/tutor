@@ -31,7 +31,7 @@ paths:
               userId:
                 type: string
                 description: Unique identifier for the user.
-              message:
+              text:
                 type: string
                 description: The message text sent by the user.
       responses:

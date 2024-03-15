@@ -83,7 +83,7 @@ func (o *SendChatMessage) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 type SendChatMessageBody struct {
 
 	// The message text sent by the user.
-	Message string `json:"message,omitempty"`
+	Text string `json:"text,omitempty"`
 
 	// Unique identifier for the user.
 	UserID string `json:"userId,omitempty"`

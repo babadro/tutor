@@ -24,12 +24,12 @@ func NewTutor(svc service) *Tutor {
 }
 
 func (t *Tutor) SendChatMessage(params operations.SendChatMessageParams, principal *models.Principal) middleware.Responder {
-	if params.Body.Message == "" {
+	if params.Body.Text == "" {
 		hlog.FromRequest(params.HTTPRequest).Error().Msg("Empty message")
 		return operations.NewSendChatMessageBadRequest()
 	}
 
-	reply, err := t.svc.SendMessage(params.HTTPRequest.Context(), params.Body.Message)
+	reply, err := t.svc.SendMessage(params.HTTPRequest.Context(), params.Body.Text)
 	if err != nil {
 		hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to send message")
 	}
