@@ -48,6 +48,20 @@ type llm interface {
 }
 
 func (s *Service) SendMessage(ctx context.Context, message string, userID string, timestamp int64, chatID string) (string, error) {
+	if chatID == "" {
+		newChat, _, err := s.firestoreClient.
+			Collection("chats").
+			Add(ctx, map[string]interface{}{
+				"user_id": userID,
+			})
+
+		if err != nil {
+			return "", fmt.Errorf("unable to create chat: %s", err.Error())
+		}
+
+		chatID = newChat.ID
+	}
+
 	_, _, err := s.firestoreClient.Collection("messages").
 		Add(ctx, map[string]interface{}{
 			"text":    message,
@@ -57,10 +71,24 @@ func (s *Service) SendMessage(ctx context.Context, message string, userID string
 		})
 
 	if err != nil {
-		return "", fmt.Errorf("unable to add message to firestore: %s", err.Error())
+		return "", fmt.Errorf("unable to add user's message to firestore: %s", err.Error())
 	}
 
-	return "I'm AI tutor, I'm here to help you with your studies", nil
+	aiResponse := "I'm AI tutor, I'm here to help you with your studies"
+
+	_, _, err = s.firestoreClient.Collection("messages").
+		Add(ctx, map[string]interface{}{
+			"text":    aiResponse,
+			"chat_id": chatID,
+			"time":    time.Now().UnixMilli(),
+		})
+
+	if err != nil {
+		return "", fmt.Errorf("unable to add AI response message to firestore: %s", err.Error())
+	}
+
+	return aiResponse, nil
+
 	//	return s.llm.Call(ctx, message)
 }
 

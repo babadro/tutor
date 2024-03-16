@@ -30,8 +30,6 @@ func (t *Tutor) SendChatMessage(params operations.SendChatMessageParams, princip
 		return operations.NewSendChatMessageBadRequest()
 	}
 
-	hlog.FromRequest(params.HTTPRequest).Info().Msgf("Message: %s", params.Body.Text)
-
 	reply, err := t.svc.SendMessage(
 		params.HTTPRequest.Context(), *params.Body.Text, principal.UserID, *params.Body.Timestamp, params.Body.ChatID,
 	)
