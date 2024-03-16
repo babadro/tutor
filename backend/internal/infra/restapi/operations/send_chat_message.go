@@ -85,8 +85,7 @@ func (o *SendChatMessage) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 type SendChatMessageBody struct {
 
 	// The chat ID.
-	// Required: true
-	ChatID *string `json:"chatId"`
+	ChatID string `json:"chatId,omitempty"`
 
 	// The message text sent by the user.
 	// Required: true
@@ -101,10 +100,6 @@ type SendChatMessageBody struct {
 func (o *SendChatMessageBody) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := o.validateChatID(formats); err != nil {
-		res = append(res, err)
-	}
-
 	if err := o.validateText(formats); err != nil {
 		res = append(res, err)
 	}
@@ -116,15 +111,6 @@ func (o *SendChatMessageBody) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (o *SendChatMessageBody) validateChatID(formats strfmt.Registry) error {
-
-	if err := validate.Required("body"+"."+"chatId", "body", o.ChatID); err != nil {
-		return err
-	}
-
 	return nil
 }
 

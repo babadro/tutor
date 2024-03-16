@@ -45,7 +45,6 @@ func init() {
             "schema": {
               "type": "object",
               "required": [
-                "chatId",
                 "text",
                 "timestamp"
               ],
@@ -332,7 +331,6 @@ func init() {
             "schema": {
               "type": "object",
               "required": [
-                "chatId",
                 "text",
                 "timestamp"
               ],

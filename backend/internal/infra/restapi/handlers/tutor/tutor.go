@@ -33,7 +33,7 @@ func (t *Tutor) SendChatMessage(params operations.SendChatMessageParams, princip
 	hlog.FromRequest(params.HTTPRequest).Info().Msgf("Message: %s", params.Body.Text)
 
 	reply, err := t.svc.SendMessage(
-		params.HTTPRequest.Context(), *params.Body.Text, principal.UserID, *params.Body.Timestamp, *params.Body.ChatID,
+		params.HTTPRequest.Context(), *params.Body.Text, principal.UserID, *params.Body.Timestamp, params.Body.ChatID,
 	)
 	if err != nil {
 		hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to send message")

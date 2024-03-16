@@ -28,7 +28,6 @@ paths:
           schema:
             type: object
             required:
-              - chatId
               - text
               - timestamp
             properties:
