@@ -124,6 +124,9 @@ type SendChatMessageOKBody struct {
 
 	// AI's response to the user's message.
 	Reply string `json:"reply,omitempty"`
+
+	// timestamp
+	Timestamp int64 `json:"timestamp,omitempty"`
 }
 
 // Validate validates this send chat message o k body

@@ -66,6 +66,10 @@ func init() {
                 "reply": {
                   "description": "AI's response to the user's message.",
                   "type": "string"
+                },
+                "timestamp": {
+                  "type": "integer",
+                  "format": "int64"
                 }
               }
             }
@@ -339,6 +343,10 @@ func init() {
                 "reply": {
                   "description": "AI's response to the user's message.",
                   "type": "string"
+                },
+                "timestamp": {
+                  "type": "integer",
+                  "format": "int64"
                 }
               }
             }

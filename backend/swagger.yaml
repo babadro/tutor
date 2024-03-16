@@ -43,6 +43,9 @@ paths:
               reply:
                 type: string
                 description: AI's response to the user's message.
+              timestamp:
+                type: integer
+                format: int64
         400:
           description: "Bad request"
           schema:
