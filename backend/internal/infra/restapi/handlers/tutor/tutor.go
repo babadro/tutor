@@ -2,6 +2,7 @@ package tutor
 
 import (
 	"context"
+	"time"
 
 	"github.com/babadro/tutor/internal/infra/restapi/operations"
 	"github.com/babadro/tutor/internal/models"
@@ -29,13 +30,18 @@ func (t *Tutor) SendChatMessage(params operations.SendChatMessageParams, princip
 		return operations.NewSendChatMessageBadRequest()
 	}
 
-	reply, err := t.svc.SendMessage(params.HTTPRequest.Context(), params.Body.Text)
-	if err != nil {
-		hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to send message")
-	}
+	hlog.FromRequest(params.HTTPRequest).Info().Msgf("Message: %s", params.Body.Text)
+
+	//reply, err := t.svc.SendMessage(params.HTTPRequest.Context(), params.Body.Text)
+	//if err != nil {
+	//	hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to send message")
+	//}
+
+	reply := "I'm a tutor bot. I'm able to help you with your homework. Please, send me a voice message with your question."
 
 	return operations.NewSendChatMessageOK().WithPayload(&operations.SendChatMessageOKBody{
-		Reply: reply,
+		Reply:     reply,
+		Timestamp: time.Now().UnixMilli(),
 	})
 }
 
