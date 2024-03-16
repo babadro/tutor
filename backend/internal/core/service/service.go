@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"time"
 
+	"cloud.google.com/go/firestore"
 	"firebase.google.com/go/storage"
 	"github.com/Azure/azure-sdk-for-go/sdk/ai/azopenai"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
@@ -17,10 +18,11 @@ import (
 )
 
 type Service struct {
-	llm           llm
-	azureOpenai   *azopenai.Client
-	baranovOpenai *openai.Client
-	storageClient *storage.Client
+	llm             llm
+	azureOpenai     *azopenai.Client
+	baranovOpenai   *openai.Client
+	storageClient   *storage.Client
+	firestoreClient *firestore.Client
 }
 
 func NewService(
@@ -28,12 +30,14 @@ func NewService(
 	azureOpenai *azopenai.Client,
 	baranovOpenai *openai.Client,
 	storageClient *storage.Client,
+	firestoreClient *firestore.Client,
 ) *Service {
 	return &Service{
-		llm:           llm,
-		azureOpenai:   azureOpenai,
-		baranovOpenai: baranovOpenai,
-		storageClient: storageClient,
+		llm:             llm,
+		azureOpenai:     azureOpenai,
+		baranovOpenai:   baranovOpenai,
+		storageClient:   storageClient,
+		firestoreClient: firestoreClient,
 	}
 }
 
@@ -43,8 +47,21 @@ type llm interface {
 	CreateEmbedding(ctx context.Context, inputTexts []string) ([][]float32, error)
 }
 
-func (s *Service) SendMessage(ctx context.Context, message string) (string, error) {
-	return s.llm.Call(ctx, message)
+func (s *Service) SendMessage(ctx context.Context, message string, userID string, timestamp int64) (string, error) {
+	_, _, err := s.firestoreClient.Collection("messages").
+		Add(ctx, map[string]interface{}{
+			"text":    message,
+			"user_id": userID,
+			"chat_id": "chat_id", // TODO: add chat_id
+			"time":    timestamp,
+		})
+
+	if err != nil {
+		return "", fmt.Errorf("unable to add message to firestore: %s", err.Error())
+	}
+
+	return "I'm AI tutor, I'm here to help you with your studies", nil
+	//	return s.llm.Call(ctx, message)
 }
 
 func (s *Service) SendVoiceMessage(ctx context.Context, voiceMsgFileUrl string, userID string) (models.SendVoiceMessageResult, error) {

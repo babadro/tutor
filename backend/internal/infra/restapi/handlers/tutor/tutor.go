@@ -12,7 +12,7 @@ import (
 )
 
 type service interface {
-	SendMessage(ctx context.Context, message string) (string, error)
+	SendMessage(ctx context.Context, message string, userID string, timestamp int64) (string, error)
 	SendVoiceMessage(ctx context.Context, voiceMsgFileUrl string, userID string) (models.SendVoiceMessageResult, error)
 }
 
@@ -32,12 +32,10 @@ func (t *Tutor) SendChatMessage(params operations.SendChatMessageParams, princip
 
 	hlog.FromRequest(params.HTTPRequest).Info().Msgf("Message: %s", params.Body.Text)
 
-	//reply, err := t.svc.SendMessage(params.HTTPRequest.Context(), params.Body.Text)
-	//if err != nil {
-	//	hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to send message")
-	//}
-
-	reply := "I'm a tutor bot. I'm able to help you with your homework. Please, send me a voice message with your question."
+	reply, err := t.svc.SendMessage(params.HTTPRequest.Context(), params.Body.Text, principal.UserID, 0)
+	if err != nil {
+		hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to send message")
+	}
 
 	return operations.NewSendChatMessageOK().WithPayload(&operations.SendChatMessageOKBody{
 		Reply:     reply,

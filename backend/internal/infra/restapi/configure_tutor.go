@@ -79,7 +79,7 @@ func configureAPI(api *operations.TutorAPI) http.Handler {
 	}
 
 	// Get a Firebase Auth client from the Firebase App
-	firebaseClient, err := firebaseApp.Auth(context.Background())
+	firebaseAuthClient, err := firebaseApp.Auth(context.Background())
 	if err != nil {
 		l.Fatal().Err(err).Msg("Unable to init firebase client")
 	}
@@ -88,7 +88,7 @@ func configureAPI(api *operations.TutorAPI) http.Handler {
 		token = strings.TrimPrefix(token, "Bearer ")
 
 		// Verify the ID Token
-		decodedToken, err := firebaseClient.VerifyIDToken(context.Background(), token)
+		decodedToken, err := firebaseAuthClient.VerifyIDToken(context.Background(), token)
 		if err != nil {
 			l.Error().Msgf("error verifying ID token: %v", err)
 			return nil, fmt.Errorf("error verifying ID token: %v", err)
@@ -131,7 +131,12 @@ func configureAPI(api *operations.TutorAPI) http.Handler {
 		l.Fatal().Err(err).Msg("Unable to init storage client")
 	}
 
-	tutorService := service.NewService(llm, openaiClient, baranovClient, storageClient)
+	firestoreClient, err := firebaseApp.Firestore(ctx)
+	if err != nil {
+		l.Fatal().Err(err).Msg("Unable to init firestore client")
+	}
+
+	tutorService := service.NewService(llm, openaiClient, baranovClient, storageClient, firestoreClient)
 	tutorAPI := tutor.NewTutor(tutorService)
 
 	api.SendChatMessageHandler = operations.SendChatMessageHandlerFunc(tutorAPI.SendChatMessage)
@@ -140,7 +145,12 @@ func configureAPI(api *operations.TutorAPI) http.Handler {
 
 	api.PreServerShutdown = func() {}
 
-	api.ServerShutdown = func() {}
+	api.ServerShutdown = func() {
+		err = firestoreClient.Close()
+		if err != nil {
+			l.Error().Err(err).Msg("Unable to close firestore client")
+		}
+	}
 
 	return setupGlobalMiddleware(l, api.Serve(setupMiddlewares()))
 }
