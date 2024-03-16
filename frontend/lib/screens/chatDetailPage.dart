@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:tutor/models/text_message_response.dart';
 import '../models/chat_message.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -62,7 +63,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
   // send post request to server for adding message
   Future<ChatMessage> _sendMessage(ChatMessage message) async {
-    const apiUrl = 'http://localhost:8080/chat_messages/1234';
+    const apiUrl = 'http://localhost:8080/chat_messages';
     final uri = Uri.parse(apiUrl);
 
     final authService = Provider.of<AuthService>(context, listen: false);
@@ -80,8 +81,14 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         body: jsonEncode(message.toJson()),
       ).timeout(Duration(seconds: 10));
       if (response.statusCode == 200) {
-        final message = ChatMessage.fromJson(jsonDecode(response.body));
-        return message;
+        final responseMessage = TextMessageResponse.fromJson(jsonDecode(response.body));
+
+        return ChatMessage(
+            IsFromCurrentUser: false,
+            Text: responseMessage.Reply,
+            Timestamp: responseMessage.Timestamp,
+            UserId: "",
+        );
       } else {
         print('Server error: ${response.body}');
         throw Exception('Failed to send message');
@@ -108,8 +115,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     _addMessage(message);
 
     // Send the message to the server
-    _sendMessage(message).then((sentMessage) {
-      print('Message sent: $sentMessage');
+    _sendMessage(message).then((responseMessage) {
+      _addMessage(responseMessage);
     }).catchError((e) {
       print('Error sending message: $e');
     });
