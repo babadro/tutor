@@ -45,13 +45,18 @@ func init() {
             "schema": {
               "type": "object",
               "properties": {
+                "chatId": {
+                  "description": "The chat ID.",
+                  "type": "string"
+                },
                 "text": {
                   "description": "The message text sent by the user.",
                   "type": "string"
                 },
-                "userId": {
-                  "description": "Unique identifier for the user.",
-                  "type": "string"
+                "timestamp": {
+                  "description": "The timestamp of the message.",
+                  "type": "integer",
+                  "format": "int64"
                 }
               }
             }
@@ -322,13 +327,18 @@ func init() {
             "schema": {
               "type": "object",
               "properties": {
+                "chatId": {
+                  "description": "The chat ID.",
+                  "type": "string"
+                },
                 "text": {
                   "description": "The message text sent by the user.",
                   "type": "string"
                 },
-                "userId": {
-                  "description": "Unique identifier for the user.",
-                  "type": "string"
+                "timestamp": {
+                  "description": "The timestamp of the message.",
+                  "type": "integer",
+                  "format": "int64"
                 }
               }
             }

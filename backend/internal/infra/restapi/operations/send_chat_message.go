@@ -82,11 +82,14 @@ func (o *SendChatMessage) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 // swagger:model SendChatMessageBody
 type SendChatMessageBody struct {
 
+	// The chat ID.
+	ChatID string `json:"chatId,omitempty"`
+
 	// The message text sent by the user.
 	Text string `json:"text,omitempty"`
 
-	// Unique identifier for the user.
-	UserID string `json:"userId,omitempty"`
+	// The timestamp of the message.
+	Timestamp int64 `json:"timestamp,omitempty"`
 }
 
 // Validate validates this send chat message body
