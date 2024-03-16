@@ -47,12 +47,12 @@ type llm interface {
 	CreateEmbedding(ctx context.Context, inputTexts []string) ([][]float32, error)
 }
 
-func (s *Service) SendMessage(ctx context.Context, message string, userID string, timestamp int64) (string, error) {
+func (s *Service) SendMessage(ctx context.Context, message string, userID string, timestamp int64, chatID string) (string, error) {
 	_, _, err := s.firestoreClient.Collection("messages").
 		Add(ctx, map[string]interface{}{
 			"text":    message,
 			"user_id": userID,
-			"chat_id": "chat_id", // TODO: add chat_id
+			"chat_id": chatID,
 			"time":    timestamp,
 		})
 

@@ -27,6 +27,10 @@ paths:
           required: true
           schema:
             type: object
+            required:
+              - chatId
+              - text
+              - timestamp
             properties:
               timestamp:
                 type: integer

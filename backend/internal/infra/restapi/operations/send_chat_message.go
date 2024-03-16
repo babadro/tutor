@@ -9,9 +9,11 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 
 	"github.com/babadro/tutor/internal/models"
 )
@@ -83,17 +85,64 @@ func (o *SendChatMessage) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 type SendChatMessageBody struct {
 
 	// The chat ID.
-	ChatID string `json:"chatId,omitempty"`
+	// Required: true
+	ChatID *string `json:"chatId"`
 
 	// The message text sent by the user.
-	Text string `json:"text,omitempty"`
+	// Required: true
+	Text *string `json:"text"`
 
 	// The timestamp of the message.
-	Timestamp int64 `json:"timestamp,omitempty"`
+	// Required: true
+	Timestamp *int64 `json:"timestamp"`
 }
 
 // Validate validates this send chat message body
 func (o *SendChatMessageBody) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := o.validateChatID(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := o.validateText(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := o.validateTimestamp(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (o *SendChatMessageBody) validateChatID(formats strfmt.Registry) error {
+
+	if err := validate.Required("body"+"."+"chatId", "body", o.ChatID); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (o *SendChatMessageBody) validateText(formats strfmt.Registry) error {
+
+	if err := validate.Required("body"+"."+"text", "body", o.Text); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (o *SendChatMessageBody) validateTimestamp(formats strfmt.Registry) error {
+
+	if err := validate.Required("body"+"."+"timestamp", "body", o.Timestamp); err != nil {
+		return err
+	}
+
 	return nil
 }
 

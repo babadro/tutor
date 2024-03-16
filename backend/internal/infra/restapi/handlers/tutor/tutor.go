@@ -12,7 +12,7 @@ import (
 )
 
 type service interface {
-	SendMessage(ctx context.Context, message string, userID string, timestamp int64) (string, error)
+	SendMessage(ctx context.Context, message string, userID string, timestamp int64, chatID string) (string, error)
 	SendVoiceMessage(ctx context.Context, voiceMsgFileUrl string, userID string) (models.SendVoiceMessageResult, error)
 }
 
@@ -25,14 +25,16 @@ func NewTutor(svc service) *Tutor {
 }
 
 func (t *Tutor) SendChatMessage(params operations.SendChatMessageParams, principal *models.Principal) middleware.Responder {
-	if params.Body.Text == "" {
+	if *params.Body.Text == "" {
 		hlog.FromRequest(params.HTTPRequest).Error().Msg("Empty message")
 		return operations.NewSendChatMessageBadRequest()
 	}
 
 	hlog.FromRequest(params.HTTPRequest).Info().Msgf("Message: %s", params.Body.Text)
 
-	reply, err := t.svc.SendMessage(params.HTTPRequest.Context(), params.Body.Text, principal.UserID, 0)
+	reply, err := t.svc.SendMessage(
+		params.HTTPRequest.Context(), *params.Body.Text, principal.UserID, *params.Body.Timestamp, *params.Body.ChatID,
+	)
 	if err != nil {
 		hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to send message")
 	}
