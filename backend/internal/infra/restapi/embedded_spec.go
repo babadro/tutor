@@ -135,7 +135,8 @@ func init() {
             "type": "integer",
             "format": "int64",
             "default": 0,
-            "name": "before_timestamp",
+            "description": "timestamp starting from which messages are to be fetched",
+            "name": "timestamp",
             "in": "query"
           }
         ],
@@ -421,7 +422,8 @@ func init() {
             "type": "integer",
             "format": "int64",
             "default": 0,
-            "name": "before_timestamp",
+            "description": "timestamp starting from which messages are to be fetched",
+            "name": "timestamp",
             "in": "query"
           }
         ],

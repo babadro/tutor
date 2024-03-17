@@ -22,15 +22,14 @@ func NewGetChatMessagesParams() GetChatMessagesParams {
 	var (
 		// initialize parameters with default values
 
-		beforeTimestampDefault = int64(0)
-
-		limitDefault = int32(10)
+		limitDefault     = int32(10)
+		timestampDefault = int64(0)
 	)
 
 	return GetChatMessagesParams{
-		BeforeTimestamp: &beforeTimestampDefault,
-
 		Limit: &limitDefault,
+
+		Timestamp: &timestampDefault,
 	}
 }
 
@@ -44,11 +43,6 @@ type GetChatMessagesParams struct {
 	HTTPRequest *http.Request `json:"-"`
 
 	/*
-	  In: query
-	  Default: 0
-	*/
-	BeforeTimestamp *int64
-	/*
 	  Required: true
 	  In: path
 	*/
@@ -58,6 +52,11 @@ type GetChatMessagesParams struct {
 	  Default: 10
 	*/
 	Limit *int32
+	/*timestamp starting from which messages are to be fetched
+	  In: query
+	  Default: 0
+	*/
+	Timestamp *int64
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -71,11 +70,6 @@ func (o *GetChatMessagesParams) BindRequest(r *http.Request, route *middleware.M
 
 	qs := runtime.Values(r.URL.Query())
 
-	qBeforeTimestamp, qhkBeforeTimestamp, _ := qs.GetOK("before_timestamp")
-	if err := o.bindBeforeTimestamp(qBeforeTimestamp, qhkBeforeTimestamp, route.Formats); err != nil {
-		res = append(res, err)
-	}
-
 	rChatID, rhkChatID, _ := route.Params.GetOK("chatId")
 	if err := o.bindChatID(rChatID, rhkChatID, route.Formats); err != nil {
 		res = append(res, err)
@@ -86,32 +80,14 @@ func (o *GetChatMessagesParams) BindRequest(r *http.Request, route *middleware.M
 		res = append(res, err)
 	}
 
+	qTimestamp, qhkTimestamp, _ := qs.GetOK("timestamp")
+	if err := o.bindTimestamp(qTimestamp, qhkTimestamp, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-// bindBeforeTimestamp binds and validates parameter BeforeTimestamp from query.
-func (o *GetChatMessagesParams) bindBeforeTimestamp(rawData []string, hasKey bool, formats strfmt.Registry) error {
-	var raw string
-	if len(rawData) > 0 {
-		raw = rawData[len(rawData)-1]
-	}
-
-	// Required: false
-	// AllowEmptyValue: false
-	if raw == "" { // empty values pass all other validations
-		// Default values have been previously initialized by NewGetChatMessagesParams()
-		return nil
-	}
-
-	value, err := swag.ConvertInt64(raw)
-	if err != nil {
-		return errors.InvalidType("before_timestamp", "query", "int64", raw)
-	}
-	o.BeforeTimestamp = &value
-
 	return nil
 }
 
@@ -149,6 +125,29 @@ func (o *GetChatMessagesParams) bindLimit(rawData []string, hasKey bool, formats
 		return errors.InvalidType("limit", "query", "int32", raw)
 	}
 	o.Limit = &value
+
+	return nil
+}
+
+// bindTimestamp binds and validates parameter Timestamp from query.
+func (o *GetChatMessagesParams) bindTimestamp(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: false
+	// AllowEmptyValue: false
+	if raw == "" { // empty values pass all other validations
+		// Default values have been previously initialized by NewGetChatMessagesParams()
+		return nil
+	}
+
+	value, err := swag.ConvertInt64(raw)
+	if err != nil {
+		return errors.InvalidType("timestamp", "query", "int64", raw)
+	}
+	o.Timestamp = &value
 
 	return nil
 }

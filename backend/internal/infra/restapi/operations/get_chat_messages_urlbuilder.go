@@ -18,8 +18,8 @@ import (
 type GetChatMessagesURL struct {
 	ChatID string
 
-	BeforeTimestamp *int64
-	Limit           *int32
+	Limit     *int32
+	Timestamp *int64
 
 	_basePath string
 	// avoid unkeyed usage
@@ -59,20 +59,20 @@ func (o *GetChatMessagesURL) Build() (*url.URL, error) {
 
 	qs := make(url.Values)
 
-	var beforeTimestampQ string
-	if o.BeforeTimestamp != nil {
-		beforeTimestampQ = swag.FormatInt64(*o.BeforeTimestamp)
-	}
-	if beforeTimestampQ != "" {
-		qs.Set("before_timestamp", beforeTimestampQ)
-	}
-
 	var limitQ string
 	if o.Limit != nil {
 		limitQ = swag.FormatInt32(*o.Limit)
 	}
 	if limitQ != "" {
 		qs.Set("limit", limitQ)
+	}
+
+	var timestampQ string
+	if o.Timestamp != nil {
+		timestampQ = swag.FormatInt64(*o.Timestamp)
+	}
+	if timestampQ != "" {
+		qs.Set("timestamp", timestampQ)
 	}
 
 	_result.RawQuery = qs.Encode()

@@ -87,7 +87,8 @@ paths:
           format: int32
           default: 10
         - in: query
-          name: before_timestamp
+          name: timestamp
+          description: timestamp starting from which messages are to be fetched
           required: false
           type: integer
           format: int64
