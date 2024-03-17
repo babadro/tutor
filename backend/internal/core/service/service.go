@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,8 +14,10 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/ai/azopenai"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/babadro/tutor/internal/models"
+	"github.com/babadro/tutor/internal/models/swagger"
 	"github.com/sashabaranov/go-openai"
 	"github.com/tmc/langchaingo/llms"
+	"google.golang.org/api/iterator"
 )
 
 type Service struct {
@@ -192,4 +195,59 @@ func generateFirebaseStorageURL(bucketName, filePath string) string {
 	fullURL := fmt.Sprintf("%s%s/%s%s?alt=media", baseURL, bucketName, storagePath, encodedFilePath)
 
 	return fullURL
+}
+
+type ChatMessage struct {
+	ChatID string `json:"chat_id"`
+	Text   string `json:"text"`
+	Time   int64  `json:"time"`
+	UserID string `json:"user_id"`
+}
+
+func (s *Service) GetChatMessages(ctx context.Context, chatID string, limit int32, timestamp int64) ([]*swagger.ChatMessage, error) {
+	var messages []ChatMessage
+
+	//chatID = "D3VpDLQJdcF13iJpFT2e"
+
+	_, _ = timestamp, limit
+
+	query := s.firestoreClient.Collection("messages").
+		Where("chat_id", "==", chatID).
+		Where("time", ">=", timestamp).
+		OrderBy("time", firestore.Desc).
+		Limit(int(limit))
+
+	iter := query.Documents(ctx)
+	defer iter.Stop()
+
+	for {
+		doc, err := iter.Next()
+
+		if err != nil {
+			if errors.Is(err, iterator.Done) {
+				break
+			}
+
+			return nil, fmt.Errorf("unable to get messages from firestore: %s", err.Error())
+		}
+
+		var message ChatMessage
+		if err = doc.DataTo(&message); err != nil {
+			return nil, fmt.Errorf("unable to get message data: %s", err.Error())
+		}
+
+		messages = append(messages, message)
+	}
+
+	//convert messages to swagger.ChatMessage
+	var swaggerMessages []*swagger.ChatMessage
+	for _, message := range messages {
+		swaggerMessages = append(swaggerMessages, &swagger.ChatMessage{
+			Text:      message.Text,
+			Timestamp: message.Time,
+			UserID:    message.UserID,
+		})
+	}
+
+	return swaggerMessages, nil
 }

@@ -25,11 +25,11 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   }
 
   void _loadMessages() async {
-    const chatId = 'your_chat_id_here'; // Use the appropriate chatId for your use case
-    const apiUrl = 'http://localhost:8080/chat_messages/1234';
+    const chatId = 'D3VpDLQJdcF13iJpFT2e';
+    const apiUrl = 'http://localhost:8080/chat_messages/$chatId';
     final uri = Uri.parse(apiUrl).replace(queryParameters: {
-     'limit': '10', // Example, adjust as needed
-      // 'before_timestamp': 'your_timestamp_here', // Uncomment and adjust if needed
+     'limit': '100', // Example, adjust as needed
+      'timestamp': DateTime.now().subtract(Duration(days: 7)).millisecondsSinceEpoch.toString(),
     });
 
     final authService = Provider.of<AuthService>(context, listen: false);
@@ -54,7 +54,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           _messages = messages;
         });
       } else {
-        print('Server error: ${response.body}');
+       // print('Server error: ${response.body}');
+        print('Failed to fetch messages: ${response.statusCode}');
       }
     } catch (e) {
       print('Error fetching messages: $e');

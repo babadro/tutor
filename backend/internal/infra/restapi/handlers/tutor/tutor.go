@@ -14,6 +14,7 @@ import (
 type service interface {
 	SendMessage(ctx context.Context, message string, userID string, timestamp int64, chatID string) (string, error)
 	SendVoiceMessage(ctx context.Context, voiceMsgFileUrl string, userID string) (models.SendVoiceMessageResult, error)
+	GetChatMessages(ctx context.Context, chatID string, limit int32, timestamp int64) ([]*swagger.ChatMessage, error)
 }
 
 type Tutor struct {
@@ -104,6 +105,17 @@ func (t *Tutor) GetChatMessages(params operations.GetChatMessagesParams, princip
 			Text:              "I see. The question is asking for the derivative of the function. Let me calculate that for you",
 			Timestamp:         1631535560,
 		},
+	}
+
+	messages, err := t.svc.GetChatMessages(params.HTTPRequest.Context(), params.ChatID, *params.Limit, *params.Timestamp)
+	if err != nil {
+		hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to get chat messages")
+		return operations.NewGetChatMessagesBadRequest()
+	}
+
+	// log dereferenced messages
+	for _, message := range messages {
+		hlog.FromRequest(params.HTTPRequest).Info().Msgf("Message: %s", message.Text)
 	}
 
 	return operations.NewGetChatMessagesOK().WithPayload(messages)
