@@ -255,7 +255,6 @@ func (s *Service) GetChatMessages(ctx context.Context, chatID string, limit int3
 func (s *Service) GetChats(ctx context.Context, userID string, limit int32) ([]*swagger.Chat, error) {
 	query := s.firestoreClient.Collection("chats").
 		Where("user_id", "==", userID).
-		OrderBy("chat_id", firestore.Desc).
 		Limit(int(limit))
 
 	iter := query.Documents(ctx)
