@@ -66,47 +66,48 @@ func (t *Tutor) SendVoiceMessage(params operations.SendVoiceMessageParams, princ
 
 func (t *Tutor) GetChatMessages(params operations.GetChatMessagesParams, principal *models.Principal) middleware.Responder {
 	// return mocked messages
-	messages := []*swagger.ChatMessage{
-		{
-			IsFromCurrentUser: false,
-			Text:              "Hello, I'm a tutor bot. How can I help you?",
-			Timestamp:         1631535500,
-		},
-		{
-			IsFromCurrentUser: true,
-			Text:              "I need help with my homework",
-			Timestamp:         1631535510,
-			UserID:            "user1",
-		},
-		{
-			IsFromCurrentUser: false,
-			Text:              "Sure, I can help you with that. What's the problem?",
-			Timestamp:         1631535520,
-		},
-		{
-			IsFromCurrentUser: true,
-			Text:              "I don't understand the question",
-			Timestamp:         1631535530,
-			UserID:            "user1",
-		},
-		{
-			IsFromCurrentUser: false,
-			Text:              "Let me see the question",
-			Timestamp:         1631535540,
-		},
-		{
-			IsFromCurrentUser: true,
-			Text:              "Here it is",
-			Timestamp:         1631535550,
-			UserID:            "user1",
-		},
-		{
-			IsFromCurrentUser: false,
-			Text:              "I see. The question is asking for the derivative of the function. Let me calculate that for you",
-			Timestamp:         1631535560,
-		},
-	}
-
+	/*
+		messages := []*swagger.ChatMessage{
+			{
+				IsFromCurrentUser: false,
+				Text:              "Hello, I'm a tutor bot. How can I help you?",
+				Timestamp:         1631535500,
+			},
+			{
+				IsFromCurrentUser: true,
+				Text:              "I need help with my homework",
+				Timestamp:         1631535510,
+				UserID:            "user1",
+			},
+			{
+				IsFromCurrentUser: false,
+				Text:              "Sure, I can help you with that. What's the problem?",
+				Timestamp:         1631535520,
+			},
+			{
+				IsFromCurrentUser: true,
+				Text:              "I don't understand the question",
+				Timestamp:         1631535530,
+				UserID:            "user1",
+			},
+			{
+				IsFromCurrentUser: false,
+				Text:              "Let me see the question",
+				Timestamp:         1631535540,
+			},
+			{
+				IsFromCurrentUser: true,
+				Text:              "Here it is",
+				Timestamp:         1631535550,
+				UserID:            "user1",
+			},
+			{
+				IsFromCurrentUser: false,
+				Text:              "I see. The question is asking for the derivative of the function. Let me calculate that for you",
+				Timestamp:         1631535560,
+			},
+		}
+	*/
 	messages, err := t.svc.GetChatMessages(params.HTTPRequest.Context(), params.ChatID, *params.Limit, *params.Timestamp)
 	if err != nil {
 		hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to get chat messages")
@@ -118,5 +119,5 @@ func (t *Tutor) GetChatMessages(params operations.GetChatMessagesParams, princip
 		hlog.FromRequest(params.HTTPRequest).Info().Msgf("Message: %s", message.Text)
 	}
 
-	return operations.NewGetChatMessagesOK().WithPayload(messages)
+	return operations.NewGetChatMessagesOK().WithPayload(&operations.GetChatMessagesOKBody{Messages: messages})
 }
