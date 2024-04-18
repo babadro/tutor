@@ -1,3 +1,4 @@
+import '../models/chat.dart';
 import 'chatDetailPage.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
@@ -11,8 +12,34 @@ class _HomeScreenState extends State<HomeScreen> {
 
   var selectedIndex = 0;
 
+  List<Chat> chats = [
+    Chat(Id: '1', Title: 'Chat 1'),
+    Chat(Id: '2', Title: 'Chat 2'),
+    Chat(Id: '3', Title: 'Chat 3'),
+  ];
+
   @override
   Widget build(BuildContext context) {
+    List<NavigationRailDestination> getDestinations() {
+      List<NavigationRailDestination> destinations = [
+        NavigationRailDestination(
+          icon: Icon(Icons.home),
+          label: Text('Home'),
+        ),
+        NavigationRailDestination(
+          icon: Icon(Icons.chat),
+          label: Text('New Chat'),
+        ),
+      ];
+
+      // Append old chats to the destinations
+      destinations.addAll(chats.map((chat) => NavigationRailDestination(
+        icon: Icon(Icons.chat),
+        label: Text(chat.Title),
+      )));
+
+      return destinations;
+    }
 
 
     Widget page;
@@ -71,16 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 SafeArea(
                   child: NavigationRail(
                     extended: constraints.maxWidth >= 600,
-                    destinations: [
-                      NavigationRailDestination(
-                        icon: Icon(Icons.home),
-                        label: Text('Home'),
-                      ),
-                      NavigationRailDestination(
-                        icon: Icon(Icons.chat),
-                        label: Text('New Chat'),
-                      ),
-                    ],
+                    destinations: getDestinations(),
                     selectedIndex: selectedIndex,
                     onDestinationSelected: (value) {
                       setState((){
