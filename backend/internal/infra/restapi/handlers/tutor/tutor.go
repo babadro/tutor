@@ -115,7 +115,6 @@ func (t *Tutor) GetChatMessages(params operations.GetChatMessagesParams, princip
 		return operations.NewGetChatMessagesBadRequest()
 	}
 
-	// log dereferenced messages
 	for _, message := range messages {
 		hlog.FromRequest(params.HTTPRequest).Info().Msgf("Message: %s", message.Text)
 	}
@@ -130,7 +129,6 @@ func (t *Tutor) GetChats(params operations.GetChatsParams, principal *models.Pri
 		return operations.NewGetChatsBadRequest()
 	}
 
-	// log dereferenced chats
 	for _, chat := range chats {
 		hlog.FromRequest(params.HTTPRequest).Info().Msgf("Chat: %s", chat.ChatID)
 	}
