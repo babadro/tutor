@@ -251,3 +251,38 @@ func (s *Service) GetChatMessages(ctx context.Context, chatID string, limit int3
 
 	return swaggerMessages, nil
 }
+
+func (s *Service) GetChats(ctx context.Context, userID string, limit int32) ([]*swagger.Chat, error) {
+	query := s.firestoreClient.Collection("chats").
+		Where("user_id", "==", userID).
+		OrderBy("chat_id", firestore.Desc).
+		Limit(int(limit))
+
+	iter := query.Documents(ctx)
+	defer iter.Stop()
+
+	var chats []*swagger.Chat
+
+	for {
+		doc, err := iter.Next()
+
+		if err != nil {
+			if errors.Is(err, iterator.Done) {
+				break
+			}
+
+			return nil, fmt.Errorf("unable to get chats from firestore: %s", err.Error())
+		}
+
+		chats = append(chats, &swagger.Chat{ChatID: doc.Ref.ID})
+	}
+
+	var swaggerChats []*swagger.Chat
+	for _, chat := range chats {
+		swaggerChats = append(swaggerChats, &swagger.Chat{
+			ChatID: chat.ChatID,
+		})
+	}
+
+	return swaggerChats, nil
+}

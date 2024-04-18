@@ -15,6 +15,7 @@ type service interface {
 	SendMessage(ctx context.Context, message string, userID string, timestamp int64, chatID string) (string, error)
 	SendVoiceMessage(ctx context.Context, voiceMsgFileUrl string, userID string) (models.SendVoiceMessageResult, error)
 	GetChatMessages(ctx context.Context, chatID string, limit int32, timestamp int64) ([]*swagger.ChatMessage, error)
+	GetChats(ctx context.Context, userID string, limit int32) ([]*swagger.Chat, error)
 }
 
 type Tutor struct {
@@ -123,14 +124,10 @@ func (t *Tutor) GetChatMessages(params operations.GetChatMessagesParams, princip
 }
 
 func (t *Tutor) GetChats(params operations.GetChatsParams, principal *models.Principal) middleware.Responder {
-	// return mocked chats
-	chats := []*swagger.Chat{
-		{
-			ChatID: "chat1",
-		},
-		{
-			ChatID: "chat2",
-		},
+	chats, err := t.svc.GetChats(params.HTTPRequest.Context(), principal.UserID, *params.Limit)
+	if err != nil {
+		hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to get chats")
+		return operations.NewGetChatsBadRequest()
 	}
 
 	// log dereferenced chats
