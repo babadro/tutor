@@ -6,11 +6,17 @@ package operations
 // Editing this file might prove futile when you re-run the generate command
 
 import (
+	"context"
 	"net/http"
+	"strconv"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 
 	"github.com/babadro/tutor/internal/models"
+	"github.com/babadro/tutor/internal/models/swagger"
 )
 
 // GetChatMessagesHandlerFunc turns a function with the right signature into a get chat messages handler
@@ -70,4 +76,101 @@ func (o *GetChatMessages) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
+}
+
+// GetChatMessagesOKBody get chat messages o k body
+//
+// swagger:model GetChatMessagesOKBody
+type GetChatMessagesOKBody struct {
+
+	// messages
+	Messages []*swagger.ChatMessage `json:"messages"`
+}
+
+// Validate validates this get chat messages o k body
+func (o *GetChatMessagesOKBody) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := o.validateMessages(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (o *GetChatMessagesOKBody) validateMessages(formats strfmt.Registry) error {
+	if swag.IsZero(o.Messages) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(o.Messages); i++ {
+		if swag.IsZero(o.Messages[i]) { // not required
+			continue
+		}
+
+		if o.Messages[i] != nil {
+			if err := o.Messages[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("getChatMessagesOK" + "." + "messages" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ContextValidate validate this get chat messages o k body based on the context it is used
+func (o *GetChatMessagesOKBody) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := o.contextValidateMessages(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (o *GetChatMessagesOKBody) contextValidateMessages(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(o.Messages); i++ {
+
+		if o.Messages[i] != nil {
+			if err := o.Messages[i].ContextValidate(ctx, formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("getChatMessagesOK" + "." + "messages" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// MarshalBinary interface implementation
+func (o *GetChatMessagesOKBody) MarshalBinary() ([]byte, error) {
+	if o == nil {
+		return nil, nil
+	}
+	return swag.WriteJSON(o)
+}
+
+// UnmarshalBinary interface implementation
+func (o *GetChatMessagesOKBody) UnmarshalBinary(b []byte) error {
+	var res GetChatMessagesOKBody
+	if err := swag.ReadJSON(b, &res); err != nil {
+		return err
+	}
+	*o = res
+	return nil
 }

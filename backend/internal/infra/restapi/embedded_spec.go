@@ -144,9 +144,80 @@ func init() {
           "200": {
             "description": "A list of chat messages",
             "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/ChatMessage"
+              "type": "object",
+              "properties": {
+                "messages": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/ChatMessage"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
+    "/chats": {
+      "get": {
+        "description": "Get chats",
+        "produces": [
+          "application/json"
+        ],
+        "operationId": "GetChats",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int32",
+            "default": 10,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "default": 0,
+            "description": "timestamp starting from which chats are to be fetched",
+            "name": "timestamp",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of chats",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "chats": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Chat"
+                  }
+                }
               }
             }
           },
@@ -258,6 +329,14 @@ func init() {
     }
   },
   "definitions": {
+    "Chat": {
+      "type": "object",
+      "properties": {
+        "chatId": {
+          "type": "string"
+        }
+      }
+    },
     "ChatMessage": {
       "type": "object",
       "properties": {
@@ -431,9 +510,80 @@ func init() {
           "200": {
             "description": "A list of chat messages",
             "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/ChatMessage"
+              "type": "object",
+              "properties": {
+                "messages": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/ChatMessage"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
+    "/chats": {
+      "get": {
+        "description": "Get chats",
+        "produces": [
+          "application/json"
+        ],
+        "operationId": "GetChats",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int32",
+            "default": 10,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "default": 0,
+            "description": "timestamp starting from which chats are to be fetched",
+            "name": "timestamp",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of chats",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "chats": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Chat"
+                  }
+                }
               }
             }
           },
@@ -545,6 +695,14 @@ func init() {
     }
   },
   "definitions": {
+    "Chat": {
+      "type": "object",
+      "properties": {
+        "chatId": {
+          "type": "string"
+        }
+      }
+    },
     "ChatMessage": {
       "type": "object",
       "properties": {

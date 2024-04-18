@@ -26,7 +26,7 @@ type GetChatMessagesOK struct {
 	/*
 	  In: Body
 	*/
-	Payload []*swagger.ChatMessage `json:"body,omitempty"`
+	Payload *GetChatMessagesOKBody `json:"body,omitempty"`
 }
 
 // NewGetChatMessagesOK creates GetChatMessagesOK with default headers values
@@ -36,13 +36,13 @@ func NewGetChatMessagesOK() *GetChatMessagesOK {
 }
 
 // WithPayload adds the payload to the get chat messages o k response
-func (o *GetChatMessagesOK) WithPayload(payload []*swagger.ChatMessage) *GetChatMessagesOK {
+func (o *GetChatMessagesOK) WithPayload(payload *GetChatMessagesOKBody) *GetChatMessagesOK {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the get chat messages o k response
-func (o *GetChatMessagesOK) SetPayload(payload []*swagger.ChatMessage) {
+func (o *GetChatMessagesOK) SetPayload(payload *GetChatMessagesOKBody) {
 	o.Payload = payload
 }
 
@@ -50,14 +50,11 @@ func (o *GetChatMessagesOK) SetPayload(payload []*swagger.ChatMessage) {
 func (o *GetChatMessagesOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(200)
-	payload := o.Payload
-	if payload == nil {
-		// return empty array
-		payload = make([]*swagger.ChatMessage, 0, 50)
-	}
-
-	if err := producer.Produce(rw, payload); err != nil {
-		panic(err) // let the recovery middleware deal with this
+	if o.Payload != nil {
+		payload := o.Payload
+		if err := producer.Produce(rw, payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
 	}
 }
 
