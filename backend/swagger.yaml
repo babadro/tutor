@@ -69,6 +69,52 @@ paths:
           description: error
           schema:
             $ref: "#/definitions/error"
+  /chats:
+    get:
+      description: "Get chats"
+      operationId: "GetChats"
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: limit
+          required: false
+          type: integer
+          format: int32
+          default: 10
+        - in: query
+          name: timestamp
+          description: timestamp starting from which chats are to be fetched
+          required: false
+          type: integer
+          format: int64
+          default: 0
+      responses:
+        200:
+          description: A list of chats
+          schema:
+            type: object
+            properties:
+              chats:
+                type: array
+                items:
+                  $ref: '#/definitions/Chat'
+        400:
+          description: "Bad request"
+          schema:
+            $ref: "#/definitions/error"
+        '401':
+          description: unauthorized
+          schema:
+            $ref: "#/definitions/error"
+        500:
+          description: "Internal server error"
+          schema:
+            $ref: "#/definitions/error"
+        default:
+          description: error
+          schema:
+            $ref: "#/definitions/error"
   /chat_messages/{chatId}:
     get:
       description: "Get chat messages"
@@ -97,9 +143,12 @@ paths:
         200:
           description: A list of chat messages
           schema:
-            type: array
-            items:
-              $ref: '#/definitions/ChatMessage'
+            type: object
+            properties:
+              messages:
+                type: array
+                items:
+                  $ref: '#/definitions/ChatMessage'
         400:
           description: "Bad request"
           schema:
@@ -193,3 +242,8 @@ definitions:
       curUsr:
         type: boolean
         x-go-name: IsFromCurrentUser
+  Chat:
+    type: object
+    properties:
+      chatId:
+        type: string
