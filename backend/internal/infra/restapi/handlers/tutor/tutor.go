@@ -121,3 +121,22 @@ func (t *Tutor) GetChatMessages(params operations.GetChatMessagesParams, princip
 
 	return operations.NewGetChatMessagesOK().WithPayload(&operations.GetChatMessagesOKBody{Messages: messages})
 }
+
+func (t *Tutor) GetChats(params operations.GetChatsParams, principal *models.Principal) middleware.Responder {
+	// return mocked chats
+	chats := []*swagger.Chat{
+		{
+			ChatID: "chat1",
+		},
+		{
+			ChatID: "chat2",
+		},
+	}
+
+	// log dereferenced chats
+	for _, chat := range chats {
+		hlog.FromRequest(params.HTTPRequest).Info().Msgf("Chat: %s", chat.ChatID)
+	}
+
+	return operations.NewGetChatsOK().WithPayload(&operations.GetChatsOKBody{Chats: chats})
+}
