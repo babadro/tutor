@@ -1,22 +1,23 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'chat_message.dart';
+part of 'send_chat_message_request.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 
-ChatMessage _$ChatMessageFromJson(Map<String, dynamic> json) => ChatMessage(
-      IsFromCurrentUser: json['curUsr'] as bool? ?? false,
+SendChatMessageRequest _$SendChatMessageRequestFromJson(
+        Map<String, dynamic> json) =>
+    SendChatMessageRequest(
+      ChatId: json['chatId'] as String,
       Text: json['text'] as String,
       Timestamp: json['timestamp'] as int,
-      UserId: json['userId'] as String? ?? '',
     );
 
-Map<String, dynamic> _$ChatMessageToJson(ChatMessage instance) =>
+Map<String, dynamic> _$SendChatMessageRequestToJson(
+        SendChatMessageRequest instance) =>
     <String, dynamic>{
-      'curUsr': instance.IsFromCurrentUser,
+      'chatId': instance.ChatId,
       'text': instance.Text,
       'timestamp': instance.Timestamp,
-      'userId': instance.UserId,
     };

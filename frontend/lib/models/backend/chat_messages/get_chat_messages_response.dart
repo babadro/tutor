@@ -1,6 +1,19 @@
 import 'package:json_annotation/json_annotation.dart';
 
-part 'chat_message.g.dart';
+part 'get_chat_messages_response.g.dart';
+
+@JsonSerializable()
+class GetChatMessagesResponse {
+  @JsonKey(name: 'messages')
+  final List<ChatMessage> Messages;
+
+  GetChatMessagesResponse({
+    required this.Messages,
+  });
+
+  factory GetChatMessagesResponse.fromJson(Map<String, dynamic> json) => _$GetChatMessagesResponseFromJson(json);
+  Map<String, dynamic> toJson() => _$GetChatMessagesResponseToJson(this);
+}
 
 @JsonSerializable()
 class ChatMessage {

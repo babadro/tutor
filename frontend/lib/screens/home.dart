@@ -1,7 +1,12 @@
-import '../models/chat.dart';
+import 'dart:convert';
+
+import 'package:provider/provider.dart';
+import '../models/backend/chats/get_chats_response.dart';
+import '../services/auth_service.dart';
 import 'chatDetailPage.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -12,11 +17,44 @@ class _HomeScreenState extends State<HomeScreen> {
 
   var selectedIndex = 0;
 
-  List<Chat> chats = [
-    Chat(Id: '1', Title: 'Chat 1'),
-    Chat(Id: '2', Title: 'Chat 2'),
-    Chat(Id: '3', Title: 'Chat 3'),
-  ];
+  List<Chat> chats = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadChats();
+  }
+
+  void _loadChats() async {
+    const apiUrl = 'http://localhost:8080/chats';
+    final uri = Uri.parse(apiUrl);
+
+    final authService = Provider.of<AuthService>(context, listen: false);
+
+    String? authToken = await authService.getCurrentUserIdToken();
+
+    try {
+      print('Fetching chats from $uri');
+      final response = await http.get(
+        uri,
+        headers: {
+          'Authorization': 'Bearer $authToken', // Include the authorization header
+          'Content-Type': 'application/json',
+        },
+      ).timeout(Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        final chatsResponse = GetChatsResponse.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+
+        setState(() {
+          this.chats = chatsResponse.Chats;
+        });
+      } else {
+        print('Failed to fetch chats: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Failed to fetch chats: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +73,7 @@ class _HomeScreenState extends State<HomeScreen> {
       // Append old chats to the destinations
       destinations.addAll(chats.map((chat) => NavigationRailDestination(
         icon: Icon(Icons.chat),
-        label: Text(chat.Title),
+        label: Text(chat.ChatId), // todo: get the name of the chat
       )));
 
       return destinations;

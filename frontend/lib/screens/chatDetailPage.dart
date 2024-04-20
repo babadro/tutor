@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:tutor/models/text_message_response.dart';
-import '../models/chat_message.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:tutor/models/backend/chat_messages/send_chat_message_request.dart';
+import 'package:tutor/models/backend/chat_messages/send_chat_message_response.dart';
 import 'package:tutor/services/auth_service.dart';
+import 'package:tutor/models/backend/chat_messages/get_chat_messages_response.dart';
+import 'package:tutor/models/local/chat/chat_message.dart' as local;
 
 class ChatDetailPage extends StatefulWidget{
   @override
@@ -14,7 +15,7 @@ class ChatDetailPage extends StatefulWidget{
 
 
 class _ChatDetailPageState extends State<ChatDetailPage> {
-  List<ChatMessage> _messages = [];
+  List<local.ChatMessage> _messages = [];
 
   TextEditingController _messageController = TextEditingController();
 
@@ -25,10 +26,10 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   }
 
   void _loadMessages() async {
-    const chatId = 'D3VpDLQJdcF13iJpFT2e';
+    const chatId = 'D3VpDLQJdcF13iJpFT2e'; // todo: replace with actual chat ID
     const apiUrl = 'http://localhost:8080/chat_messages/$chatId';
     final uri = Uri.parse(apiUrl).replace(queryParameters: {
-     'limit': '100', // Example, adjust as needed
+     'limit': '100', // todo adjust as needed
       'timestamp': DateTime.now().subtract(Duration(days: 7)).millisecondsSinceEpoch.toString(),
     });
 
@@ -46,12 +47,14 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           },
       ).timeout(Duration(seconds: 10));
       if (response.statusCode == 200) {
-        final messages = (jsonDecode(response.body) as List)
-            .map((e) => ChatMessage.fromJson(e as Map<String, dynamic>))
-            .toList();
+        final messagesResponse = GetChatMessagesResponse.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
 
         setState(() {
-          _messages = messages;
+          _messages = messagesResponse.Messages.map((message) => local.ChatMessage(
+            IsFromCurrentUser: message.IsFromCurrentUser,
+            Text: message.Text,
+            Timestamp: message.Timestamp,
+          )).toList();
         });
       } else {
        // print('Server error: ${response.body}');
@@ -63,7 +66,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   }
 
   // send post request to server for adding message
-  Future<ChatMessage> _sendMessage(ChatMessage message) async {
+  Future<SendChatMessageResponse> _sendMessage(SendChatMessageRequest message) async {
     const apiUrl = 'http://localhost:8080/chat_messages';
     final uri = Uri.parse(apiUrl);
 
@@ -82,14 +85,9 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         body: jsonEncode(message.toJson()),
       ).timeout(Duration(seconds: 10));
       if (response.statusCode == 200) {
-        final responseMessage = TextMessageResponse.fromJson(jsonDecode(response.body));
+        final responseMessage = SendChatMessageResponse.fromJson(jsonDecode(response.body));
 
-        return ChatMessage(
-            IsFromCurrentUser: false,
-            Text: responseMessage.Reply,
-            Timestamp: responseMessage.Timestamp,
-            UserId: "",
-        );
+        return responseMessage;
       } else {
         print('Server error: ${response.body}');
         throw Exception('Failed to send message');
@@ -100,24 +98,32 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     }
   }
 
-  void _addMessage(ChatMessage message) {
+  void _addMessage(local.ChatMessage message) {
     setState(() {
       _messages.add(message);
     });
   }
 
   void _handleSendPressed(String text) {
-    final message = ChatMessage(
-      IsFromCurrentUser: true,
+    var timestamp = DateTime.now().millisecondsSinceEpoch;
+
+    _addMessage(local.ChatMessage(IsFromCurrentUser: true, Text: text, Timestamp: timestamp));
+
+    final message = SendChatMessageRequest(
+      ChatId: '', // todo: replace with actual chat ID
       Text: text,
-      Timestamp: DateTime.now().millisecondsSinceEpoch,
-      UserId: 'your_user_id_here', // Use the appropriate userId for your use case
+      Timestamp: timestamp,
     );
-    _addMessage(message);
 
     // Send the message to the server
     _sendMessage(message).then((responseMessage) {
-      _addMessage(responseMessage);
+      _addMessage(
+        local.ChatMessage(
+          IsFromCurrentUser: false,
+          Text: responseMessage.Reply,
+          Timestamp: responseMessage.Timestamp,
+        ),
+      );
     }).catchError((e) {
       print('Error sending message: $e');
     });
