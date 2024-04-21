@@ -9,6 +9,10 @@ import 'package:tutor/models/backend/chat_messages/get_chat_messages_response.da
 import 'package:tutor/models/local/chat/chat_message.dart' as local;
 
 class ChatDetailPage extends StatefulWidget{
+  final String chatId;
+
+  ChatDetailPage({Key? key, required this.chatId}) : super(key: key);
+
   @override
   _ChatDetailPageState createState() => _ChatDetailPageState();
 }
@@ -26,8 +30,11 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   }
 
   void _loadMessages() async {
-    const chatId = 'D3VpDLQJdcF13iJpFT2e'; // todo: replace with actual chat ID
-    const apiUrl = 'http://localhost:8080/chat_messages/$chatId';
+    if (widget.chatId.isEmpty) {
+      return;
+    }
+
+    final apiUrl = 'http://localhost:8080/chat_messages/${widget.chatId}';
     final uri = Uri.parse(apiUrl).replace(queryParameters: {
      'limit': '100', // todo adjust as needed
       'timestamp': DateTime.now().subtract(Duration(days: 7)).millisecondsSinceEpoch.toString(),

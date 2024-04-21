@@ -14,10 +14,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-
   var selectedIndex = 0;
-
   List<Chat> chats = [];
+  String selectedChatId = '';
 
   @override
   void initState() {
@@ -79,19 +78,6 @@ class _HomeScreenState extends State<HomeScreen> {
       return destinations;
     }
 
-
-    Widget page;
-    switch(selectedIndex) {
-      case 0:
-        page = Placeholder();
-        break;
-      case 1:
-        page = ChatDetailPage();
-        break;
-      default:
-        throw UnimplementedError('no widget for $selectedIndex');
-    }
-
     return LayoutBuilder(
         builder: (context, constraints) {
           return Scaffold(
@@ -141,6 +127,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     onDestinationSelected: (value) {
                       setState((){
                         selectedIndex = value;
+                        selectedChatId = (value > 1) ? chats[value - 2].ChatId : '';
                       });
                     },
                   ),
@@ -148,7 +135,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Expanded(
                   child: Container(
                     color: Theme.of(context).colorScheme.primaryContainer,
-                    child: page,
+                    child: (selectedIndex > 0) ? ChatDetailPage(key: Key(selectedChatId), chatId: selectedChatId) : Placeholder(),
                   ),
                 ),
               ],
