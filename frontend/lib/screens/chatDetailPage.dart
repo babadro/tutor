@@ -117,7 +117,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     _addMessage(local.ChatMessage(IsFromCurrentUser: true, Text: text, Timestamp: timestamp));
 
     final message = SendChatMessageRequest(
-      ChatId: '', // todo: replace with actual chat ID
+      ChatId: widget.chatId,
       Text: text,
       Timestamp: timestamp,
     );

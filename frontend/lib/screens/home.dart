@@ -25,7 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _loadChats() async {
-    const apiUrl = 'http://localhost:8080/chats';
+    const apiUrl = 'http://localhost:8080/chats?limit=100&timestamp=0';
     final uri = Uri.parse(apiUrl);
 
     final authService = Provider.of<AuthService>(context, listen: false);
