@@ -334,6 +334,13 @@ func init() {
       "properties": {
         "chatId": {
           "type": "string"
+        },
+        "time": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "title": {
+          "type": "string"
         }
       }
     },
@@ -699,6 +706,13 @@ func init() {
       "type": "object",
       "properties": {
         "chatId": {
+          "type": "string"
+        },
+        "time": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "title": {
           "type": "string"
         }
       }

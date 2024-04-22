@@ -19,6 +19,12 @@ type Chat struct {
 
 	// chat Id
 	ChatID string `json:"chatId,omitempty"`
+
+	// time
+	Time int64 `json:"time,omitempty"`
+
+	// title
+	Title string `json:"title,omitempty"`
 }
 
 // Validate validates this chat
