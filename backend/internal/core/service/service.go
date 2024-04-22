@@ -198,10 +198,10 @@ func generateFirebaseStorageURL(bucketName, filePath string) string {
 }
 
 type ChatMessage struct {
-	ChatID string `json:"chat_id"`
-	Text   string `json:"text"`
-	Time   int64  `json:"time"`
-	UserID string `json:"user_id"`
+	ChatID string `firestore:"chat_id"`
+	Text   string `firestore:"text"`
+	Time   int64  `firestore:"time"`
+	UserID string `firestore:"user_id"`
 }
 
 func (s *Service) GetChatMessages(ctx context.Context, chatID string, limit int32, timestamp int64) ([]*swagger.ChatMessage, error) {
@@ -214,7 +214,7 @@ func (s *Service) GetChatMessages(ctx context.Context, chatID string, limit int3
 	query := s.firestoreClient.Collection("messages").
 		Where("chat_id", "==", chatID).
 		Where("time", ">=", timestamp).
-		OrderBy("time", firestore.Desc).
+		OrderBy("time", firestore.Asc).
 		Limit(int(limit))
 
 	iter := query.Documents(ctx)
@@ -243,10 +243,12 @@ func (s *Service) GetChatMessages(ctx context.Context, chatID string, limit int3
 	var swaggerMessages []*swagger.ChatMessage
 	for _, message := range messages {
 		swaggerMessages = append(swaggerMessages, &swagger.ChatMessage{
-			Text:      message.Text,
-			Timestamp: message.Time,
-			UserID:    message.UserID,
+			Text:              message.Text,
+			Timestamp:         message.Time,
+			UserID:            message.UserID,
+			IsFromCurrentUser: message.UserID != "",
 		})
+
 	}
 
 	return swaggerMessages, nil

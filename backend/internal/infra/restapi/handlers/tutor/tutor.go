@@ -115,9 +115,9 @@ func (t *Tutor) GetChatMessages(params operations.GetChatMessagesParams, princip
 		return operations.NewGetChatMessagesBadRequest()
 	}
 
-	for _, message := range messages {
-		hlog.FromRequest(params.HTTPRequest).Info().Msgf("Message: %s", message.Text)
-	}
+	//for _, message := range messages {
+	//	hlog.FromRequest(params.HTTPRequest).Info().Msgf("Message: %v", *message)
+	//}
 
 	return operations.NewGetChatMessagesOK().WithPayload(&operations.GetChatMessagesOKBody{Messages: messages})
 }
