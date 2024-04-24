@@ -160,6 +160,9 @@ func (o *SendChatMessageBody) UnmarshalBinary(b []byte) error {
 // swagger:model SendChatMessageOKBody
 type SendChatMessageOKBody struct {
 
+	// If the chatId is not provided in the request, the new chat will be created and the chatId will be returned in the response.
+	ChatID string `json:"chatId,omitempty"`
+
 	// AI's response to the user's message.
 	Reply string `json:"reply,omitempty"`
 

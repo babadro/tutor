@@ -72,6 +72,10 @@ func init() {
             "schema": {
               "type": "object",
               "properties": {
+                "chatId": {
+                  "description": "If the chatId is not provided in the request, the new chat will be created and the chatId will be returned in the response.",
+                  "type": "string"
+                },
                 "reply": {
                   "description": "AI's response to the user's message.",
                   "type": "string"
@@ -445,6 +449,10 @@ func init() {
             "schema": {
               "type": "object",
               "properties": {
+                "chatId": {
+                  "description": "If the chatId is not provided in the request, the new chat will be created and the chatId will be returned in the response.",
+                  "type": "string"
+                },
                 "reply": {
                   "description": "AI's response to the user's message.",
                   "type": "string"
