@@ -9,9 +9,9 @@ import 'package:tutor/models/backend/chat_messages/get_chat_messages_response.da
 import 'package:tutor/models/local/chat/chat_message.dart' as local;
 
 class ChatDetailPage extends StatefulWidget{
-  final String chatId;
+  final String initialChatId;
 
-  ChatDetailPage({Key? key, required this.chatId}) : super(key: key);
+  ChatDetailPage({Key? key, required this.initialChatId}) : super(key: key);
 
   @override
   _ChatDetailPageState createState() => _ChatDetailPageState();
@@ -19,6 +19,7 @@ class ChatDetailPage extends StatefulWidget{
 
 
 class _ChatDetailPageState extends State<ChatDetailPage> {
+  late String chatId;
   List<local.ChatMessage> _messages = [];
 
   TextEditingController _messageController = TextEditingController();
@@ -26,15 +27,16 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   @override
   void initState() {
     super.initState();
+    chatId = widget.initialChatId;
     _loadMessages();
   }
 
   void _loadMessages() async {
-    if (widget.chatId.isEmpty) {
+    if (chatId.isEmpty) {
       return;
     }
 
-    final apiUrl = 'http://localhost:8080/chat_messages/${widget.chatId}';
+    final apiUrl = 'http://localhost:8080/chat_messages/${chatId}';
     final uri = Uri.parse(apiUrl).replace(queryParameters: {
      'limit': '100', // todo adjust as needed
       'timestamp': DateTime.now().subtract(Duration(days: 7)).millisecondsSinceEpoch.toString(),
@@ -62,6 +64,12 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
             Text: message.Text,
             Timestamp: message.Timestamp,
           )).toList();
+
+          _messages.forEach((message) {
+            print('Message: ${message.Text}');
+            print('Timestamp: ${message.Timestamp}');
+            print('IsFromCurrentUser: ${message.IsFromCurrentUser}');
+          });
         });
       } else {
        // print('Server error: ${response.body}');
@@ -111,19 +119,29 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     });
   }
 
+  void _setChatId(String newChatId) {
+    setState(() {
+      chatId = newChatId;
+    });
+  }
+
   void _handleSendPressed(String text) {
     var timestamp = DateTime.now().millisecondsSinceEpoch;
 
     _addMessage(local.ChatMessage(IsFromCurrentUser: true, Text: text, Timestamp: timestamp));
 
     final message = SendChatMessageRequest(
-      ChatId: widget.chatId,
+      ChatId: chatId,
       Text: text,
       Timestamp: timestamp,
     );
 
     // Send the message to the server
     _sendMessage(message).then((responseMessage) {
+      if (responseMessage.ChatId.isNotEmpty) {
+        _setChatId(responseMessage.ChatId);
+      }
+
       _addMessage(
         local.ChatMessage(
           IsFromCurrentUser: false,

@@ -72,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
       // Append old chats to the destinations
       destinations.addAll(chats.map((chat) => NavigationRailDestination(
         icon: Icon(Icons.chat),
-        label: Text(chat.ChatId), // todo: get the name of the chat
+        label: Text(chat.Title),
       )));
 
       return destinations;
@@ -135,7 +135,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Expanded(
                   child: Container(
                     color: Theme.of(context).colorScheme.primaryContainer,
-                    child: (selectedIndex > 0) ? ChatDetailPage(key: Key(selectedChatId), chatId: selectedChatId) : Placeholder(),
+                    child: (selectedIndex > 0) ? ChatDetailPage(key: Key(selectedChatId), initialChatId: selectedChatId) : Placeholder(),
                   ),
                 ),
               ],
