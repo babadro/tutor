@@ -32,16 +32,21 @@ func (t *Tutor) SendChatMessage(params operations.SendChatMessageParams, princip
 		return operations.NewSendChatMessageBadRequest()
 	}
 
-	reply, chatID, err := t.svc.SendMessage(
+	reply, createdChat, err := t.svc.SendMessage(
 		params.HTTPRequest.Context(), *params.Body.Text, principal.UserID, *params.Body.Timestamp, params.Body.ChatID,
 	)
 	if err != nil {
 		hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to send message")
 	}
 
+	var chat *swagger.Chat
+	if createdChat.ChatID != "" {
+		chat = &createdChat
+	}
+
 	return operations.NewSendChatMessageOK().WithPayload(&operations.SendChatMessageOKBody{
 		Reply:     reply,
-		ChatID:    chatID,
+		Chat:      chat,
 		Timestamp: time.Now().UnixMilli(),
 	})
 }

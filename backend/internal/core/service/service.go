@@ -51,6 +51,8 @@ type llm interface {
 }
 
 func (s *Service) SendMessage(ctx context.Context, message, userID string, timestamp int64, chatID string) (string, swagger.Chat, error) {
+	var newlyCreatedChat swagger.Chat
+
 	if chatID == "" {
 		newChat, _, err := s.firestoreClient.
 			Collection("chats").
@@ -61,10 +63,14 @@ func (s *Service) SendMessage(ctx context.Context, message, userID string, times
 			})
 
 		if err != nil {
-			return "", "", fmt.Errorf("unable to create chat: %s", err.Error())
+			return "", swagger.Chat{}, fmt.Errorf("unable to create chat: %s", err.Error())
 		}
 
-		chatID = newChat.ID
+		newlyCreatedChat = swagger.Chat{
+			ChatID: newChat.ID,
+			Time:   timestamp,
+			Title:  message,
+		}
 	}
 
 	_, _, err := s.firestoreClient.Collection("messages").
@@ -76,7 +82,7 @@ func (s *Service) SendMessage(ctx context.Context, message, userID string, times
 		})
 
 	if err != nil {
-		return "", "", fmt.Errorf("unable to add user's message to firestore: %s", err.Error())
+		return "", swagger.Chat{}, fmt.Errorf("unable to add user's message to firestore: %s", err.Error())
 	}
 
 	aiResponse := "I'm AI tutor, I'm here to help you with your studies"
@@ -89,10 +95,10 @@ func (s *Service) SendMessage(ctx context.Context, message, userID string, times
 		})
 
 	if err != nil {
-		return "", "", fmt.Errorf("unable to add AI response message to firestore: %s", err.Error())
+		return "", swagger.Chat{}, fmt.Errorf("unable to add AI response message to firestore: %s", err.Error())
 	}
 
-	return aiResponse, chatID, nil
+	return aiResponse, newlyCreatedChat, nil
 
 	//	return s.llm.Call(ctx, message)
 }
