@@ -5,9 +5,7 @@ import 'package:tutor/services/auth_service.dart';
 
 import 'app.dart';
 import 'firebase_options.dart';
-
-// TODO(codelab user): Get API key
-const clientId = 'YOUR_CLIENT_ID';
+import 'models/local/chat/chats.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,8 +13,16 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  runApp(Provider<AuthService>(
-    create: (_) => AuthService(),
-    child: MyApp(),
-  ),);
+  runApp(
+      MultiProvider(
+          providers: [
+            Provider<AuthService>(
+              create: (_) => AuthService(),
+            ),
+            ChangeNotifierProvider<ChatModel>(
+              create: (_) => ChatModel(),
+            ),
+          ],
+          child: MyApp()
+  ));
 }
