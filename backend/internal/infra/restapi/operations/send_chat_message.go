@@ -16,6 +16,7 @@ import (
 	"github.com/go-openapi/validate"
 
 	"github.com/babadro/tutor/internal/models"
+	"github.com/babadro/tutor/internal/models/swagger"
 )
 
 // SendChatMessageHandlerFunc turns a function with the right signature into a send chat message handler
@@ -160,6 +161,9 @@ func (o *SendChatMessageBody) UnmarshalBinary(b []byte) error {
 // swagger:model SendChatMessageOKBody
 type SendChatMessageOKBody struct {
 
+	// chat
+	Chat *swagger.Chat `json:"chat,omitempty"`
+
 	// If the chatId is not provided in the request, the new chat will be created and the chatId will be returned in the response.
 	ChatID string `json:"chatId,omitempty"`
 
@@ -172,11 +176,60 @@ type SendChatMessageOKBody struct {
 
 // Validate validates this send chat message o k body
 func (o *SendChatMessageOKBody) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := o.validateChat(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
 	return nil
 }
 
-// ContextValidate validates this send chat message o k body based on context it is used
+func (o *SendChatMessageOKBody) validateChat(formats strfmt.Registry) error {
+	if swag.IsZero(o.Chat) { // not required
+		return nil
+	}
+
+	if o.Chat != nil {
+		if err := o.Chat.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("sendChatMessageOK" + "." + "chat")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+// ContextValidate validate this send chat message o k body based on the context it is used
 func (o *SendChatMessageOKBody) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := o.contextValidateChat(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (o *SendChatMessageOKBody) contextValidateChat(ctx context.Context, formats strfmt.Registry) error {
+
+	if o.Chat != nil {
+		if err := o.Chat.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("sendChatMessageOK" + "." + "chat")
+			}
+			return err
+		}
+	}
+
 	return nil
 }
 

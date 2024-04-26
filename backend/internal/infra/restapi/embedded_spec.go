@@ -72,6 +72,10 @@ func init() {
             "schema": {
               "type": "object",
               "properties": {
+                "chat": {
+                  "type": "object",
+                  "$ref": "#/definitions/Chat"
+                },
                 "chatId": {
                   "description": "If the chatId is not provided in the request, the new chat will be created and the chatId will be returned in the response.",
                   "type": "string"
@@ -449,6 +453,10 @@ func init() {
             "schema": {
               "type": "object",
               "properties": {
+                "chat": {
+                  "type": "object",
+                  "$ref": "#/definitions/Chat"
+                },
                 "chatId": {
                   "description": "If the chatId is not provided in the request, the new chat will be created and the chatId will be returned in the response.",
                   "type": "string"
