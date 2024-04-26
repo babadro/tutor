@@ -11,7 +11,9 @@ SendChatMessageResponse _$SendChatMessageResponseFromJson(
     SendChatMessageResponse(
       Reply: json['reply'] as String,
       Timestamp: json['timestamp'] as int,
-      ChatId: json['chatId'] as String? ?? '',
+      CreatedChat: json['chat'] == null
+          ? null
+          : Chat.fromJson(json['chat'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$SendChatMessageResponseToJson(
@@ -19,5 +21,5 @@ Map<String, dynamic> _$SendChatMessageResponseToJson(
     <String, dynamic>{
       'reply': instance.Reply,
       'timestamp': instance.Timestamp,
-      'chatId': instance.ChatId,
+      'chat': instance.CreatedChat,
     };
