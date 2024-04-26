@@ -50,16 +50,18 @@ type llm interface {
 	CreateEmbedding(ctx context.Context, inputTexts []string) ([][]float32, error)
 }
 
-func (s *Service) SendMessage(ctx context.Context, message string, userID string, timestamp int64, chatID string) (string, error) {
+func (s *Service) SendMessage(ctx context.Context, message, userID string, timestamp int64, chatID string) (string, swagger.Chat, error) {
 	if chatID == "" {
 		newChat, _, err := s.firestoreClient.
 			Collection("chats").
 			Add(ctx, map[string]interface{}{
 				"user_id": userID,
+				"time":    timestamp,
+				"title":   message,
 			})
 
 		if err != nil {
-			return "", fmt.Errorf("unable to create chat: %s", err.Error())
+			return "", "", fmt.Errorf("unable to create chat: %s", err.Error())
 		}
 
 		chatID = newChat.ID
@@ -74,7 +76,7 @@ func (s *Service) SendMessage(ctx context.Context, message string, userID string
 		})
 
 	if err != nil {
-		return "", fmt.Errorf("unable to add user's message to firestore: %s", err.Error())
+		return "", "", fmt.Errorf("unable to add user's message to firestore: %s", err.Error())
 	}
 
 	aiResponse := "I'm AI tutor, I'm here to help you with your studies"
@@ -87,10 +89,10 @@ func (s *Service) SendMessage(ctx context.Context, message string, userID string
 		})
 
 	if err != nil {
-		return "", fmt.Errorf("unable to add AI response message to firestore: %s", err.Error())
+		return "", "", fmt.Errorf("unable to add AI response message to firestore: %s", err.Error())
 	}
 
-	return aiResponse, nil
+	return aiResponse, chatID, nil
 
 	//	return s.llm.Call(ctx, message)
 }
@@ -207,10 +209,6 @@ type ChatMessage struct {
 func (s *Service) GetChatMessages(ctx context.Context, chatID string, limit int32, timestamp int64) ([]*swagger.ChatMessage, error) {
 	var messages []ChatMessage
 
-	//chatID = "D3VpDLQJdcF13iJpFT2e"
-
-	_, _ = timestamp, limit
-
 	query := s.firestoreClient.Collection("messages").
 		Where("chat_id", "==", chatID).
 		Where("time", ">=", timestamp).
@@ -254,9 +252,18 @@ func (s *Service) GetChatMessages(ctx context.Context, chatID string, limit int3
 	return swaggerMessages, nil
 }
 
-func (s *Service) GetChats(ctx context.Context, userID string, limit int32) ([]*swagger.Chat, error) {
+type chat struct {
+	Timestamp int64  `firestore:"time"`
+	Title     string `firestore:"title"`
+}
+
+func (s *Service) GetChats(ctx context.Context, userID string, limit int32, timestamp int64) ([]*swagger.Chat, error) {
+	userID = "fake"
+
 	query := s.firestoreClient.Collection("chats").
 		Where("user_id", "==", userID).
+		Where("time", ">=", timestamp).
+		//OrderBy("time", firestore.Desc).
 		Limit(int(limit))
 
 	iter := query.Documents(ctx)
@@ -267,6 +274,8 @@ func (s *Service) GetChats(ctx context.Context, userID string, limit int32) ([]*
 	for {
 		doc, err := iter.Next()
 
+		var chatModel chat
+
 		if err != nil {
 			if errors.Is(err, iterator.Done) {
 				break
@@ -275,15 +284,18 @@ func (s *Service) GetChats(ctx context.Context, userID string, limit int32) ([]*
 			return nil, fmt.Errorf("unable to get chats from firestore: %s", err.Error())
 		}
 
-		chats = append(chats, &swagger.Chat{ChatID: doc.Ref.ID})
-	}
+		if err = doc.DataTo(&chatModel); err != nil {
+			return nil, fmt.Errorf("unable to get chat data: %s", err.Error())
+		}
 
-	var swaggerChats []*swagger.Chat
-	for _, chat := range chats {
-		swaggerChats = append(swaggerChats, &swagger.Chat{
-			ChatID: chat.ChatID,
+		chats = append(chats, &swagger.Chat{
+			ChatID: doc.Ref.ID,
+			Title:  chatModel.Title,
+			Time:   chatModel.Timestamp,
 		})
 	}
 
-	return swaggerChats, nil
+	fmt.Println("chats", chats)
+
+	return chats, nil
 }

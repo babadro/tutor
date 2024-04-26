@@ -12,10 +12,10 @@ import (
 )
 
 type service interface {
-	SendMessage(ctx context.Context, message string, userID string, timestamp int64, chatID string) (string, error)
+	SendMessage(ctx context.Context, message, userID string, timestamp int64, chatID string) (string, swagger.Chat, error)
 	SendVoiceMessage(ctx context.Context, voiceMsgFileUrl string, userID string) (models.SendVoiceMessageResult, error)
 	GetChatMessages(ctx context.Context, chatID string, limit int32, timestamp int64) ([]*swagger.ChatMessage, error)
-	GetChats(ctx context.Context, userID string, limit int32) ([]*swagger.Chat, error)
+	GetChats(ctx context.Context, userID string, limit int32, timestamp int64) ([]*swagger.Chat, error)
 }
 
 type Tutor struct {
@@ -32,7 +32,7 @@ func (t *Tutor) SendChatMessage(params operations.SendChatMessageParams, princip
 		return operations.NewSendChatMessageBadRequest()
 	}
 
-	reply, err := t.svc.SendMessage(
+	reply, chatID, err := t.svc.SendMessage(
 		params.HTTPRequest.Context(), *params.Body.Text, principal.UserID, *params.Body.Timestamp, params.Body.ChatID,
 	)
 	if err != nil {
@@ -41,6 +41,7 @@ func (t *Tutor) SendChatMessage(params operations.SendChatMessageParams, princip
 
 	return operations.NewSendChatMessageOK().WithPayload(&operations.SendChatMessageOKBody{
 		Reply:     reply,
+		ChatID:    chatID,
 		Timestamp: time.Now().UnixMilli(),
 	})
 }
@@ -123,7 +124,7 @@ func (t *Tutor) GetChatMessages(params operations.GetChatMessagesParams, princip
 }
 
 func (t *Tutor) GetChats(params operations.GetChatsParams, principal *models.Principal) middleware.Responder {
-	chats, err := t.svc.GetChats(params.HTTPRequest.Context(), principal.UserID, *params.Limit)
+	chats, err := t.svc.GetChats(params.HTTPRequest.Context(), principal.UserID, *params.Limit, *params.Timestamp)
 	if err != nil {
 		hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to get chats")
 		return operations.NewGetChatsBadRequest()
