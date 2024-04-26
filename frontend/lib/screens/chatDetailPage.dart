@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:tutor/models/backend/chat_messages/send_chat_message_request.dart';
 import 'package:tutor/models/backend/chat_messages/send_chat_message_response.dart';
+import 'package:tutor/models/local/chat/chats.dart' as localChat;
 import 'package:tutor/services/auth_service.dart';
 import 'package:tutor/models/backend/chat_messages/get_chat_messages_response.dart';
 import 'package:tutor/models/local/chat/chat_message.dart' as local;
@@ -138,8 +139,16 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
     // Send the message to the server
     _sendMessage(message).then((responseMessage) {
-      if (responseMessage.ChatId.isNotEmpty) {
-        _setChatId(responseMessage.ChatId);
+      if (responseMessage.CreatedChat != null) {
+        Provider.of<localChat.ChatModel>(context, listen: false).addChat(
+          localChat.Chat(
+            ChatId: responseMessage.CreatedChat!.ChatId,
+            Timestamp: responseMessage.CreatedChat!.Timestamp,
+            Title: responseMessage.CreatedChat!.Title,
+          ),
+        );
+
+        _setChatId(responseMessage.CreatedChat!.ChatId);
       }
 
       _addMessage(
