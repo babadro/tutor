@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:provider/provider.dart';
+import 'package:tutor/models/local/chat/chats.dart' as localChat;
 import '../models/backend/chats/get_chats_response.dart';
 import '../services/auth_service.dart';
 import 'chatDetailPage.dart';
@@ -15,8 +16,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   var selectedIndex = 0;
-  List<Chat> chats = [];
-  String selectedChatId = '';
+  var selectedChatId = '';
 
   @override
   void initState() {
@@ -45,7 +45,13 @@ class _HomeScreenState extends State<HomeScreen> {
         final chatsResponse = GetChatsResponse.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
 
         setState(() {
-          this.chats = chatsResponse.Chats;
+          var chats = chatsResponse.Chats.map((e) => ( localChat.Chat(
+            ChatId: e.ChatId,
+            Timestamp: e.Timestamp,
+            Title: e.Title,
+          ))).toList();
+
+          Provider.of<localChat.ChatModel>(context, listen: false).setChats(chats);
         });
       } else {
         print('Failed to fetch chats: ${response.statusCode}');
@@ -57,6 +63,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    List<localChat.Chat> chats = context.watch<localChat.ChatModel>().chats;
+    bool isNewChatCreated = context.watch<localChat.ChatModel>().isNewChatCreated;
+    if (isNewChatCreated) {
+      selectedIndex = 2; // 0 is home, 1 is new chat, so the first chat is at index 2
+      selectedChatId = chats[0].ChatId;
+    }
+
     List<NavigationRailDestination> getDestinations() {
       List<NavigationRailDestination> destinations = [
         NavigationRailDestination(
