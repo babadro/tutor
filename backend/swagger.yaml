@@ -56,9 +56,7 @@ paths:
               chat:
                 type: object
                 $ref: '#/definitions/Chat'
-              chatId:
-                type: string
-                description: If the chatId is not provided in the request, the new chat will be created and the chatId will be returned in the response.
+                description: If the chatId is not provided in the request, the new chat will be created and this chat will be returned in the response.
         400:
           description: "Bad request"
           schema:

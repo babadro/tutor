@@ -73,12 +73,9 @@ func init() {
               "type": "object",
               "properties": {
                 "chat": {
+                  "description": "If the chatId is not provided in the request, the new chat will be created and this chat will be returned in the response.",
                   "type": "object",
                   "$ref": "#/definitions/Chat"
-                },
-                "chatId": {
-                  "description": "If the chatId is not provided in the request, the new chat will be created and the chatId will be returned in the response.",
-                  "type": "string"
                 },
                 "reply": {
                   "description": "AI's response to the user's message.",
@@ -454,12 +451,9 @@ func init() {
               "type": "object",
               "properties": {
                 "chat": {
+                  "description": "If the chatId is not provided in the request, the new chat will be created and this chat will be returned in the response.",
                   "type": "object",
                   "$ref": "#/definitions/Chat"
-                },
-                "chatId": {
-                  "description": "If the chatId is not provided in the request, the new chat will be created and the chatId will be returned in the response.",
-                  "type": "string"
                 },
                 "reply": {
                   "description": "AI's response to the user's message.",
