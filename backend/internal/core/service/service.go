@@ -71,6 +71,8 @@ func (s *Service) SendMessage(ctx context.Context, message, userID string, times
 			Time:   timestamp,
 			Title:  message,
 		}
+
+		chatID = newChat.ID
 	}
 
 	_, _, err := s.firestoreClient.Collection("messages").
