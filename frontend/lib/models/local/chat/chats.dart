@@ -21,6 +21,11 @@ class ChatModel extends ChangeNotifier {
 
   List<Chat> get chats => _chats;
 
+  void resetIsNewChatCreated() {
+    _isNewChatCreated = false;
+  }
+
+
   void addChat(Chat chat) {
     _chats.insert(0, chat);
 

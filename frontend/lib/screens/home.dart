@@ -64,10 +64,11 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     List<localChat.Chat> chats = context.watch<localChat.ChatModel>().chats;
-    bool isNewChatCreated = context.watch<localChat.ChatModel>().isNewChatCreated;
-    if (isNewChatCreated) {
-      selectedIndex = 2; // 0 is home, 1 is new chat, so the first chat is at index 2
+    localChat.ChatModel chatModel = context.watch<localChat.ChatModel>();
+    if (chatModel.isNewChatCreated) {
+      selectedIndex = 2; // 0 is home, 1 is 'new chat' button, so the first chat is at index 2
       selectedChatId = chats[0].ChatId;
+      chatModel.resetIsNewChatCreated();
     }
 
     List<NavigationRailDestination> getDestinations() {
