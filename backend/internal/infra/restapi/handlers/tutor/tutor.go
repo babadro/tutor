@@ -2,8 +2,10 @@ package tutor
 
 import (
 	"context"
+	"errors"
 	"time"
 
+	service2 "github.com/babadro/tutor/internal/core/service"
 	"github.com/babadro/tutor/internal/infra/restapi/operations"
 	"github.com/babadro/tutor/internal/models"
 	"github.com/babadro/tutor/internal/models/swagger"
@@ -14,7 +16,7 @@ import (
 type service interface {
 	SendMessage(ctx context.Context, message, userID string, timestamp int64, chatID string) (string, swagger.Chat, error)
 	SendVoiceMessage(ctx context.Context, voiceMsgFileUrl string, userID string) (models.SendVoiceMessageResult, error)
-	GetChatMessages(ctx context.Context, chatID string, limit int32, timestamp int64) ([]*swagger.ChatMessage, error)
+	GetChatMessages(ctx context.Context, chatID string, userID string, limit int32, timestamp int64) ([]*swagger.ChatMessage, error)
 	GetChats(ctx context.Context, userID string, limit int32, timestamp int64) ([]*swagger.Chat, error)
 }
 
@@ -115,8 +117,12 @@ func (t *Tutor) GetChatMessages(params operations.GetChatMessagesParams, princip
 			},
 		}
 	*/
-	messages, err := t.svc.GetChatMessages(params.HTTPRequest.Context(), params.ChatID, *params.Limit, *params.Timestamp)
+	messages, err := t.svc.GetChatMessages(params.HTTPRequest.Context(), params.ChatID, principal.UserID, *params.Limit, *params.Timestamp)
 	if err != nil {
+		if errors.Is(err, service2.ErrUserNotAuthorizedToViewThisChat) {
+			return operations.NewGetChatMessagesUnauthorized()
+		}
+
 		hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to get chat messages")
 		return operations.NewGetChatMessagesBadRequest()
 	}

@@ -20,6 +20,10 @@ import (
 	"google.golang.org/api/iterator"
 )
 
+var (
+	ErrUserNotAuthorizedToViewThisChat = errors.New("user is not authorized to view this chat")
+)
+
 type Service struct {
 	llm             llm
 	azureOpenai     *azopenai.Client
@@ -87,7 +91,10 @@ func (s *Service) SendMessage(ctx context.Context, message, userID string, times
 		return "", swagger.Chat{}, fmt.Errorf("unable to add user's message to firestore: %s", err.Error())
 	}
 
-	aiResponse := "I'm AI tutor, I'm here to help you with your studies"
+	aiResponse, err := s.llm.Call(ctx, message)
+	if err != nil {
+		return "", swagger.Chat{}, fmt.Errorf("unable to get AI response from llm: %s", err.Error())
+	}
 
 	_, _, err = s.firestoreClient.Collection("messages").
 		Add(ctx, map[string]interface{}{
@@ -101,8 +108,6 @@ func (s *Service) SendMessage(ctx context.Context, message, userID string, times
 	}
 
 	return aiResponse, newlyCreatedChat, nil
-
-	//	return s.llm.Call(ctx, message)
 }
 
 func (s *Service) SendVoiceMessage(ctx context.Context, voiceMsgFileUrl string, userID string) (models.SendVoiceMessageResult, error) {
@@ -214,7 +219,31 @@ type ChatMessage struct {
 	UserID string `firestore:"user_id"`
 }
 
-func (s *Service) GetChatMessages(ctx context.Context, chatID string, limit int32, timestamp int64) ([]*swagger.ChatMessage, error) {
+func (s *Service) GetChatMessages(ctx context.Context, chatID string, userID string, limit int32, timestamp int64) ([]*swagger.ChatMessage, error) {
+	docRef := s.firestoreClient.Collection("chats").Doc(chatID)
+
+	// Attempt to retrieve the document
+	docSnapshot, err := docRef.Get(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve chat by id: %v", err)
+	}
+
+	// Read the user_id property from the document
+	userIDinDB, err := docSnapshot.DataAt("user_id")
+	if err != nil {
+		return nil, fmt.Errorf("failed to read user_id from chat: %v", err)
+	}
+
+	// Assert the type of userID if necessary, assuming it's a string
+	userIDinDBStr, ok := userIDinDB.(string)
+	if !ok {
+		return nil, fmt.Errorf("user_id in chat is not a string")
+	}
+
+	if userIDinDBStr != userID {
+		return nil, ErrUserNotAuthorizedToViewThisChat
+	}
+
 	var messages []ChatMessage
 
 	query := s.firestoreClient.Collection("messages").
@@ -266,8 +295,6 @@ type chat struct {
 }
 
 func (s *Service) GetChats(ctx context.Context, userID string, limit int32, timestamp int64) ([]*swagger.Chat, error) {
-	userID = "fake"
-
 	query := s.firestoreClient.Collection("chats").
 		Where("user_id", "==", userID).
 		Where("time", ">=", timestamp).
