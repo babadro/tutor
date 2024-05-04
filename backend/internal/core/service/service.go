@@ -274,7 +274,7 @@ func (s *Service) GetChatMessages(ctx context.Context, chatID string, userID str
 		messages = append(messages, message)
 	}
 
-	//convert messages to swagger.ChatMessage
+	// convert messages to swagger.ChatMessage
 	var swaggerMessages []*swagger.ChatMessage
 	for _, message := range messages {
 		swaggerMessages = append(swaggerMessages, &swagger.ChatMessage{
@@ -283,7 +283,6 @@ func (s *Service) GetChatMessages(ctx context.Context, chatID string, userID str
 			UserID:            message.UserID,
 			IsFromCurrentUser: message.UserID != "",
 		})
-
 	}
 
 	return swaggerMessages, nil
