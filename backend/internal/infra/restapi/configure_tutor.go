@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	firebase "firebase.google.com/go"
+	"firebase.google.com/go/auth"
 	"github.com/Azure/azure-sdk-for-go/sdk/ai/azopenai"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/babadro/tutor/internal/infra/restapi/handlers/tutor"
@@ -39,7 +40,7 @@ type envVars struct {
 	StorageBucket  string   `env:"STORAGE_BUCKET,required"`
 }
 
-func configureFlags(api *operations.TutorAPI) {
+func configureFlags(_ *operations.TutorAPI) {
 	// api.CommandLineOptionsGroups = []swag.CommandLineOptionsGroup{ ... }
 }
 
@@ -54,8 +55,6 @@ func configureAPI(api *operations.TutorAPI) http.Handler {
 	if err := env.Parse(&envs); err != nil {
 		l.Fatal().Msgf("Unable to parse env vars: %v\n", err)
 	}
-
-	_ = context.Background()
 
 	// configure the api here
 	api.ServeError = errors.ServeError
@@ -74,6 +73,7 @@ func configureAPI(api *operations.TutorAPI) http.Handler {
 	}
 	opt := option.WithCredentialsFile("/app/secrets/tutor.json")
 	firebaseApp, err := firebase.NewApp(context.Background(), firebaseConfig, opt)
+
 	if err != nil {
 		l.Fatal().Err(err).Msg("Unable to init firebase app")
 	}
@@ -88,10 +88,12 @@ func configureAPI(api *operations.TutorAPI) http.Handler {
 		token = strings.TrimPrefix(token, "Bearer ")
 
 		// Verify the ID Token
-		decodedToken, err := firebaseAuthClient.VerifyIDToken(context.Background(), token)
+		var decodedToken *auth.Token
+
+		decodedToken, err = firebaseAuthClient.VerifyIDToken(context.Background(), token)
 		if err != nil {
-			l.Error().Msgf("error verifying ID token: %v", err)
-			return nil, fmt.Errorf("error verifying ID token: %v", err)
+			l.Error().Msgf("error verifying ID token: %s", err.Error())
+			return nil, fmt.Errorf("error verifying ID token: %s", err.Error())
 		}
 
 		email, ok := decodedToken.Claims["email"].(string)
@@ -110,7 +112,7 @@ func configureAPI(api *operations.TutorAPI) http.Handler {
 
 		l.Error().Msgf("Unauthorized user: %s", email)
 
-		return nil, errors.New(401, "Unauthorized")
+		return nil, errors.New(http.StatusUnauthorized, "Unauthorized")
 	}
 
 	llm, err := openai.New()
@@ -119,6 +121,7 @@ func configureAPI(api *operations.TutorAPI) http.Handler {
 	}
 
 	openAICredential := azcore.NewKeyCredential(envs.OpenaiAPIKey)
+
 	openaiClient, err := azopenai.NewClientForOpenAI("https://api.openai.com/v1", openAICredential, nil)
 	if err != nil {
 		l.Fatal().Err(err).Msg("Unable to init openai client")
@@ -175,9 +178,12 @@ func setupMiddlewares() middleware.Builder {
 	return nil
 }
 
-// The middleware configuration happens before anything, this middleware also applies to serving the swagger.json document.
+// The middleware configuration happens before anything,
+// this middleware also applies to serving the swagger.json document.
 // So this is a good place to plug in a panic handling middleware, logging and metrics.
-func setupGlobalMiddleware(l zerolog.Logger, handler http.Handler) http.Handler {
+func setupGlobalMiddleware(
+	l zerolog.Logger, handler http.Handler,
+) http.Handler {
 	return alice.New(
 		middlewares.Logging(l),
 		middlewares.Cors,

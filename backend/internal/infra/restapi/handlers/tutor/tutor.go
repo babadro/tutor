@@ -15,8 +15,12 @@ import (
 
 type service interface {
 	SendMessage(ctx context.Context, message, userID string, timestamp int64, chatID string) (string, swagger.Chat, error)
-	SendVoiceMessage(ctx context.Context, voiceMsgFileUrl string, userID string) (models.SendVoiceMessageResult, error)
-	GetChatMessages(ctx context.Context, chatID string, userID string, limit int32, timestamp int64) ([]*swagger.ChatMessage, error)
+	SendVoiceMessage(
+		ctx context.Context, voiceMsgFileURL string, userID string,
+	) (models.SendVoiceMessageResult, error)
+	GetChatMessages(
+		ctx context.Context, chatID string, userID string, limit int32, timestamp int64,
+	) ([]*swagger.ChatMessage, error)
 	GetChats(ctx context.Context, userID string, limit int32, timestamp int64) ([]*swagger.Chat, error)
 }
 
@@ -28,7 +32,9 @@ func NewTutor(svc service) *Tutor {
 	return &Tutor{svc: svc}
 }
 
-func (t *Tutor) SendChatMessage(params operations.SendChatMessageParams, principal *models.Principal) middleware.Responder {
+func (t *Tutor) SendChatMessage(
+	params operations.SendChatMessageParams, principal *models.Principal,
+) middleware.Responder {
 	if *params.Body.Text == "" {
 		hlog.FromRequest(params.HTTPRequest).Error().Msg("Empty message")
 		return operations.NewSendChatMessageBadRequest()
@@ -53,7 +59,9 @@ func (t *Tutor) SendChatMessage(params operations.SendChatMessageParams, princip
 	})
 }
 
-func (t *Tutor) SendVoiceMessage(params operations.SendVoiceMessageParams, principal *models.Principal) middleware.Responder {
+func (t *Tutor) SendVoiceMessage(
+	params operations.SendVoiceMessageParams, principal *models.Principal,
+) middleware.Responder {
 	voiceMessage := params.Body.VoiceMessageURL
 
 	// log voice message
@@ -73,14 +81,19 @@ func (t *Tutor) SendVoiceMessage(params operations.SendVoiceMessageParams, princ
 	})
 }
 
-func (t *Tutor) GetChatMessages(params operations.GetChatMessagesParams, principal *models.Principal) middleware.Responder {
-	messages, err := t.svc.GetChatMessages(params.HTTPRequest.Context(), params.ChatID, principal.UserID, *params.Limit, *params.Timestamp)
+func (t *Tutor) GetChatMessages(
+	params operations.GetChatMessagesParams, principal *models.Principal,
+) middleware.Responder {
+	messages, err := t.svc.GetChatMessages(
+		params.HTTPRequest.Context(), params.ChatID, principal.UserID, *params.Limit, *params.Timestamp,
+	)
 	if err != nil {
 		if errors.Is(err, service2.ErrUserNotAuthorizedToViewThisChat) {
 			return operations.NewGetChatMessagesUnauthorized()
 		}
 
 		hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to get chat messages")
+
 		return operations.NewGetChatMessagesBadRequest()
 	}
 

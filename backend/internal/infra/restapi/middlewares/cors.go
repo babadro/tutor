@@ -11,7 +11,7 @@ func Cors(next http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Headers", "*")
 
 		// Check if it's a preflight request
-		if r.Method == "OPTIONS" {
+		if r.Method == http.MethodOptions {
 			// Preflight request; respond with 200 OK without further processing
 			w.WriteHeader(http.StatusOK)
 			return

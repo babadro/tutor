@@ -54,7 +54,9 @@ type llm interface {
 	CreateEmbedding(ctx context.Context, inputTexts []string) ([][]float32, error)
 }
 
-func (s *Service) SendMessage(ctx context.Context, message, userID string, timestamp int64, chatID string) (string, swagger.Chat, error) {
+func (s *Service) SendMessage(
+	ctx context.Context, message, userID string, timestamp int64, chatID string,
+) (string, swagger.Chat, error) {
 	var newlyCreatedChat swagger.Chat
 
 	if chatID == "" {
@@ -110,11 +112,14 @@ func (s *Service) SendMessage(ctx context.Context, message, userID string, times
 	return aiResponse, newlyCreatedChat, nil
 }
 
-func (s *Service) SendVoiceMessage(ctx context.Context, voiceMsgFileUrl string, userID string) (models.SendVoiceMessageResult, error) {
-	resp, err := http.Get(voiceMsgFileUrl)
+func (s *Service) SendVoiceMessage(
+	ctx context.Context, voiceMsgFileURL string, userID string,
+) (models.SendVoiceMessageResult, error) {
+	resp, err := http.Get(voiceMsgFileURL)
 	if err != nil {
 		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to download voice message: %s", err.Error())
 	}
+
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
@@ -187,8 +192,6 @@ func (s *Service) SendVoiceMessage(ctx context.Context, voiceMsgFileUrl string, 
 
 	voiceResponseURL := generateFirebaseStorageURL(object.BucketName(), object.ObjectName())
 
-	fmt.Println("voice response url: ", voiceResponseURL)
-
 	return models.SendVoiceMessageResult{
 		VoiceMessageURL:         "",
 		VoiceResponseURL:        voiceResponseURL,
@@ -219,19 +222,21 @@ type ChatMessage struct {
 	UserID string `firestore:"user_id"`
 }
 
-func (s *Service) GetChatMessages(ctx context.Context, chatID string, userID string, limit int32, timestamp int64) ([]*swagger.ChatMessage, error) {
+func (s *Service) GetChatMessages(
+	ctx context.Context, chatID string, userID string, limit int32, timestamp int64,
+) ([]*swagger.ChatMessage, error) {
 	docRef := s.firestoreClient.Collection("chats").Doc(chatID)
 
 	// Attempt to retrieve the document
 	docSnapshot, err := docRef.Get(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve chat by id: %v", err)
+		return nil, fmt.Errorf("failed to retrieve chat by id: %s", err.Error())
 	}
 
 	// Read the user_id property from the document
 	userIDinDB, err := docSnapshot.DataAt("user_id")
 	if err != nil {
-		return nil, fmt.Errorf("failed to read user_id from chat: %v", err)
+		return nil, fmt.Errorf("failed to read user_id from chat: %s", err.Error())
 	}
 
 	// Assert the type of userID if necessary, assuming it's a string
@@ -256,7 +261,8 @@ func (s *Service) GetChatMessages(ctx context.Context, chatID string, userID str
 	defer iter.Stop()
 
 	for {
-		doc, err := iter.Next()
+		var doc *firestore.DocumentSnapshot
+		doc, err = iter.Next()
 
 		if err != nil {
 			if errors.Is(err, iterator.Done) {
@@ -328,8 +334,6 @@ func (s *Service) GetChats(ctx context.Context, userID string, limit int32, time
 			Time:   chatModel.Timestamp,
 		})
 	}
-
-	fmt.Println("chats", chats)
 
 	return chats, nil
 }
