@@ -1,6 +1,6 @@
 module github.com/babadro/tutor
 
-go 1.21.0
+go 1.22.2
 
 require (
 	firebase.google.com/go v3.13.0+incompatible
