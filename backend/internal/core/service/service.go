@@ -271,7 +271,7 @@ func (s *Service) GetChats(ctx context.Context, userID string, limit int32, time
 	query := s.firestoreClient.Collection("chats").
 		Where("user_id", "==", userID).
 		Where("time", ">=", timestamp).
-		//OrderBy("time", firestore.Desc).
+		OrderBy("time", firestore.Desc).
 		Limit(int(limit))
 
 	iter := query.Documents(ctx)
