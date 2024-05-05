@@ -84,36 +84,7 @@ func configureAPI(api *operations.TutorAPI) http.Handler {
 		l.Fatal().Err(err).Msg("Unable to init firebase client")
 	}
 
-	api.KeyAuth = func(token string) (*models.Principal, error) {
-		token = strings.TrimPrefix(token, "Bearer ")
-
-		// Verify the ID Token
-		var decodedToken *auth.Token
-
-		decodedToken, err = firebaseAuthClient.VerifyIDToken(context.Background(), token)
-		if err != nil {
-			l.Error().Msgf("error verifying ID token: %s", err.Error())
-			return nil, fmt.Errorf("error verifying ID token: %s", err.Error())
-		}
-
-		email, ok := decodedToken.Claims["email"].(string)
-		if !ok {
-			return nil, fmt.Errorf("error getting email from token")
-		}
-
-		for _, user := range envs.AllowedUsers {
-			if user == email {
-				return &models.Principal{
-					Email:  email,
-					UserID: decodedToken.UID,
-				}, nil
-			}
-		}
-
-		l.Error().Msgf("Unauthorized user: %s", email)
-
-		return nil, errors.New(http.StatusUnauthorized, "Unauthorized")
-	}
+	api.KeyAuth = getKeyAuthFunc(l, firebaseAuthClient, envs.AllowedUsers)
 
 	llm, err := openai.New()
 	if err != nil {
@@ -188,4 +159,37 @@ func setupGlobalMiddleware(
 		middlewares.Logging(l),
 		middlewares.Cors,
 	).Then(handler)
+}
+
+func getKeyAuthFunc(
+	l zerolog.Logger, firebaseAuthClient *auth.Client, allowedUsers []string,
+) func(string) (*models.Principal, error) {
+	return func(token string) (*models.Principal, error) {
+		token = strings.TrimPrefix(token, "Bearer ")
+
+		// Verify the ID Token
+		decodedToken, err := firebaseAuthClient.VerifyIDToken(context.Background(), token)
+		if err != nil {
+			l.Error().Msgf("error verifying ID token: %s", err.Error())
+			return nil, fmt.Errorf("error verifying ID token: %s", err.Error())
+		}
+
+		email, ok := decodedToken.Claims["email"].(string)
+		if !ok {
+			return nil, fmt.Errorf("error getting email from token")
+		}
+
+		for _, user := range allowedUsers {
+			if user == email {
+				return &models.Principal{
+					Email:  email,
+					UserID: decodedToken.UID,
+				}, nil
+			}
+		}
+
+		l.Error().Msgf("Unauthorized user: %s", email)
+
+		return nil, errors.New(http.StatusUnauthorized, "Unauthorized")
+	}
 }
