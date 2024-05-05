@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:provider/provider.dart';
 import 'package:tutor/models/local/chat/chats.dart' as localChat;
+import 'package:tutor/screens/audioPage.dart';
+import 'package:tutor/screens/audio_page_2_flutter_sound.dart';
 import '../models/backend/chats/get_chats_response.dart';
 import '../services/auth_service.dart';
 import 'chatDetailPage.dart';
@@ -149,7 +151,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Expanded(
                   child: Container(
                     color: Theme.of(context).colorScheme.primaryContainer,
-                    child: (selectedIndex > 0) ? ChatDetailPage(key: Key(selectedChatId), initialChatId: selectedChatId) : Placeholder(),
+                    child: (selectedIndex > 0) ? ChatDetailPage(key: Key(selectedChatId), initialChatId: selectedChatId) : SimpleRecorder(key: Key('recording_screen')),
                   ),
                 ),
               ],
