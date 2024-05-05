@@ -1,0 +1,258 @@
+swagger: "2.0"
+info:
+  version: "1.0.0"
+  title: "Tutor"
+  description: "API for AI-powered functionality in a language learning app"
+securityDefinitions:
+  key:
+    type: apiKey
+    in: header
+    name: Authorization
+security:
+  - key: []
+paths:
+  /chat_messages:
+    post:
+      summary: Sends a message to the AI and receives a response.
+      operationId: "SendChatMessage"
+      description: This endpoint receives a user's message and returns the AI's response.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: User message and additional information
+          required: true
+          schema:
+            type: object
+            required:
+              - text
+              - timestamp
+            properties:
+              timestamp:
+                type: integer
+                format: int64
+                description: The timestamp of the message.
+              chatId:
+                type: string
+                description: The chat ID.
+              text:
+                type: string
+                description: The message text sent by the user.
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            type: object
+            properties:
+              reply:
+                type: string
+                description: AI's response to the user's message.
+              timestamp:
+                type: integer
+                format: int64
+              chat:
+                type: object
+                $ref: '#/definitions/Chat'
+                description: If the chatId is not provided in the request, the new chat will be created and this chat will be returned in the response.
+        400:
+          description: "Bad request"
+          schema:
+            $ref: "#/definitions/error"
+        '401':
+          description: unauthorized
+          schema:
+            $ref: "#/definitions/error"
+        500:
+          description: "Internal server error"
+          schema:
+            $ref: "#/definitions/error"
+        default:
+          description: error
+          schema:
+            $ref: "#/definitions/error"
+  /chats:
+    get:
+      description: "Get chats"
+      operationId: "GetChats"
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: limit
+          required: false
+          type: integer
+          format: int32
+          default: 10
+        - in: query
+          name: timestamp
+          description: timestamp starting from which chats are to be fetched
+          required: false
+          type: integer
+          format: int64
+          default: 0
+      responses:
+        200:
+          description: A list of chats
+          schema:
+            type: object
+            properties:
+              chats:
+                type: array
+                items:
+                  $ref: '#/definitions/Chat'
+        400:
+          description: "Bad request"
+          schema:
+            $ref: "#/definitions/error"
+        '401':
+          description: unauthorized
+          schema:
+            $ref: "#/definitions/error"
+        500:
+          description: "Internal server error"
+          schema:
+            $ref: "#/definitions/error"
+        default:
+          description: error
+          schema:
+            $ref: "#/definitions/error"
+  /chat_messages/{chatId}:
+    get:
+      description: "Get chat messages"
+      operationId: "GetChatMessages"
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: chatId
+          required: true
+          type: string
+        - in: query
+          name: limit
+          required: false
+          type: integer
+          format: int32
+          default: 10
+        - in: query
+          name: timestamp
+          description: timestamp starting from which messages are to be fetched
+          required: false
+          type: integer
+          format: int64
+          default: 0
+      responses:
+        200:
+          description: A list of chat messages
+          schema:
+            type: object
+            properties:
+              messages:
+                type: array
+                items:
+                  $ref: '#/definitions/ChatMessage'
+        400:
+          description: "Bad request"
+          schema:
+            $ref: "#/definitions/error"
+        '401':
+          description: unauthorized
+          schema:
+            $ref: "#/definitions/error"
+        500:
+          description: "Internal server error"
+          schema:
+            $ref: "#/definitions/error"
+        default:
+          description: error
+          schema:
+            $ref: "#/definitions/error"
+
+  /voice_messages:
+    post:
+      summary: Processes a voice message and returns a response.
+      operationId: "SendVoiceMessage"
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: User message containing a voice message url
+          required: true
+          schema:
+            type: object
+            properties:
+              voiceMessageUrl:
+                type: string
+                description: URL of the voice message file
+      responses:
+        '200':
+          description: Successful response
+          schema:
+            type: object
+            properties:
+              voiceMessageUrl:
+                type: string
+                description: URL of the voice message input file.
+              voiceMessageTranscript:
+                type: string
+                description: Transcription of the input voice message.
+              voiceResponseUrl:
+                type: string
+                description: URL to the voice response file.
+              voiceResponseTranscript:
+                type: string
+                description: Text transcription of the voice response.
+        400:
+          description: "Bad request"
+          schema:
+            $ref: "#/definitions/error"
+        '401':
+          description: unauthorized
+          schema:
+            $ref: "#/definitions/error"
+        500:
+          description: "Internal server error"
+          schema:
+            $ref: "#/definitions/error"
+        default:
+          description: error
+          schema:
+            $ref: "#/definitions/error"
+
+definitions:
+  error:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int64
+      message:
+        type: string
+  ChatMessage:
+    type: object
+    properties:
+      userId:
+        type: string
+      text:
+        type: string
+      timestamp:
+        type: integer
+        format: int64
+      curUsr:
+        type: boolean
+        x-go-name: IsFromCurrentUser
+  Chat:
+    type: object
+    properties:
+      chatId:
+        type: string
+      time:
+        type: integer
+        format: int64
+      title:
+        type: string

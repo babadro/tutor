@@ -7,7 +7,7 @@ services:
    env_file: .env.ngrok
    ports:
      - "4040:4040"
-   command: [ "http", "service:8080" ]
+   command: [ "http", "--domain=gnu-casual-rightly.ngrok-free.app", "service:8080" ]
    healthcheck:
      test: ["CMD", "nc", "-z", "-v", "localhost", "4040"]
      interval: 1s

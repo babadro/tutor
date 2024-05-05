@@ -1,0 +1,10 @@
+vendor/
+.idea/
+.vscode
+release/
+.env.secrets
+.env.ngrok
+temp/
+
+cmd/server/server
+secrets
