@@ -8,6 +8,8 @@ import 'package:tutor/models/local/chat/chats.dart' as localChat;
 import 'package:tutor/services/auth_service.dart';
 import 'package:tutor/models/backend/chat_messages/get_chat_messages_response.dart';
 import 'package:tutor/models/local/chat/chat_message.dart' as local;
+import 'package:flutter_sound/flutter_sound.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class ChatDetailPage extends StatefulWidget{
   final String initialChatId;
@@ -25,11 +27,16 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
   TextEditingController _messageController = TextEditingController();
 
+  FlutterSoundRecorder? _audioRecorder;
+  bool _isRecording = false;
+  bool _hasRecordPermission = false;
+
   @override
   void initState() {
     super.initState();
     chatId = widget.initialChatId;
     _loadMessages();
+    _initRecorder();
   }
 
   void _loadMessages() async {
@@ -163,6 +170,59 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     });
   }
 
+  void _initRecorder() async {
+    _audioRecorder = FlutterSoundRecorder();
+    final status = await Permission.microphone.request();
+    _hasRecordPermission = status == PermissionStatus.granted;
+    if (_hasRecordPermission) {
+      await _audioRecorder!.openRecorder();
+    } else {
+      print('Microphone permission not granted');
+    }
+  }
+
+  Future<void> _startRecording() async {
+    if (!_hasRecordPermission) {
+      print('Microphone permission not granted');
+      return;
+    }
+
+    await _audioRecorder!.startRecorder(toFile: 'test.mp3');
+    setState(() {
+      _isRecording = true;
+    });
+  }
+
+  Future<void> _stopAndSendRecording() async {
+    final path = await _audioRecorder!.stopRecorder();
+    setState(() {
+      _isRecording = false;
+    });
+
+    // todo implement sending the recorder audio file to the backend
+    _sendAudioFile(path);
+  }
+
+  void _cancelRecording() async {
+    await _audioRecorder!.stopRecorder();
+    setState(() {
+      _isRecording = false;
+    });
+  }
+
+  @override
+  void dispose() {
+    _audioRecorder?.closeRecorder();
+    _audioRecorder = null;
+    super.dispose();
+  }
+
+  Future<void> _sendAudioFile(String? path) async {
+    if (path == null) return;
+    print('Sending $path to the server...');
+    // todo implement the logic to send the audio file to your backend.
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -171,20 +231,20 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           ListView.builder(
             itemCount: _messages.length,
             shrinkWrap: true,
-            padding: EdgeInsets.only(top: 10,bottom: 10),
+            padding: EdgeInsets.only(top: 10, bottom: 10),
             physics: NeverScrollableScrollPhysics(),
-            itemBuilder: (context, index){
+            itemBuilder: (context, index) {
               return Container(
-                padding: EdgeInsets.only(left: 14,right: 14,top: 10,bottom: 10),
+                padding: EdgeInsets.only(left: 14, right: 14, top: 10, bottom: 10),
                 child: Align(
-                  alignment: (_messages[index].IsFromCurrentUser?Alignment.topRight:Alignment.topLeft),
+                  alignment: (_messages[index].IsFromCurrentUser ? Alignment.topRight : Alignment.topLeft),
                   child: Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
-                      color: (_messages[index].IsFromCurrentUser?Colors.blue[200]:Colors.grey.shade200),
+                      color: (_messages[index].IsFromCurrentUser ? Colors.blue[200] : Colors.grey.shade200),
                     ),
                     padding: EdgeInsets.all(16),
-                    child: Text(_messages[index].Text, style: TextStyle(fontSize: 15),),
+                    child: Text(_messages[index].Text, style: TextStyle(fontSize: 15)),
                   ),
                 ),
               );
@@ -193,26 +253,46 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           Align(
             alignment: Alignment.bottomLeft,
             child: Container(
-              padding: EdgeInsets.only(left: 10,bottom: 10,top: 10),
+              padding: EdgeInsets.only(left: 10, bottom: 10, top: 10),
               height: 60,
               width: double.infinity,
               color: Colors.white,
               child: Row(
                 children: <Widget>[
                   GestureDetector(
-                    onTap: (){
+                    onTap: () {
+                      if (!_isRecording) {
+                        _startRecording();
+                      } else {
+                        _stopAndSendRecording();
+                      }
                     },
                     child: Container(
                       height: 30,
                       width: 30,
                       decoration: BoxDecoration(
-                        color: Colors.lightBlue,
+                        color: _isRecording ? Colors.red : Colors.lightBlue,
                         borderRadius: BorderRadius.circular(30),
                       ),
-                      child: Icon(Icons.add, color: Colors.white, size: 20, ),
+                      child: Icon(_isRecording ? Icons.stop : Icons.mic, color: Colors.white, size: 20),
                     ),
                   ),
-                  SizedBox(width: 15,),
+                  Visibility(
+                    visible: _isRecording,
+                    child: GestureDetector(
+                      onTap: _cancelRecording,
+                      child: Container(
+                        height: 30,
+                        width: 30,
+                        decoration: BoxDecoration(
+                          color: Colors.black,
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        child: Icon(Icons.delete, color: Colors.white, size: 20),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 15),
                   Expanded(
                     child: TextField(
                       decoration: InputDecoration(
@@ -223,20 +303,19 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                       controller: _messageController,
                     ),
                   ),
-                  SizedBox(width: 15,),
+                  SizedBox(width: 15),
                   FloatingActionButton(
-                    onPressed: (){
+                    onPressed: () {
                       if (_messageController.text.trim().isNotEmpty) {
                         _handleSendPressed(_messageController.text.trim());
                         _messageController.clear();
                       }
                     },
-                    child: Icon(Icons.send,color: Colors.white,size: 18,),
+                    child: Icon(Icons.send, color: Colors.white, size: 18),
                     backgroundColor: Colors.blue,
                     elevation: 0,
                   ),
                 ],
-
               ),
             ),
           ),
@@ -244,4 +323,5 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       ),
     );
   }
+
 }
