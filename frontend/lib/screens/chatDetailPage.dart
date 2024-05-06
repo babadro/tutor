@@ -11,6 +11,8 @@ import 'package:tutor/models/local/chat/chat_message.dart' as local;
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../services/chat_service.dart';
+
 class ChatDetailPage extends StatefulWidget{
   final String initialChatId;
 
@@ -23,6 +25,7 @@ class ChatDetailPage extends StatefulWidget{
 
 class _ChatDetailPageState extends State<ChatDetailPage> {
   late String chatId;
+  late ChatService _chatService;
   List<local.ChatMessage> _messages = [];
 
   TextEditingController _messageController = TextEditingController();
@@ -35,90 +38,16 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   void initState() {
     super.initState();
     chatId = widget.initialChatId;
+    _chatService = ChatService(context);
     _loadMessages();
     _initRecorder();
   }
 
   void _loadMessages() async {
-    if (chatId.isEmpty) {
-      return;
-    }
-
-    final apiUrl = 'http://localhost:8080/chat_messages/${chatId}';
-    final uri = Uri.parse(apiUrl).replace(queryParameters: {
-     'limit': '100', // todo adjust as needed
-      'timestamp': DateTime.now().subtract(Duration(days: 7)).millisecondsSinceEpoch.toString(),
+    var messages = await _chatService.loadMessages(chatId);
+    setState(() {
+      _messages = messages;
     });
-
-    final authService = Provider.of<AuthService>(context, listen: false);
-
-    String? authToken = await authService.getCurrentUserIdToken();
-
-    try {
-      print('Fetching messages from $uri');
-      final response = await http.get(
-          uri,
-          headers: {
-            'Authorization': 'Bearer $authToken', // Include the authorization header
-            'Content-Type': 'application/json',
-          },
-      ).timeout(Duration(seconds: 10));
-      if (response.statusCode == 200) {
-        final messagesResponse = GetChatMessagesResponse.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
-
-        setState(() {
-          _messages = messagesResponse.Messages.map((message) => local.ChatMessage(
-            IsFromCurrentUser: message.IsFromCurrentUser,
-            Text: message.Text,
-            Timestamp: message.Timestamp,
-          )).toList();
-
-          _messages.forEach((message) {
-            print('Message: ${message.Text}');
-            print('Timestamp: ${message.Timestamp}');
-            print('IsFromCurrentUser: ${message.IsFromCurrentUser}');
-          });
-        });
-      } else {
-       // print('Server error: ${response.body}');
-        print('Failed to fetch messages: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Error fetching messages: $e');
-    }
-  }
-
-  // send post request to server for adding message
-  Future<SendChatMessageResponse> _sendMessage(SendChatMessageRequest message) async {
-    const apiUrl = 'http://localhost:8080/chat_messages';
-    final uri = Uri.parse(apiUrl);
-
-    final authService = Provider.of<AuthService>(context, listen: false);
-
-    String? authToken = await authService.getCurrentUserIdToken();
-
-    try {
-      print('Sending message to $uri');
-      final response = await http.post(
-        uri,
-        headers: {
-          'Authorization': 'Bearer $authToken', // Include the authorization header
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode(message.toJson()),
-      ).timeout(Duration(seconds: 10));
-      if (response.statusCode == 200) {
-        final responseMessage = SendChatMessageResponse.fromJson(jsonDecode(response.body));
-
-        return responseMessage;
-      } else {
-        print('Server error: ${response.body}');
-        throw Exception('Failed to send message');
-      }
-    } catch (e) {
-      print('Error sending message: $e');
-      throw Exception('Failed to send message');
-    }
   }
 
   void _addMessage(local.ChatMessage message) {
@@ -127,25 +56,22 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     });
   }
 
-  void _setChatId(String newChatId) {
-    setState(() {
-      chatId = newChatId;
-    });
-  }
-
-  void _handleSendPressed(String text) {
+  void _handleSendPressed(String text) async {
     var timestamp = DateTime.now().millisecondsSinceEpoch;
-
-    _addMessage(local.ChatMessage(IsFromCurrentUser: true, Text: text, Timestamp: timestamp));
-
-    final message = SendChatMessageRequest(
+    var message = SendChatMessageRequest(
       ChatId: chatId,
       Text: text,
       Timestamp: timestamp,
     );
 
-    // Send the message to the server
-    _sendMessage(message).then((responseMessage) {
+    try {
+      var responseMessage = await _chatService.sendMessage(message);
+      _addMessage(local.ChatMessage(
+        IsFromCurrentUser: true,
+        Text: text,
+        Timestamp: timestamp,
+      ));
+
       if (responseMessage.CreatedChat != null) {
         Provider.of<localChat.ChatModel>(context, listen: false).addChat(
           localChat.Chat(
@@ -155,19 +81,19 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           ),
         );
 
-        _setChatId(responseMessage.CreatedChat!.ChatId);
+        setState(() {
+          chatId = responseMessage.CreatedChat!.ChatId;
+        });
       }
 
-      _addMessage(
-        local.ChatMessage(
-          IsFromCurrentUser: false,
-          Text: responseMessage.Reply,
-          Timestamp: responseMessage.Timestamp,
-        ),
-      );
-    }).catchError((e) {
+      _addMessage(local.ChatMessage(
+        IsFromCurrentUser: false,
+        Text: responseMessage.Reply,
+        Timestamp: responseMessage.Timestamp,
+      ));
+    } catch (e) {
       print('Error sending message: $e');
-    });
+    }
   }
 
   void _initRecorder() async {
@@ -323,5 +249,4 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       ),
     );
   }
-
 }
