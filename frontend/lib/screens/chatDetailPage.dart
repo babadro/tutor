@@ -29,10 +29,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   List<local.ChatMessage> _messages = [];
 
   TextEditingController _messageController = TextEditingController();
-
-  FlutterSoundRecorder? _audioRecorder;
   bool _isRecording = false;
-  bool _hasRecordPermission = false;
 
   @override
   void initState() {
@@ -40,7 +37,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     chatId = widget.initialChatId;
     _chatService = ChatService(context);
     _loadMessages();
-    _initRecorder();
   }
 
   void _loadMessages() async {
@@ -96,57 +92,16 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     }
   }
 
-  void _initRecorder() async {
-    _audioRecorder = FlutterSoundRecorder();
-    final status = await Permission.microphone.request();
-    _hasRecordPermission = status == PermissionStatus.granted;
-    if (_hasRecordPermission) {
-      await _audioRecorder!.openRecorder();
-    } else {
-      print('Microphone permission not granted');
-    }
-  }
-
   Future<void> _startRecording() async {
-    if (!_hasRecordPermission) {
-      print('Microphone permission not granted');
-      return;
-    }
-
-    await _audioRecorder!.startRecorder(toFile: 'test.mp3');
-    setState(() {
-      _isRecording = true;
-    });
+    // todo
   }
 
   Future<void> _stopAndSendRecording() async {
-    final path = await _audioRecorder!.stopRecorder();
-    setState(() {
-      _isRecording = false;
-    });
-
-    // todo implement sending the recorder audio file to the backend
-    _sendAudioFile(path);
+    // todo
   }
 
   void _cancelRecording() async {
-    await _audioRecorder!.stopRecorder();
-    setState(() {
-      _isRecording = false;
-    });
-  }
-
-  @override
-  void dispose() {
-    _audioRecorder?.closeRecorder();
-    _audioRecorder = null;
-    super.dispose();
-  }
-
-  Future<void> _sendAudioFile(String? path) async {
-    if (path == null) return;
-    print('Sending $path to the server...');
-    // todo implement the logic to send the audio file to your backend.
+    // todo
   }
 
   @override
