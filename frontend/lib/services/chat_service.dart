@@ -7,6 +7,9 @@ import 'package:tutor/services/auth_service.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
+import 'package:tutor/models/local/chat/chats.dart' as localChat;
+
+import '../models/backend/chats/get_chats_response.dart';
 
 class ChatService {
   final BuildContext context;
@@ -74,6 +77,43 @@ class ChatService {
     } catch (e) {
       print('Error sending message: $e');
       throw Exception('Failed to send message');
+    }
+  }
+
+  Future<List<localChat.Chat>> getChats() async {
+    const apiUrl = 'http://localhost:8080/chats?limit=100&timestamp=0';
+    final uri = Uri.parse(apiUrl);
+
+    final authService = Provider.of<AuthService>(context, listen: false);
+
+    String? authToken = await authService.getCurrentUserIdToken();
+
+    try {
+      print('Fetching chats from $uri');
+      final response = await http.get(
+        uri,
+        headers: {
+          'Authorization': 'Bearer $authToken', // Include the authorization header
+          'Content-Type': 'application/json',
+        },
+      ).timeout(Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        final chatsResponse = GetChatsResponse.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+
+        var chats = chatsResponse.Chats.map((e) => ( localChat.Chat(
+          ChatId: e.ChatId,
+          Timestamp: e.Timestamp,
+          Title: e.Title,
+        ))).toList();
+
+        return chats;
+      } else {
+        print('Failed to fetch chats: ${response.statusCode}');
+        throw Exception('Failed to fetch chats');
+      }
+    } catch (e) {
+      print('Failed to fetch chats: $e');
+      throw Exception('Failed to fetch chats');
     }
   }
 }
