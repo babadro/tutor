@@ -4,21 +4,27 @@ import 'package:tutor/models/backend/chat_messages/send_chat_message_response.da
 import 'package:tutor/models/backend/chat_messages/get_chat_messages_response.dart';
 import 'package:tutor/models/local/chat/chat_message.dart' as local;
 import 'package:tutor/services/auth_service.dart';
-import 'package:provider/provider.dart';
-import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:tutor/models/local/chat/chats.dart' as localChat;
+import 'package:tutor/services/service_response.dart';
 
 import '../models/backend/chats/get_chats_response.dart';
 
+class sendMessageResult {
+  final local.ChatMessage message;
+  final localChat.Chat createdChat ;
+
+  sendMessageResult(this.message, this.createdChat);
+}
+
 class ChatService {
-  final BuildContext context;
+  final AuthService _authService;
 
-  ChatService(this.context);
+  ChatService(this._authService);
 
-  Future<List<local.ChatMessage>> loadMessages(String chatId) async {
+  Future<ServiceResult<List<local.ChatMessage>>> loadMessages(String chatId) async {
     if (chatId.isEmpty) {
-      return [];
+      return ServiceResult.success([]);
     }
 
     final apiUrl = 'http://localhost:8080/chat_messages/$chatId';
@@ -27,8 +33,7 @@ class ChatService {
       'timestamp': DateTime.now().subtract(Duration(days: 7)).millisecondsSinceEpoch.toString(),
     });
 
-    final authService = Provider.of<AuthService>(context, listen: false);
-    String? authToken = await authService.getCurrentUserIdToken();
+    String? authToken = await _authService.getCurrentUserIdToken();
 
     try {
       final response = await http.get(uri, headers: {
@@ -38,26 +43,23 @@ class ChatService {
 
       if (response.statusCode == 200) {
         final messagesResponse = GetChatMessagesResponse.fromJson(jsonDecode(response.body));
-        return messagesResponse.Messages.map((message) => local.ChatMessage(
+        return ServiceResult.success(messagesResponse.Messages.map((message) => local.ChatMessage(
           IsFromCurrentUser: message.IsFromCurrentUser,
           Text: message.Text,
           Timestamp: message.Timestamp,
-        )).toList();
+        )).toList());
       } else {
-        print('Failed to fetch messages: ${response.statusCode}');
-        return [];
+        return ServiceResult.failure(errorMessage: 'Failed to fetch messages: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error fetching messages: $e');
-      return [];
+      return ServiceResult.failure(errorMessage: 'Failed to fetch messages: $e');
     }
   }
 
-  Future<SendChatMessageResponse> sendMessage(SendChatMessageRequest message) async {
+  Future<ServiceResult<sendMessageResult>> sendMessage(SendChatMessageRequest message) async {
     final apiUrl = 'http://localhost:8080/chat_messages';
     final uri = Uri.parse(apiUrl);
-    final authService = Provider.of<AuthService>(context, listen: false);
-    String? authToken = await authService.getCurrentUserIdToken();
+    String? authToken = await _authService.getCurrentUserIdToken();
 
     try {
       final response = await http.post(
@@ -69,24 +71,35 @@ class ChatService {
         body: jsonEncode(message.toJson()),
       );
       if (response.statusCode == 200) {
-        return SendChatMessageResponse.fromJson(jsonDecode(response.body));
+        final resp = SendChatMessageResponse.fromJson(jsonDecode(response.body));
+
+        return ServiceResult.success(
+          sendMessageResult(
+            local.ChatMessage(
+              IsFromCurrentUser: false,
+              Text: resp.Reply,
+              Timestamp: resp.Timestamp,
+            ),
+            resp.CreatedChat != null ? localChat.Chat(
+              ChatId: resp.CreatedChat!.ChatId,
+              Timestamp: resp.CreatedChat!.Timestamp,
+              Title: resp.CreatedChat!.Title,
+            ) : localChat.Chat(ChatId: '', Timestamp: 0, Title: ''),
+          ),
+        );
       } else {
-        print('Server error: ${response.body}');
-        throw Exception('Failed to send message');
+        return ServiceResult.failure(errorMessage: 'Failed to send message: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error sending message: $e');
-      throw Exception('Failed to send message');
+      return ServiceResult.failure(errorMessage: 'Failed to send message: $e');
     }
   }
 
-  Future<List<localChat.Chat>> getChats() async {
+  Future<ServiceResult<List<localChat.Chat>>> getChats() async {
     const apiUrl = 'http://localhost:8080/chats?limit=100&timestamp=0';
     final uri = Uri.parse(apiUrl);
 
-    final authService = Provider.of<AuthService>(context, listen: false);
-
-    String? authToken = await authService.getCurrentUserIdToken();
+    String? authToken = await _authService.getCurrentUserIdToken();
 
     try {
       print('Fetching chats from $uri');
@@ -106,14 +119,12 @@ class ChatService {
           Title: e.Title,
         ))).toList();
 
-        return chats;
+        return ServiceResult.success(chats);
       } else {
-        print('Failed to fetch chats: ${response.statusCode}');
-        throw Exception('Failed to fetch chats');
+        return ServiceResult.failure(errorMessage: 'Failed to fetch chats: ${response.statusCode}');
       }
     } catch (e) {
-      print('Failed to fetch chats: $e');
-      throw Exception('Failed to fetch chats');
+      return ServiceResult.failure(errorMessage: 'Failed to fetch chats: $e');
     }
   }
 }

@@ -1,14 +1,11 @@
-import 'dart:convert';
-
 import 'package:provider/provider.dart';
 import 'package:tutor/models/local/chat/chats.dart' as localChat;
 import 'package:tutor/screens/audio_page_2_flutter_sound.dart';
-import '../models/backend/chats/get_chats_response.dart';
 import '../services/auth_service.dart';
+import '../services/chat_service.dart';
 import 'chatDetailPage.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -18,48 +15,27 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   var selectedIndex = 0;
   var selectedChatId = '';
+  late ChatService _chatService;
 
   @override
   void initState() {
     super.initState();
+    _chatService = ChatService(Provider.of<AuthService>(context, listen: false));
     _loadChats();
   }
 
   void _loadChats() async {
-    const apiUrl = 'http://localhost:8080/chats?limit=100&timestamp=0';
-    final uri = Uri.parse(apiUrl);
-
-    final authService = Provider.of<AuthService>(context, listen: false);
-
-    String? authToken = await authService.getCurrentUserIdToken();
-
-    try {
-      print('Fetching chats from $uri');
-      final response = await http.get(
-        uri,
-        headers: {
-          'Authorization': 'Bearer $authToken', // Include the authorization header
-          'Content-Type': 'application/json',
-        },
-      ).timeout(Duration(seconds: 10));
-      if (response.statusCode == 200) {
-        final chatsResponse = GetChatsResponse.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
-
-        setState(() {
-          var chats = chatsResponse.Chats.map((e) => ( localChat.Chat(
-            ChatId: e.ChatId,
-            Timestamp: e.Timestamp,
-            Title: e.Title,
-          ))).toList();
-
-          Provider.of<localChat.ChatModel>(context, listen: false).setChats(chats);
-        });
-      } else {
-        print('Failed to fetch chats: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Failed to fetch chats: $e');
+    final loadChatsRes = await _chatService.getChats();
+    if (!loadChatsRes.success) {
+      print('Failed to load chats: ${loadChatsRes.errorMessage}');
+      // todo show error message
+      return;
     }
+
+    setState(() {
+      Provider.of<localChat.ChatModel>(context, listen: false).
+        setChats(loadChatsRes.data);
+    });
   }
 
   @override

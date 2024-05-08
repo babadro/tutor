@@ -1,15 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:tutor/models/backend/chat_messages/send_chat_message_request.dart';
-import 'package:tutor/models/backend/chat_messages/send_chat_message_response.dart';
 import 'package:tutor/models/local/chat/chats.dart' as localChat;
 import 'package:tutor/services/auth_service.dart';
-import 'package:tutor/models/backend/chat_messages/get_chat_messages_response.dart';
 import 'package:tutor/models/local/chat/chat_message.dart' as local;
-import 'package:flutter_sound/flutter_sound.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 import '../services/chat_service.dart';
 
@@ -35,14 +29,20 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   void initState() {
     super.initState();
     chatId = widget.initialChatId;
-    _chatService = ChatService(context);
+    _chatService = ChatService(Provider.of<AuthService>(context, listen: false));
     _loadMessages();
   }
 
   void _loadMessages() async {
-    var messages = await _chatService.loadMessages(chatId);
+    var loadMessagesResult = await _chatService.loadMessages(chatId);
+    if (!loadMessagesResult.success) {
+      print('Failed to load messages: ${loadMessagesResult.errorMessage}');
+      // todo: show error message
+      return;
+    }
+
     setState(() {
-      _messages = messages;
+      _messages = loadMessagesResult.data;
     });
   }
 
@@ -60,36 +60,34 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       Timestamp: timestamp,
     );
 
-    try {
-      var responseMessage = await _chatService.sendMessage(message);
-      _addMessage(local.ChatMessage(
-        IsFromCurrentUser: true,
-        Text: text,
-        Timestamp: timestamp,
-      ));
+    _addMessage(
+        local.ChatMessage(
+          IsFromCurrentUser: true,
+          Text: text,
+          Timestamp: timestamp,
+        )
+    );
 
-      if (responseMessage.CreatedChat != null) {
-        Provider.of<localChat.ChatModel>(context, listen: false).addChat(
-          localChat.Chat(
-            ChatId: responseMessage.CreatedChat!.ChatId,
-            Timestamp: responseMessage.CreatedChat!.Timestamp,
-            Title: responseMessage.CreatedChat!.Title,
-          ),
-        );
-
-        setState(() {
-          chatId = responseMessage.CreatedChat!.ChatId;
-        });
-      }
-
-      _addMessage(local.ChatMessage(
-        IsFromCurrentUser: false,
-        Text: responseMessage.Reply,
-        Timestamp: responseMessage.Timestamp,
-      ));
-    } catch (e) {
-      print('Error sending message: $e');
+    var sendResult = await _chatService.sendMessage(message);
+    if (!sendResult.success) {
+      print('Failed to send message: ${sendResult.errorMessage}');
+      // todo: show error message
+      return;
     }
+
+    var createdChat = sendResult.data.createdChat;
+
+    if (createdChat.ChatId != '') {
+      Provider.of<localChat.ChatModel>(context, listen: false).addChat(
+        createdChat,
+      );
+
+      setState(() {
+        chatId = createdChat.ChatId;
+      });
+    }
+
+    _addMessage(sendResult.data.message);
   }
 
   Future<void> _startRecording() async {
