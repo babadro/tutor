@@ -1,9 +1,9 @@
 import 'package:provider/provider.dart';
 import 'package:tutor/models/local/chat/chats.dart' as localChat;
-import 'package:tutor/screens/audio_page_2_flutter_sound.dart';
-import '../services/auth_service.dart';
-import '../services/chat_service.dart';
-import 'chatDetailPage.dart';
+import 'package:tutor/widgets/audio_page_2_flutter_sound.dart';
+import 'package:tutor/services/auth_service.dart';
+import 'package:tutor/services/chat_service.dart';
+import 'package:tutor/widgets/chatDetailPage.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
 

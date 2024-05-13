@@ -29,8 +29,8 @@ class ChatService {
 
     final apiUrl = 'http://localhost:8080/chat_messages/$chatId';
     final uri = Uri.parse(apiUrl).replace(queryParameters: {
-      'limit': '100',
-      'timestamp': DateTime.now().subtract(Duration(days: 7)).millisecondsSinceEpoch.toString(),
+      'limit': '100'
+      //'timestamp': DateTime.now().subtract(Duration(days: 356)).millisecondsSinceEpoch.toString(),
     });
 
     String? authToken = await _authService.getCurrentUserIdToken();
