@@ -4,8 +4,7 @@ import 'package:tutor/models/backend/chat_messages/send_chat_message_request.dar
 import 'package:tutor/models/local/chat/chats.dart' as localChat;
 import 'package:tutor/services/auth_service.dart';
 import 'package:tutor/models/local/chat/chat_message.dart' as local;
-
-import '../services/chat_service.dart';
+import 'package:tutor/services/chat_service.dart';
 
 class ChatDetailPage extends StatefulWidget{
   final String initialChatId;
