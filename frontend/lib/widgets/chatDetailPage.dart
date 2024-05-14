@@ -183,6 +183,16 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         //var url = value;
         _mplaybackReady = true;
       });
+
+      var timestamp = DateTime.now().millisecondsSinceEpoch;
+
+      _addMessage(
+          local.ChatMessage(
+            IsFromCurrentUser: true,
+            Text: "audio transcription will be here",
+            Timestamp: timestamp,
+          )
+      );
     });
   }
 
