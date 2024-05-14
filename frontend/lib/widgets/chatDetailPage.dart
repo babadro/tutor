@@ -191,6 +191,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
             IsFromCurrentUser: true,
             Text: "audio transcription will be here",
             Timestamp: timestamp,
+            AudioUrl: value ?? '',
           )
       );
     });
