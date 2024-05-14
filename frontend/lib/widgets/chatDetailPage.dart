@@ -8,7 +8,6 @@ import 'package:tutor/services/chat_service.dart';
 import 'dart:async';
 import 'package:audio_session/audio_session.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter/material.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:flutter_sound_platform_interface/flutter_sound_recorder_platform_interface.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -42,9 +41,11 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
   @override
   void initState() {
-    chatId = widget.initialChatId;
-    _chatService = ChatService(Provider.of<AuthService>(context, listen: false));
-    _loadMessages();
+    openTheRecorder().then((value) {
+      setState(() {
+        _mRecorderIsInited = true;
+      });
+    });
 
     _mPlayer!.openPlayer().then((value) {
       setState(() {
@@ -52,11 +53,9 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       });
     });
 
-    openTheRecorder().then((value) {
-      setState(() {
-        _mRecorderIsInited = true;
-      });
-    });
+    chatId = widget.initialChatId;
+    _chatService = ChatService(Provider.of<AuthService>(context, listen: false));
+    _loadMessages();
 
     super.initState();
   }
@@ -301,7 +300,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                   ),
                   SizedBox(width: 15),
                   Visibility(
-                    visible: _mRecorder!.isStopped,
+                    visible: _mplaybackReady,
                     child: GestureDetector(
                       onTap: getPlaybackFn(),
                       child: Container(
