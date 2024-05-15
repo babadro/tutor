@@ -197,14 +197,14 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     });
   }
 
-  void play() {
+  void play(String path) {
     assert(_mPlayerIsInited &&
         _mplaybackReady &&
         _mRecorder!.isStopped &&
         _mPlayer!.isStopped);
     _mPlayer!
         .startPlayer(
-        fromURI: _mPath,
+        fromURI: path,
         //codec: kIsWeb ? Codec.opusWebM : Codec.aacADTS,
         whenFinished: () {
           setState(() {});
@@ -227,11 +227,11 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     return _mRecorder!.isStopped ? record : stopRecorder;
   }
 
-  _Fn? getPlaybackFn() {
+  _Fn? getPlaybackFn(String path) {
     if (!_mPlayerIsInited || !_mplaybackReady || !_mRecorder!.isStopped) {
       return null;
     }
-    return _mPlayer!.isStopped ? play : stopPlayer;
+    return _mPlayer!.isStopped ? (){play(path);} : stopPlayer;
   }
 
   Future<void> _startRecording() async {
@@ -267,7 +267,26 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                       color: (_messages[index].IsFromCurrentUser ? Colors.blue[200] : Colors.grey.shade200),
                     ),
                     padding: EdgeInsets.all(16),
-                    child: Text(_messages[index].Text, style: TextStyle(fontSize: 15)),
+                    child: Column(
+                      children: <Widget>[
+                        Text(_messages[index].Text, style: TextStyle(fontSize: 15)),
+                        Visibility(
+                          visible: _messages[index].AudioUrl != '',
+                          child: GestureDetector(
+                            onTap: getPlaybackFn(_mPath),
+                            child: Container(
+                              height: 30,
+                              width: 30,
+                              decoration: BoxDecoration(
+                                color: Colors.black,
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              child: Icon(Icons.play_arrow, color: Colors.white, size: 20),
+                            ),
+                          ),
+                        ),
+                      ]
+                    ),
                   ),
                 ),
               );
@@ -313,7 +332,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                   Visibility(
                     visible: _mplaybackReady,
                     child: GestureDetector(
-                      onTap: getPlaybackFn(),
+                      onTap: getPlaybackFn(_mPath),
                       child: Container(
                         height: 30,
                         width: 30,
