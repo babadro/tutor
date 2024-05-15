@@ -13,7 +13,7 @@ security:
 paths:
   /chat_messages:
     post:
-      summary: Sends a message to the AI and receives a response.
+      summary: Sends a text message to the AI and receives a response.
       operationId: "SendChatMessage"
       description: This endpoint receives a user's message and returns the AI's response.
       consumes:
