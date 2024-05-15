@@ -23,7 +23,7 @@ Map<String, dynamic> _$GetChatMessagesResponseToJson(
 ChatMessage _$ChatMessageFromJson(Map<String, dynamic> json) => ChatMessage(
       IsFromCurrentUser: json['curUsr'] as bool? ?? false,
       Text: json['text'] as String,
-      Timestamp: json['timestamp'] as int,
+      Timestamp: (json['timestamp'] as num).toInt(),
       UserId: json['userId'] as String? ?? '',
     );
 

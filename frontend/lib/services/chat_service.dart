@@ -1,20 +1,34 @@
 import 'package:http/http.dart' as http;
-import 'package:tutor/models/backend/chat_messages/send_chat_message_request.dart';
-import 'package:tutor/models/backend/chat_messages/send_chat_message_response.dart';
+import 'package:tutor/models/backend/chat_messages/send_text_message_request.dart';
+import 'package:tutor/models/backend/chat_messages/send_text_message_response.dart';
 import 'package:tutor/models/backend/chat_messages/get_chat_messages_response.dart';
 import 'package:tutor/models/local/chat/chat_message.dart' as local;
 import 'package:tutor/services/auth_service.dart';
 import 'dart:convert';
 import 'package:tutor/models/local/chat/chats.dart' as localChat;
 import 'package:tutor/services/service_response.dart';
-
-import '../models/backend/chats/get_chats_response.dart';
+import 'package:tutor/models/backend/chats/get_chats_response.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:mime/mime.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:tutor/models/backend/chat_messages/send_voice_message_response.dart';
 
 class sendMessageResult {
   final local.ChatMessage message;
   final localChat.Chat createdChat ;
 
   sendMessageResult(this.message, this.createdChat);
+}
+
+class sendVoiceMessageResult {
+  final local.ChatMessage userMessage;
+  final local.ChatMessage replyMessage;
+  final localChat.Chat createdChat;
+
+  sendVoiceMessageResult(this.userMessage, this.replyMessage, this.createdChat);
 }
 
 class ChatService {
@@ -56,7 +70,7 @@ class ChatService {
     }
   }
 
-  Future<ServiceResult<sendMessageResult>> sendMessage(SendChatMessageRequest message) async {
+  Future<ServiceResult<sendMessageResult>> sendMessage(SendTextMessageRequest message) async {
     final apiUrl = 'http://localhost:8080/chat_messages';
     final uri = Uri.parse(apiUrl);
     String? authToken = await _authService.getCurrentUserIdToken();
@@ -71,7 +85,7 @@ class ChatService {
         body: jsonEncode(message.toJson()),
       );
       if (response.statusCode == 200) {
-        final resp = SendChatMessageResponse.fromJson(jsonDecode(response.body));
+        final resp = SendTextMessageResponse.fromJson(jsonDecode(response.body));
 
         return ServiceResult.success(
           sendMessageResult(
@@ -92,6 +106,65 @@ class ChatService {
       }
     } catch (e) {
       return ServiceResult.failure(errorMessage: 'Failed to send message: $e');
+    }
+  }
+
+  Future<ServiceResult<sendVoiceMessageResult>> sendVoiceMessage(File audioFile, String chatId) async {
+    final apiUrl = 'http://localhost:8080/chat_voice_messages';
+    final uri = Uri.parse(apiUrl);
+    String? authToken = await _authService.getCurrentUserIdToken();
+
+    try {
+      final mimeTypeData = lookupMimeType(audioFile.path, headerBytes: [0xFF, 0xD8])!.split('/');
+
+      final timestamp = DateTime.now();
+
+      final request = http.MultipartRequest('POST', uri)
+        ..headers['Authorization'] = 'Bearer $authToken'
+        ..headers['Content-Type'] = 'multipart/form-data'
+        ..fields['chatId'] = chatId
+        ..files.add(
+          await http.MultipartFile.fromPath(
+            'file',
+            audioFile.path,
+            contentType: MediaType(mimeTypeData[0], mimeTypeData[1]),
+          ),
+        );
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200) {
+        final resp = SendVoiceMessageResponse.fromJson(jsonDecode(response.body));
+
+        return ServiceResult.success(
+          sendVoiceMessageResult(
+            local.ChatMessage(
+              IsFromCurrentUser: true,
+              Text: resp.UserText,
+              AudioUrl: resp.UserAudioURL,
+              Timestamp: resp.UserMessageTime,
+            ),
+            local.ChatMessage(
+              IsFromCurrentUser: false,
+              Text: resp.ReplyText,
+              AudioUrl: resp.ReplyAudioURL,
+              Timestamp: resp.ReplyTime,
+            ),
+            resp.CreatedChat != null
+                ? localChat.Chat(
+              ChatId: resp.CreatedChat!.ChatId,
+              Timestamp: resp.CreatedChat!.Timestamp,
+              Title: resp.CreatedChat!.Title,
+            )
+                : localChat.Chat(ChatId: '', Timestamp: 0, Title: ''),
+          ),
+        );
+      } else {
+        return ServiceResult.failure(errorMessage: 'Failed to send voice message: ${response.statusCode}');
+      }
+    } catch (e) {
+      return ServiceResult.failure(errorMessage: 'Failed to send voice message: $e');
     }
   }
 

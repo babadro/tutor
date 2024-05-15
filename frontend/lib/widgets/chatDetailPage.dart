@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tutor/models/backend/chat_messages/send_chat_message_request.dart';
+import 'package:tutor/models/backend/chat_messages/send_text_message_request.dart';
 import 'package:tutor/models/local/chat/chats.dart' as localChat;
 import 'package:tutor/services/auth_service.dart';
 import 'package:tutor/models/local/chat/chat_message.dart' as local;
@@ -91,7 +91,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
   void _handleSendPressed(String text) async {
     var timestamp = DateTime.now().millisecondsSinceEpoch;
-    var message = SendChatMessageRequest(
+    var message = SendTextMessageRequest(
       ChatId: chatId,
       Text: text,
       Timestamp: timestamp,

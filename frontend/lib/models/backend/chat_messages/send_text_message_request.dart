@@ -1,9 +1,9 @@
 import 'package:json_annotation/json_annotation.dart';
 
-part 'send_chat_message_request.g.dart';
+part 'send_text_message_request.g.dart';
 
 @JsonSerializable()
-class SendChatMessageRequest {
+class SendTextMessageRequest {
   @JsonKey(name: 'chatId')
   final String ChatId;
 
@@ -13,12 +13,12 @@ class SendChatMessageRequest {
   @JsonKey(name: 'timestamp')
   final int Timestamp;
 
-  SendChatMessageRequest({
+  SendTextMessageRequest({
     required this.ChatId,
     required this.Text,
     required this.Timestamp,
   });
 
-  factory SendChatMessageRequest.fromJson(Map<String, dynamic> json) => _$SendChatMessageRequestFromJson(json);
-  Map<String, dynamic> toJson() => _$SendChatMessageRequestToJson(this);
+  factory SendTextMessageRequest.fromJson(Map<String, dynamic> json) => _$SendTextMessageRequestFromJson(json);
+  Map<String, dynamic> toJson() => _$SendTextMessageRequestToJson(this);
 }
