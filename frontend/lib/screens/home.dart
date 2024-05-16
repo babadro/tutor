@@ -34,7 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     setState(() {
       Provider.of<localChat.ChatModel>(context, listen: false).
-        setChats(loadChatsRes.data);
+        setChats(loadChatsRes.data!);
     });
   }
 

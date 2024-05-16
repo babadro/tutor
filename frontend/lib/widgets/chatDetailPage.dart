@@ -79,7 +79,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     }
 
     setState(() {
-      _messages = loadMessagesResult.data;
+      _messages = loadMessagesResult.data!;
     });
   }
 
@@ -112,7 +112,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       return;
     }
 
-    var createdChat = sendResult.data.createdChat;
+    var createdChat = sendResult.data!.createdChat;
 
     if (createdChat.ChatId != '') {
       Provider.of<localChat.ChatModel>(context, listen: false).addChat(
@@ -124,7 +124,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       });
     }
 
-    _addMessage(sendResult.data.message);
+    _addMessage(sendResult.data!.message);
   }
 
   Future<void> openTheRecorder() async {
@@ -179,6 +179,17 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
   void stopRecorder() async {
     await _mRecorder!.stopRecorder().then((value) {
+      // log value
+      print('Value is: $value');
+
+      _chatService.sendVoiceMessage(value ?? '', chatId).then((value) {
+        if (!value.success) {
+          print('Failed to send voice message: ${value.errorMessage}');
+        } else {
+          print('Voice message sent');
+        }
+      });
+
       setState(() {
         //var url = value;
         _mplaybackReady = true;
@@ -198,6 +209,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   }
 
   void play(String path) {
+    print('Playing $path');
     assert(_mPlayerIsInited &&
         _mplaybackReady &&
         _mRecorder!.isStopped &&
