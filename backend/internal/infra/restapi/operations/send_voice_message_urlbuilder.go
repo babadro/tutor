@@ -35,7 +35,7 @@ func (o *SendVoiceMessageURL) SetBasePath(bp string) {
 func (o *SendVoiceMessageURL) Build() (*url.URL, error) {
 	var _result url.URL
 
-	var _path = "/voice_messages"
+	var _path = "/chat_voice_messages"
 
 	_basePath := o._basePath
 	_result.Path = golangswaggerpaths.Join(_basePath, _path)

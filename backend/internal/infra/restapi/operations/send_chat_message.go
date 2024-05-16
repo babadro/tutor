@@ -40,7 +40,7 @@ func NewSendChatMessage(ctx *middleware.Context, handler SendChatMessageHandler)
 /*
 SendChatMessage swagger:route POST /chat_messages sendChatMessage
 
-Sends a message to the AI and receives a response.
+Sends a text message to the AI and receives a response.
 
 This endpoint receives a user's message and returns the AI's response.
 */

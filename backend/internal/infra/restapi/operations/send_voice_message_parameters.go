@@ -6,14 +6,14 @@ package operations
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	"context"
 	"io"
+	"mime/multipart"
 	"net/http"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
-	"github.com/go-openapi/validate"
+	"github.com/go-openapi/strfmt"
 )
 
 // NewSendVoiceMessageParams creates a new SendVoiceMessageParams object
@@ -32,11 +32,15 @@ type SendVoiceMessageParams struct {
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
-	/*User message containing a voice message url
-	  Required: true
-	  In: body
+	/*The chat ID.
+	  In: formData
 	*/
-	Body SendVoiceMessageBody
+	ChatID *string
+	/*The audio file to be sent.
+	  Required: true
+	  In: formData
+	*/
+	File io.ReadCloser
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -48,35 +52,57 @@ func (o *SendVoiceMessageParams) BindRequest(r *http.Request, route *middleware.
 
 	o.HTTPRequest = r
 
-	if runtime.HasBody(r) {
-		defer r.Body.Close()
-		var body SendVoiceMessageBody
-		if err := route.Consumer.Consume(r.Body, &body); err != nil {
-			if err == io.EOF {
-				res = append(res, errors.Required("body", "body", ""))
-			} else {
-				res = append(res, errors.NewParseError("body", "body", "", err))
-			}
-		} else {
-			// validate body object
-			if err := body.Validate(route.Formats); err != nil {
-				res = append(res, err)
-			}
-
-			ctx := validate.WithOperationRequest(context.Background())
-			if err := body.ContextValidate(ctx, route.Formats); err != nil {
-				res = append(res, err)
-			}
-
-			if len(res) == 0 {
-				o.Body = body
-			}
+	if err := r.ParseMultipartForm(32 << 20); err != nil {
+		if err != http.ErrNotMultipart {
+			return errors.New(400, "%v", err)
+		} else if err := r.ParseForm(); err != nil {
+			return errors.New(400, "%v", err)
 		}
-	} else {
-		res = append(res, errors.Required("body", "body", ""))
 	}
+	fds := runtime.Values(r.Form)
+
+	fdChatID, fdhkChatID, _ := fds.GetOK("chatId")
+	if err := o.bindChatID(fdChatID, fdhkChatID, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
+	file, fileHeader, err := r.FormFile("file")
+	if err != nil {
+		res = append(res, errors.New(400, "reading file %q failed: %v", "file", err))
+	} else if err := o.bindFile(file, fileHeader); err != nil {
+		// Required: true
+		res = append(res, err)
+	} else {
+		o.File = &runtime.File{Data: file, Header: fileHeader}
+	}
+
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+// bindChatID binds and validates parameter ChatID from formData.
+func (o *SendVoiceMessageParams) bindChatID(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: false
+
+	if raw == "" { // empty values pass all other validations
+		return nil
+	}
+
+	o.ChatID = &raw
+
+	return nil
+}
+
+// bindFile binds file parameter File.
+//
+// The only supported validations on files are MinLength and MaxLength
+func (o *SendVoiceMessageParams) bindFile(file multipart.File, header *multipart.FileHeader) error {
 	return nil
 }
