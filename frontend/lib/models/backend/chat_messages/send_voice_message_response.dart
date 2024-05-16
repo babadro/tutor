@@ -6,22 +6,22 @@ part 'send_voice_message_response.g.dart';
 
 @JsonSerializable()
 class SendVoiceMessageResponse {
-  @JsonKey(name: 'usr_txt')
+  @JsonKey(name: 'usrTxt')
   final String UserText;
 
-  @JsonKey(name: 'usr_audio')
+  @JsonKey(name: 'usrAudio')
   final String UserAudioURL;
 
-  @JsonKey(name: 'usr_time')
+  @JsonKey(name: 'usrTime')
   final int UserMessageTime;
 
-  @JsonKey(name: 'reply_txt')
+  @JsonKey(name: 'replyTxt')
   final String ReplyText;
 
-  @JsonKey(name: 'reply_audio')
+  @JsonKey(name: 'replyAudio')
   final String ReplyAudioURL;
 
-  @JsonKey(name: 'reply_time')
+  @JsonKey(name: 'replyTime')
   final int ReplyTime;
 
   @JsonKey(name: 'chat')

@@ -115,13 +115,12 @@ class ChatService {
     String? authToken = await _authService.getCurrentUserIdToken();
 
     try {
-      final mimeTypeData = lookupMimeType(audioFile.path, headerBytes: [0xFF, 0xD8])!.split('/');
+      final mimeTypeData = lookupMimeType(audioFile.path)!.split('/');
 
       final timestamp = DateTime.now();
 
       final request = http.MultipartRequest('POST', uri)
         ..headers['Authorization'] = 'Bearer $authToken'
-        ..headers['Content-Type'] = 'multipart/form-data'
         ..fields['chatId'] = chatId
         ..files.add(
           await http.MultipartFile.fromPath(
