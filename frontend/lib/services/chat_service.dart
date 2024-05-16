@@ -109,13 +109,13 @@ class ChatService {
     }
   }
 
-  Future<ServiceResult<sendVoiceMessageResult>> sendVoiceMessage(File audioFile, String chatId) async {
+  Future<ServiceResult<sendVoiceMessageResult>> sendVoiceMessage(String audioFilePath, String chatId) async {
     final apiUrl = 'http://localhost:8080/chat_voice_messages';
     final uri = Uri.parse(apiUrl);
     String? authToken = await _authService.getCurrentUserIdToken();
 
     try {
-      final mimeTypeData = lookupMimeType(audioFile.path)!.split('/');
+      //final mimeTypeData = lookupMimeType(audioFilePath)!.split('/');
 
       final timestamp = DateTime.now();
 
@@ -125,8 +125,8 @@ class ChatService {
         ..files.add(
           await http.MultipartFile.fromPath(
             'file',
-            audioFile.path,
-            contentType: MediaType(mimeTypeData[0], mimeTypeData[1]),
+            audioFilePath,
+            //contentType: MediaType(mimeTypeData[0], mimeTypeData[1]),
           ),
         );
 

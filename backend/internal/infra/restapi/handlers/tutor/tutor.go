@@ -3,6 +3,7 @@ package tutor
 import (
 	"context"
 	"errors"
+	"io"
 	"time"
 
 	service2 "github.com/babadro/tutor/internal/core/service"
@@ -62,22 +63,34 @@ func (t *Tutor) SendChatMessage(
 func (t *Tutor) SendVoiceMessage(
 	params operations.SendVoiceMessageParams, principal *models.Principal,
 ) middleware.Responder {
-	voiceMessage := params.Body.VoiceMessageURL
+	// todo check if the userID matches with the chatID, otherwise return unauthorized
+
+	// log file length of readcloser
+	fileLength, _ := io.Copy(io.Discard, params.File)
+	hlog.FromRequest(params.HTTPRequest).Info().Msgf("File length: %d", fileLength)
+
+	// log chatID
+	hlog.FromRequest(params.HTTPRequest).Info().Msgf("ChatID: %s", params.ChatID)
+
+	//voiceMessage := params.File
 
 	// log voice message
-	hlog.FromRequest(params.HTTPRequest).Info().Msgf("Voice message: %s", voiceMessage)
-
-	result, err := t.svc.SendVoiceMessage(params.HTTPRequest.Context(), voiceMessage, principal.UserID)
-	if err != nil {
-		hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to send voice message")
-		return operations.NewSendVoiceMessageBadRequest()
-	}
+	//hlog.FromRequest(params.HTTPRequest).Info().Msgf("Voice message: %s", voiceMessage)
+	//
+	//result, err := t.svc.SendVoiceMessage(params.HTTPRequest.Context(), voiceMessage, principal.UserID)
+	//if err != nil {
+	//	hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to send voice message")
+	//	return operations.NewSendVoiceMessageBadRequest()
+	//}
 
 	return operations.NewSendVoiceMessageOK().WithPayload(&operations.SendVoiceMessageOKBody{
-		VoiceMessageTranscript:  result.VoiceMessageTranscript,
-		VoiceMessageURL:         result.VoiceMessageURL,
-		VoiceResponseTranscript: result.VoiceResponseTranscript,
-		VoiceResponseURL:        result.VoiceResponseURL,
+		UsrAudio:   "audio.mp3",            // todo
+		UsrTxt:     "text",                 // todo
+		UsrTime:    time.Now().UnixMilli(), // todo
+		ReplyAudio: "audio.mp3",            // todo
+		ReplyTxt:   "text",                 // todo
+		ReplyTime:  time.Now().UnixMilli(), // todo
+		Chat:       nil,                    // todo
 	})
 }
 
