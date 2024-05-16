@@ -169,44 +169,55 @@ paths:
           description: error
           schema:
             $ref: "#/definitions/error"
-
-  /voice_messages:
+  /chat_voice_messages:
     post:
-      summary: Processes a voice message and returns a response.
+      summary: Sends an audio message to the AI and receives a response.
       operationId: "SendVoiceMessage"
+      description: This endpoint receives a user's audio message and returns the AI's response.
       consumes:
-        - application/json
+        - multipart/form-data
       produces:
         - application/json
       parameters:
-        - in: body
-          name: body
-          description: User message containing a voice message url
+        - in: formData
+          name: file
+          type: file
+          description: The audio file to be sent.
           required: true
-          schema:
-            type: object
-            properties:
-              voiceMessageUrl:
-                type: string
-                description: URL of the voice message file
+        - in: formData
+          name: chatId
+          type: string
+          description: The chat ID.
       responses:
         '200':
           description: Successful response
           schema:
             type: object
             properties:
-              voiceMessageUrl:
+              usrTxt:
                 type: string
-                description: URL of the voice message input file.
-              voiceMessageTranscript:
+                description: The user's message in text format.
+              usrAudio:
                 type: string
-                description: Transcription of the input voice message.
-              voiceResponseUrl:
+                description: Url to the user's audio message.
+              usrTime:
+                type: integer
+                format: int64
+                description: The timestamp of the user's message.
+              replyTxt:
                 type: string
-                description: URL to the voice response file.
-              voiceResponseTranscript:
+                description: AI's text response to the user's message.
+              replyAudio:
                 type: string
-                description: Text transcription of the voice response.
+                description: Url to the AI's audio response.
+              replyTime:
+                type: integer
+                format: int64
+                description: The timestamp of the AI's response.
+              chat:
+                type: object
+                $ref: '#/definitions/Chat'
+                description: If the chatId is not provided in the request, the new chat will be created and this chat will be returned in the response.
         400:
           description: "Bad request"
           schema:
