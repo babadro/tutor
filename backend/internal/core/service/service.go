@@ -4,14 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"net/url"
 	"time"
 
 	"cloud.google.com/go/firestore"
 	"firebase.google.com/go/storage"
 	"github.com/Azure/azure-sdk-for-go/sdk/ai/azopenai"
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/babadro/tutor/internal/models"
 	"github.com/babadro/tutor/internal/models/swagger"
 	"github.com/sashabaranov/go-openai"
@@ -114,6 +112,7 @@ func (s *Service) SendMessage(
 func (s *Service) SendVoiceMessage(
 	ctx context.Context, userAudio []byte, userID string,
 ) (models.SendVoiceMessageResult, error) {
+	/* todo uncomment when front end is ready
 	req := azopenai.AudioTranscriptionOptions{
 		File:           userAudio,
 		ResponseFormat: to.Ptr(azopenai.AudioTranscriptionFormatText),
@@ -168,6 +167,8 @@ func (s *Service) SendVoiceMessage(
 	if err != nil {
 		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to upload voice message to storage: %s", err.Error())
 	}
+
+	*/
 
 	return models.SendVoiceMessageResult{
 		UserAudioURL:     userAudioURL,
