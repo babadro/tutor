@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:http/http.dart' as http;
 import 'package:tutor/models/backend/chat_messages/send_text_message_request.dart';
 import 'package:tutor/models/backend/chat_messages/send_text_message_response.dart';
@@ -114,19 +116,20 @@ class ChatService {
     final uri = Uri.parse(apiUrl);
     String? authToken = await _authService.getCurrentUserIdToken();
 
-    try {
-      //final mimeTypeData = lookupMimeType(audioFilePath)!.split('/');
+    // todo will not work on mobile app
+    Uint8List fileBytes = await http.readBytes(Uri.parse(audioFilePath));
 
+    try {
       final timestamp = DateTime.now();
 
       final request = http.MultipartRequest('POST', uri)
         ..headers['Authorization'] = 'Bearer $authToken'
         ..fields['chatId'] = chatId
         ..files.add(
-          await http.MultipartFile.fromPath(
+          await http.MultipartFile.fromBytes(
             'file',
-            audioFilePath,
-            //contentType: MediaType(mimeTypeData[0], mimeTypeData[1]),
+            fileBytes,
+            filename: 'audio_${timestamp.millisecondsSinceEpoch}.m4a',
           ),
         );
 

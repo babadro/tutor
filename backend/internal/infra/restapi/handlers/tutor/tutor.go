@@ -16,9 +16,7 @@ import (
 
 type service interface {
 	SendMessage(ctx context.Context, message, userID string, timestamp int64, chatID string) (string, swagger.Chat, error)
-	SendVoiceMessage(
-		ctx context.Context, voiceMsgFileURL string, userID string,
-	) (models.SendVoiceMessageResult, error)
+	SendVoiceMessage(ctx context.Context, voiceMsgBytes []byte, userID string) (models.SendVoiceMessageResult, error)
 	GetChatMessages(
 		ctx context.Context, chatID string, userID string, limit int32, timestamp int64,
 	) ([]*swagger.ChatMessage, error)
@@ -84,11 +82,11 @@ func (t *Tutor) SendVoiceMessage(
 	//}
 
 	return operations.NewSendVoiceMessageOK().WithPayload(&operations.SendVoiceMessageOKBody{
-		UsrAudio:   "audio.mp3",            // todo
-		UsrTxt:     "text",                 // todo
+		UsrAudio:   "user_audio.mp3",       // todo
+		UsrTxt:     "user text",            // todo
 		UsrTime:    time.Now().UnixMilli(), // todo
-		ReplyAudio: "audio.mp3",            // todo
-		ReplyTxt:   "text",                 // todo
+		ReplyAudio: "reply_audio.mp3",      // todo
+		ReplyTxt:   "reply_text",           // todo
 		ReplyTime:  time.Now().UnixMilli(), // todo
 		Chat:       nil,                    // todo
 	})

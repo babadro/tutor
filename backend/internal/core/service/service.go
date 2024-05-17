@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
 	"net/url"
 	"time"
 
@@ -113,91 +112,91 @@ func (s *Service) SendMessage(
 }
 
 func (s *Service) SendVoiceMessage(
-	ctx context.Context, voiceMsgFileURL string, userID string,
+	ctx context.Context, userAudio []byte, userID string,
 ) (models.SendVoiceMessageResult, error) {
-	resp, err := http.Get(voiceMsgFileURL)
-	if err != nil {
-		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to download voice message: %s", err.Error())
-	}
-
-	defer func() { _ = resp.Body.Close() }()
-
-	if resp.StatusCode != http.StatusOK {
-		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to download voice message: %s", resp.Status)
-	}
-
-	audioBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to file from body: %s", err.Error())
-	}
-
-	// download voice message
 	req := azopenai.AudioTranscriptionOptions{
-		File:           audioBytes,
+		File:           userAudio,
 		ResponseFormat: to.Ptr(azopenai.AudioTranscriptionFormatText),
 		DeploymentName: to.Ptr("whisper-1"),
 	}
 
-	voiceResponseTranscript, err := s.azureOpenai.GetAudioTranscription(ctx, req, nil)
+	userTranscript, err := s.azureOpenai.GetAudioTranscription(ctx, req, nil)
 	if err != nil {
 		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to transcribe voice message: %s", err.Error())
 	}
 
-	if voiceResponseTranscript.Text == nil {
-		return models.SendVoiceMessageResult{}, fmt.Errorf("voiceResponseTranscript.Text is nil")
+	if userTranscript.Text == nil {
+		return models.SendVoiceMessageResult{}, fmt.Errorf("userTranscript.Text is nil")
 	}
 
-	responseTranscript := *voiceResponseTranscript.Text
+	userText := *userTranscript.Text
 
-	llmTextResponse, err := s.llm.Call(ctx, responseTranscript)
+	llmReplyText, err := s.llm.Call(ctx, userText)
 	if err != nil {
-		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to get llmTextResponse from llm: %s", err.Error())
+		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to get llmReplyText from llm: %s", err.Error())
 	}
 
 	textToSpeechReq := openai.CreateSpeechRequest{
 		Model:          "tts-1",
-		Input:          llmTextResponse,
+		Input:          llmReplyText,
 		Voice:          openai.VoiceFable,
 		ResponseFormat: "mp3",
 	}
 
-	voiceResponse, err := s.baranovOpenai.CreateSpeech(ctx, textToSpeechReq)
+	llmAudio, err := s.baranovOpenai.CreateSpeech(ctx, textToSpeechReq)
 	if err != nil {
 		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to get speech from text: %s", err.Error())
 	}
 
-	// convert voiceResponse to []byte
-	voiceResponseBytes, err := io.ReadAll(voiceResponse)
+	// convert llmAudio to []byte
+	llmReplyAudio, err := io.ReadAll(llmAudio)
 	if err != nil {
 		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to read voice response: %s", err.Error())
 	}
 
-	bucket, err := s.storageClient.DefaultBucket()
+	// for llm audio we use mp3
+	voiceResponseName := fmt.Sprintf("users/%s/backend_uploads/%d.mp3", userID, time.Now().UnixNano())
+
+	llmReplyAudioURL, err := s.uploadFileToStorage(ctx, llmReplyAudio, voiceResponseName)
 	if err != nil {
-		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to get default bucket: %s", err.Error())
+		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to upload voice response to storage: %s", err.Error())
 	}
 
-	fileName := fmt.Sprintf("users/%s/backend_uploads/%d.mp3", userID, time.Now().UnixNano())
+	// for user audio we use webm
+	voiceMessageName := fmt.Sprintf("users/%s/backend_uploads/%d.webm", userID, time.Now().UnixNano())
+	userAudioURL, err := s.uploadFileToStorage(ctx, userAudio, voiceMessageName)
+	if err != nil {
+		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to upload voice message to storage: %s", err.Error())
+	}
+
+	return models.SendVoiceMessageResult{
+		UserAudioURL:     userAudioURL,
+		LLMReplyAudioURL: llmReplyAudioURL,
+		UserText:         userText,
+		LLMText:          llmReplyText,
+	}, nil
+}
+
+func (s *Service) uploadFileToStorage(
+	ctx context.Context, fileBytes []byte, fileName string,
+) (string, error) {
+	bucket, err := s.storageClient.DefaultBucket()
+	if err != nil {
+		return "", fmt.Errorf("unable to get default bucket: %s", err.Error())
+	}
 
 	object := bucket.Object(fileName)
 	wc := object.NewWriter(ctx)
 
-	if _, err = wc.Write(voiceResponseBytes); err != nil {
-		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to write voice response to storage: %s", err.Error())
+	if _, err = wc.Write(fileBytes); err != nil {
+		return "", fmt.Errorf("unable to write file to storage: %s", err.Error())
 	}
 
 	if err = wc.Close(); err != nil {
-		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to close writer: %s", err.Error())
+		return "", fmt.Errorf("unable to close writer: %s", err.Error())
 	}
 
-	voiceResponseURL := generateFirebaseStorageURL(object.BucketName(), object.ObjectName())
-
-	return models.SendVoiceMessageResult{
-		VoiceMessageURL:         "",
-		VoiceResponseURL:        voiceResponseURL,
-		VoiceMessageTranscript:  responseTranscript,
-		VoiceResponseTranscript: llmTextResponse,
-	}, nil
+	return generateFirebaseStorageURL(object.BucketName(), object.ObjectName()), nil
 }
 
 func generateFirebaseStorageURL(bucketName, filePath string) string {

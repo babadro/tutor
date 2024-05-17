@@ -187,11 +187,18 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           print('Failed to send voice message: ${value.errorMessage}');
         } else {
           print('Voice message sent');
+          final res = value.data!;
+
+          _addMessage(res.userMessage);
+          _addMessage(res.replyMessage);
+
+          // print reply message
+          print('Reply message: ${res.replyMessage.AudioUrl}');
         }
       });
 
       setState(() {
-        //var url = value;
+       // var url = value;
         _mplaybackReady = true;
       });
 
@@ -200,7 +207,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       _addMessage(
           local.ChatMessage(
             IsFromCurrentUser: true,
-            Text: "audio transcription will be here",
+            Text: "audio with local path",
             Timestamp: timestamp,
             AudioUrl: value ?? '',
           )

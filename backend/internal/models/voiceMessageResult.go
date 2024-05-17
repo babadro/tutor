@@ -1,8 +1,8 @@
 package models
 
 type SendVoiceMessageResult struct {
-	VoiceMessageURL         string
-	VoiceMessageTranscript  string
-	VoiceResponseURL        string
-	VoiceResponseTranscript string
+	UserAudioURL     string
+	UserText         string
+	LLMReplyAudioURL string
+	LLMText          string
 }
