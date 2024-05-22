@@ -14,6 +14,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 )
 
 // NewSendVoiceMessageParams creates a new SendVoiceMessageParams object
@@ -41,6 +42,10 @@ type SendVoiceMessageParams struct {
 	  In: formData
 	*/
 	File io.ReadCloser
+	/*The timestamp of the message.
+	  In: formData
+	*/
+	Timestamp *int64
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -76,6 +81,11 @@ func (o *SendVoiceMessageParams) BindRequest(r *http.Request, route *middleware.
 		o.File = &runtime.File{Data: file, Header: fileHeader}
 	}
 
+	fdTimestamp, fdhkTimestamp, _ := fds.GetOK("timestamp")
+	if err := o.bindTimestamp(fdTimestamp, fdhkTimestamp, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -104,5 +114,27 @@ func (o *SendVoiceMessageParams) bindChatID(rawData []string, hasKey bool, forma
 //
 // The only supported validations on files are MinLength and MaxLength
 func (o *SendVoiceMessageParams) bindFile(file multipart.File, header *multipart.FileHeader) error {
+	return nil
+}
+
+// bindTimestamp binds and validates parameter Timestamp from formData.
+func (o *SendVoiceMessageParams) bindTimestamp(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: false
+
+	if raw == "" { // empty values pass all other validations
+		return nil
+	}
+
+	value, err := swag.ConvertInt64(raw)
+	if err != nil {
+		return errors.InvalidType("timestamp", "formData", "int64", raw)
+	}
+	o.Timestamp = &value
+
 	return nil
 }

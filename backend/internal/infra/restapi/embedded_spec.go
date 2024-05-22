@@ -211,6 +211,13 @@ func init() {
             "description": "The chat ID.",
             "name": "chatId",
             "in": "formData"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "The timestamp of the message.",
+            "name": "timestamp",
+            "in": "formData"
           }
         ],
         "responses": {
@@ -602,6 +609,13 @@ func init() {
             "type": "string",
             "description": "The chat ID.",
             "name": "chatId",
+            "in": "formData"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "The timestamp of the message.",
+            "name": "timestamp",
             "in": "formData"
           }
         ],
