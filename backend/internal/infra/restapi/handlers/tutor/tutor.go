@@ -16,7 +16,7 @@ import (
 
 type service interface {
 	SendMessage(ctx context.Context, message, userID string, timestamp int64, chatID string) (string, swagger.Chat, error)
-	SendVoiceMessage(ctx context.Context, voiceMsgBytes []byte, userID string) (models.SendVoiceMessageResult, error)
+	SendVoiceMessage(ctx context.Context, voiceMsgBytes []byte, userID string, chatID string, timestamp int64) (models.SendVoiceMessageResult, error)
 	GetChatMessages(
 		ctx context.Context, chatID string, userID string, limit int32, timestamp int64,
 	) ([]*swagger.ChatMessage, error)
