@@ -188,11 +188,13 @@ paths:
           name: chatId
           type: string
           description: The chat ID.
+          required: false
         - in: formData
           name: timestamp
           type: integer
           format: int64
           description: The timestamp of the message.
+          required: true
       responses:
         '200':
           description: Successful response

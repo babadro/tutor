@@ -217,7 +217,8 @@ func init() {
             "format": "int64",
             "description": "The timestamp of the message.",
             "name": "timestamp",
-            "in": "formData"
+            "in": "formData",
+            "required": true
           }
         ],
         "responses": {
@@ -616,7 +617,8 @@ func init() {
             "format": "int64",
             "description": "The timestamp of the message.",
             "name": "timestamp",
-            "in": "formData"
+            "in": "formData",
+            "required": true
           }
         ],
         "responses": {

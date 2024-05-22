@@ -15,6 +15,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // NewSendVoiceMessageParams creates a new SendVoiceMessageParams object
@@ -43,9 +44,10 @@ type SendVoiceMessageParams struct {
 	*/
 	File io.ReadCloser
 	/*The timestamp of the message.
+	  Required: true
 	  In: formData
 	*/
-	Timestamp *int64
+	Timestamp int64
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -119,22 +121,25 @@ func (o *SendVoiceMessageParams) bindFile(file multipart.File, header *multipart
 
 // bindTimestamp binds and validates parameter Timestamp from formData.
 func (o *SendVoiceMessageParams) bindTimestamp(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	if !hasKey {
+		return errors.Required("timestamp", "formData", rawData)
+	}
 	var raw string
 	if len(rawData) > 0 {
 		raw = rawData[len(rawData)-1]
 	}
 
-	// Required: false
+	// Required: true
 
-	if raw == "" { // empty values pass all other validations
-		return nil
+	if err := validate.RequiredString("timestamp", "formData", raw); err != nil {
+		return err
 	}
 
 	value, err := swag.ConvertInt64(raw)
 	if err != nil {
 		return errors.InvalidType("timestamp", "formData", "int64", raw)
 	}
-	o.Timestamp = &value
+	o.Timestamp = value
 
 	return nil
 }
