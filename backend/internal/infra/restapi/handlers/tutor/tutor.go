@@ -16,7 +16,9 @@ import (
 
 type service interface {
 	SendMessage(ctx context.Context, message, userID string, timestamp int64, chatID string) (string, swagger.Chat, error)
-	SendVoiceMessage(ctx context.Context, voiceMsgBytes []byte, userID string, chatID string, timestamp int64) (models.SendVoiceMessageResult, error)
+	SendVoiceMessage(
+		ctx context.Context, voiceMsgBytes []byte, userID, chatID string, timestamp int64,
+	) (models.SendVoiceMessageResult, error)
 	GetChatMessages(
 		ctx context.Context, chatID string, userID string, limit int32, timestamp int64,
 	) ([]*swagger.ChatMessage, error)
@@ -63,23 +65,34 @@ func (t *Tutor) SendVoiceMessage(
 ) middleware.Responder {
 	// todo check if the userID matches with the chatID, otherwise return unauthorized
 
+	// read file to []byte
+	voiceMsgBytes, err := io.ReadAll(params.File)
+	if err != nil {
+		hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to read voice message")
+		return operations.NewSendVoiceMessageBadRequest()
+	}
+
 	// log file length of readcloser
-	fileLength, _ := io.Copy(io.Discard, params.File)
-	hlog.FromRequest(params.HTTPRequest).Info().Msgf("File length: %d", fileLength)
+	hlog.FromRequest(params.HTTPRequest).Info().Msgf("File length: %d", len(voiceMsgBytes))
+
+	chatID := ""
+	if params.ChatID != nil {
+		chatID = *params.ChatID
+	}
 
 	// log chatID
-	hlog.FromRequest(params.HTTPRequest).Info().Msgf("ChatID: %s", params.ChatID)
+	hlog.FromRequest(params.HTTPRequest).Info().Msgf("ChatID: %s", chatID)
 
 	//voiceMessage := params.File
 
 	// log voice message
 	//hlog.FromRequest(params.HTTPRequest).Info().Msgf("Voice message: %s", voiceMessage)
 	//
-	//result, err := t.svc.SendVoiceMessage(params.HTTPRequest.Context(), voiceMessage, principal.UserID)
-	//if err != nil {
-	//	hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to send voice message")
-	//	return operations.NewSendVoiceMessageBadRequest()
-	//}
+	result, err := t.svc.SendVoiceMessage(params.HTTPRequest.Context(), voiceMsgBytes, principal.UserID, chatID, params.Timestamp)
+	if err != nil {
+		hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to send voice message")
+		return operations.NewSendVoiceMessageBadRequest()
+	}
 
 	return operations.NewSendVoiceMessageOK().WithPayload(&operations.SendVoiceMessageOKBody{
 		UsrAudio:   "user_audio.mp3",       // todo
