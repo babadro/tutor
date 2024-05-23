@@ -94,14 +94,19 @@ func (t *Tutor) SendVoiceMessage(
 		return operations.NewSendVoiceMessageBadRequest()
 	}
 
+	var chat *swagger.Chat
+	if result.CreatedChat.ChatID != "" {
+		chat = &result.CreatedChat
+	}
+
 	return operations.NewSendVoiceMessageOK().WithPayload(&operations.SendVoiceMessageOKBody{
-		UsrAudio:   "user_audio.mp3",       // todo
-		UsrTxt:     "user text",            // todo
-		UsrTime:    time.Now().UnixMilli(), // todo
-		ReplyAudio: "reply_audio.mp3",      // todo
-		ReplyTxt:   "reply_text",           // todo
-		ReplyTime:  time.Now().UnixMilli(), // todo
-		Chat:       nil,                    // todo
+		UsrAudio:   result.UserAudioURL,
+		UsrTxt:     result.UserText,
+		UsrTime:    params.Timestamp,
+		ReplyAudio: result.LLMAudioURL,
+		ReplyTxt:   result.LLMText,
+		ReplyTime:  result.LLMTimestamp,
+		Chat:       chat,
 	})
 }
 

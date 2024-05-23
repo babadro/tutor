@@ -129,7 +129,7 @@ func (s *Service) saveMessageToDB(
 }
 
 func (s *Service) SendVoiceMessage(
-	ctx context.Context, voiceMsgBytes []byte, userID string, chatID string, timestamp int64,
+	ctx context.Context, voiceMsgBytes []byte, userID string, chatID string, userMsgTimestamp int64,
 ) (models.SendVoiceMessageResult, error) {
 	/* todo uncomment when front end is ready
 	req := azopenai.AudioTranscriptionOptions{
@@ -198,7 +198,7 @@ func (s *Service) SendVoiceMessage(
 	userText := fmt.Sprintf("User text %d", time.Now().UnixNano())
 	llmReplyText := fmt.Sprintf("LLM reply text %d", time.Now().UnixNano())
 
-	createdChat, err := s.saveMessageToDB(ctx, userText, userID, chatID, userAudioURL, timestamp)
+	createdChat, err := s.saveMessageToDB(ctx, userText, userID, chatID, userAudioURL, userMsgTimestamp)
 	if err != nil {
 		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to save user message to db: %s", err.Error())
 	}
@@ -207,17 +207,19 @@ func (s *Service) SendVoiceMessage(
 		chatID = createdChat.ChatID
 	}
 
-	_, err = s.saveMessageToDB(ctx, llmReplyText, "", chatID, llmReplyAudioURL, timestamp)
+	llmReplyTimestamp := time.Now().UnixMilli()
+	_, err = s.saveMessageToDB(ctx, llmReplyText, "", chatID, llmReplyAudioURL, llmReplyTimestamp)
 	if err != nil {
 		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to save llm reply to db: %s", err.Error())
 	}
 
 	return models.SendVoiceMessageResult{
-		UserAudioURL:     userAudioURL,
-		LLMReplyAudioURL: llmReplyAudioURL,
-		UserText:         userText,
-		LLMText:          llmReplyText,
-		CreatedChat:      createdChat,
+		UserAudioURL: userAudioURL,
+		LLMAudioURL:  llmReplyAudioURL,
+		UserText:     userText,
+		LLMText:      llmReplyText,
+		CreatedChat:  createdChat,
+		LLMTimestamp: llmReplyTimestamp,
 	}, nil
 }
 
