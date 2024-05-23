@@ -172,10 +172,9 @@ func (s *Service) SendVoiceMessage(
 		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to read voice response: %s", err.Error())
 	}
 	*/
-
 	// open mp3 file to []byte on local machine
 	// todo use real llm audio
-	llmReplyAudio, err := os.ReadFile("example123456.mp3")
+	llmReplyAudio, err := os.ReadFile("cmd/server/example123456.mp3")
 	if err != nil {
 		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to read voice response: %s", err.Error())
 	}

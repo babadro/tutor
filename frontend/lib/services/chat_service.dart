@@ -119,12 +119,15 @@ class ChatService {
     // todo will not work on mobile app
     Uint8List fileBytes = await http.readBytes(Uri.parse(audioFilePath));
 
+    print('File size: ${fileBytes.length} bytes');
+
     try {
       final timestamp = DateTime.now();
 
       final request = http.MultipartRequest('POST', uri)
         ..headers['Authorization'] = 'Bearer $authToken'
         ..fields['chatId'] = chatId
+        ..fields['timestamp'] = timestamp.millisecondsSinceEpoch.toString()
         ..files.add(
           await http.MultipartFile.fromBytes(
             'file',
