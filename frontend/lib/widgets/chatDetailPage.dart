@@ -187,7 +187,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         } else {
           final res = value.data!;
 
-          if (value.data!.createdChat != '') {
+          if (value.data!.createdChat.ChatId != '') {
             switchToNewChat(value.data!.createdChat);
           };
 
