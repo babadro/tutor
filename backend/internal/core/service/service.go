@@ -260,10 +260,11 @@ func generateFirebaseStorageURL(bucketName, filePath string) string {
 }
 
 type ChatMessage struct {
-	ChatID string `firestore:"chat_id"`
-	Text   string `firestore:"text"`
-	Time   int64  `firestore:"time"`
-	UserID string `firestore:"user_id"`
+	ChatID   string `firestore:"chat_id"`
+	Text     string `firestore:"text"`
+	Time     int64  `firestore:"time"`
+	UserID   string `firestore:"user_id"`
+	AudioURL string `firestore:"audio_url"`
 }
 
 func (s *Service) GetChatMessages(
@@ -332,6 +333,7 @@ func (s *Service) GetChatMessages(
 			Timestamp:         message.Time,
 			UserID:            message.UserID,
 			IsFromCurrentUser: message.UserID != "",
+			AudioURL:          message.AudioURL,
 		})
 	}
 
