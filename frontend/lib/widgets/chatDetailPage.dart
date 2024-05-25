@@ -38,7 +38,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   FlutterSoundRecorder? _mRecorder = FlutterSoundRecorder(logLevel: Level.info);
   bool _mPlayerIsInited = false;
   bool _mRecorderIsInited = false;
-  bool _mplaybackReady = false;
 
   @override
   void initState() {
@@ -81,16 +80,12 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
     setState(() {
       _messages = loadMessagesResult.data!;
-      // print last message fields:
-      print('Last message: ${_messages.last.Text}, ${_messages.last.AudioUrl}');
     });
   }
 
   void _addMessage(local.ChatMessage message) {
     setState(() {
       _messages.add(message);
-      // print full message:
-      print('Message: ${message.Text}, ${message.AudioUrl}');
     });
   }
 
@@ -184,27 +179,15 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
   void stopRecorder() async {
     await _mRecorder!.stopRecorder().then((value) {
-      // log value
-      print('Value is: $value');
-
       _chatService.sendVoiceMessage(value ?? '', chatId).then((value) {
         if (!value.success) {
           print('Failed to send voice message: ${value.errorMessage}');
         } else {
-          print('Voice message sent');
           final res = value.data!;
 
           _addMessage(res.userMessage);
           _addMessage(res.replyMessage);
-
-          // print reply message
-          print('Reply message: ${res.replyMessage.AudioUrl}');
         }
-      });
-
-      setState(() {
-       // var url = value;
-        _mplaybackReady = true;
       });
     });
   }
@@ -212,7 +195,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   void play(String path) {
     print('Playing $path');
     assert(_mPlayerIsInited &&
-        _mplaybackReady &&
         _mRecorder!.isStopped &&
         _mPlayer!.isStopped);
     _mPlayer!
@@ -241,7 +223,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   }
 
   _Fn? getPlaybackFn(String path) {
-    if (!_mPlayerIsInited || !_mplaybackReady || !_mRecorder!.isStopped) {
+    if (!_mPlayerIsInited || !_mRecorder!.isStopped) {
       return null;
     }
     return _mPlayer!.isStopped ? (){play(path);} : stopPlayer;
