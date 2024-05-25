@@ -112,19 +112,21 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       return;
     }
 
-    var createdChat = sendResult.data!.createdChat;
-
-    if (createdChat.ChatId != '') {
-      Provider.of<localChat.ChatModel>(context, listen: false).addChat(
-        createdChat,
-      );
-
-      setState(() {
-        chatId = createdChat.ChatId;
-      });
-    }
+    if (sendResult.data!.createdChat != '') {
+      switchToNewChat(sendResult.data!.createdChat);
+    };
 
     _addMessage(sendResult.data!.message);
+  }
+
+  void switchToNewChat(localChat.Chat createdChat) {
+    Provider.of<localChat.ChatModel>(context, listen: false).addChat(
+      createdChat,
+    );
+
+    setState(() {
+      chatId = createdChat.ChatId;
+    });
   }
 
   Future<void> openTheRecorder() async {
@@ -185,6 +187,10 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         } else {
           final res = value.data!;
 
+          if (value.data!.createdChat != '') {
+            switchToNewChat(value.data!.createdChat);
+          };
+
           _addMessage(res.userMessage);
           _addMessage(res.replyMessage);
         }
@@ -229,16 +235,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     return _mPlayer!.isStopped ? (){play(path);} : stopPlayer;
   }
 
-  Future<void> _startRecording() async {
-    // todo
-  }
-
-  Future<void> _stopAndSendRecording() async {
-    // todo
-  }
-
   void _cancelRecording() async {
-    // todo
+    _mRecorder!.stopRecorder();
   }
 
   @override
