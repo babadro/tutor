@@ -63,6 +63,7 @@ class ChatService {
           IsFromCurrentUser: message.IsFromCurrentUser,
           Text: message.Text,
           Timestamp: message.Timestamp,
+          AudioUrl: message.AudioUrl,
         )).toList());
       } else {
         return ServiceResult.failure(errorMessage: 'Failed to fetch messages: ${response.statusCode}');

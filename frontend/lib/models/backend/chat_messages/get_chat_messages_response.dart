@@ -29,11 +29,15 @@ class ChatMessage {
   @JsonKey(name: 'userId', defaultValue: '')
   final String UserId;
 
+  @JsonKey(name: 'audio', defaultValue: '')
+  final String AudioUrl;
+
   ChatMessage({
     required this.IsFromCurrentUser,
     required this.Text,
     required this.Timestamp,
     required this.UserId,
+    this.AudioUrl = '',
   });
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) => _$ChatMessageFromJson(json);

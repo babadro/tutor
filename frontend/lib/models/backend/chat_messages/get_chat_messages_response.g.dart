@@ -25,6 +25,7 @@ ChatMessage _$ChatMessageFromJson(Map<String, dynamic> json) => ChatMessage(
       Text: json['text'] as String,
       Timestamp: (json['timestamp'] as num).toInt(),
       UserId: json['userId'] as String? ?? '',
+      AudioUrl: json['audio'] as String? ?? '',
     );
 
 Map<String, dynamic> _$ChatMessageToJson(ChatMessage instance) =>
@@ -33,4 +34,5 @@ Map<String, dynamic> _$ChatMessageToJson(ChatMessage instance) =>
       'text': instance.Text,
       'timestamp': instance.Timestamp,
       'userId': instance.UserId,
+      'audio': instance.AudioUrl,
     };

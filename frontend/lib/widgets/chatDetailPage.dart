@@ -286,7 +286,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                         Visibility(
                           visible: _messages[index].AudioUrl != '',
                           child: GestureDetector(
-                            onTap: getPlaybackFn(_mPath),
+                            onTap: getPlaybackFn(_messages[index].AudioUrl),
                             child: Container(
                               height: 30,
                               width: 30,
@@ -342,21 +342,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                     ),
                   ),
                   SizedBox(width: 15),
-                  Visibility(
-                    visible: _mplaybackReady,
-                    child: GestureDetector(
-                      onTap: getPlaybackFn(_mPath),
-                      child: Container(
-                        height: 30,
-                        width: 30,
-                        decoration: BoxDecoration(
-                          color: Colors.black,
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        child: Icon(Icons.play_arrow, color: Colors.white, size: 20),
-                      ),
-                    ),
-                  ),
                   Expanded(
                     child: TextField(
                       decoration: InputDecoration(
