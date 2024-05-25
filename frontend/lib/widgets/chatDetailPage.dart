@@ -236,7 +236,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   }
 
   void _cancelRecording() async {
-    _mRecorder!.stopRecorder();
+    await _mRecorder!.stopRecorder();
+    setState(() {});
   }
 
   @override
