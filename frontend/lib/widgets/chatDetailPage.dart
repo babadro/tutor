@@ -11,6 +11,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:flutter_sound_platform_interface/flutter_sound_recorder_platform_interface.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:logger/logger.dart';
 
 typedef _Fn = void Function();
 const theSource = AudioSource.microphone;
@@ -33,8 +34,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
   Codec _codec = Codec.aacMP4;
   String _mPath = 'tau_file.mp4';
-  FlutterSoundPlayer? _mPlayer = FlutterSoundPlayer();
-  FlutterSoundRecorder? _mRecorder = FlutterSoundRecorder();
+  FlutterSoundPlayer? _mPlayer = FlutterSoundPlayer(logLevel: Level.info);
+  FlutterSoundRecorder? _mRecorder = FlutterSoundRecorder(logLevel: Level.info);
   bool _mPlayerIsInited = false;
   bool _mRecorderIsInited = false;
   bool _mplaybackReady = false;
@@ -80,12 +81,16 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
     setState(() {
       _messages = loadMessagesResult.data!;
+      // print last message fields:
+      print('Last message: ${_messages.last.Text}, ${_messages.last.AudioUrl}');
     });
   }
 
   void _addMessage(local.ChatMessage message) {
     setState(() {
       _messages.add(message);
+      // print full message:
+      print('Message: ${message.Text}, ${message.AudioUrl}');
     });
   }
 
@@ -201,17 +206,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
        // var url = value;
         _mplaybackReady = true;
       });
-
-      var timestamp = DateTime.now().millisecondsSinceEpoch;
-
-      _addMessage(
-          local.ChatMessage(
-            IsFromCurrentUser: true,
-            Text: "audio with local path",
-            Timestamp: timestamp,
-            AudioUrl: value ?? '',
-          )
-      );
     });
   }
 
