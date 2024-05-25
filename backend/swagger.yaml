@@ -264,6 +264,9 @@ definitions:
       curUsr:
         type: boolean
         x-go-name: IsFromCurrentUser
+      audio:
+        type: string
+        x-go-name: AudioURL
   Chat:
     type: object
     properties:

@@ -374,6 +374,10 @@ func init() {
     "ChatMessage": {
       "type": "object",
       "properties": {
+        "audio": {
+          "type": "string",
+          "x-go-name": "AudioURL"
+        },
         "curUsr": {
           "type": "boolean",
           "x-go-name": "IsFromCurrentUser"
@@ -774,6 +778,10 @@ func init() {
     "ChatMessage": {
       "type": "object",
       "properties": {
+        "audio": {
+          "type": "string",
+          "x-go-name": "AudioURL"
+        },
         "curUsr": {
           "type": "boolean",
           "x-go-name": "IsFromCurrentUser"
