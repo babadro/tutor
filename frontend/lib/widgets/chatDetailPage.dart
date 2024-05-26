@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tutor/models/backend/chat_messages/send_text_message_request.dart';
 import 'package:tutor/models/local/chat/chats.dart' as localChat;
+import 'package:tutor/services/audio_player_service.dart';
 import 'package:tutor/services/auth_service.dart';
 import 'package:tutor/models/local/chat/chat_message.dart' as local;
 import 'package:tutor/services/chat_service.dart';
@@ -12,6 +13,8 @@ import 'package:flutter_sound/flutter_sound.dart';
 import 'package:flutter_sound_platform_interface/flutter_sound_recorder_platform_interface.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:logger/logger.dart';
+
+import 'message.dart';
 
 typedef _Fn = void Function();
 const theSource = AudioSource.microphone;
@@ -34,9 +37,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
   Codec _codec = Codec.aacMP4;
   String _mPath = 'tau_file.mp4';
-  FlutterSoundPlayer? _mPlayer = FlutterSoundPlayer(logLevel: Level.info);
   FlutterSoundRecorder? _mRecorder = FlutterSoundRecorder(logLevel: Level.info);
-  bool _mPlayerIsInited = false;
   bool _mRecorderIsInited = false;
 
   @override
@@ -44,12 +45,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     openTheRecorder().then((value) {
       setState(() {
         _mRecorderIsInited = true;
-      });
-    });
-
-    _mPlayer!.openPlayer().then((value) {
-      setState(() {
-        _mPlayerIsInited = true;
       });
     });
 
@@ -62,9 +57,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
   @override
   void dispose() {
-    _mPlayer!.closePlayer();
-    _mPlayer = null;
-
     _mRecorder!.closeRecorder();
     _mRecorder = null;
     super.dispose();
@@ -198,41 +190,11 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     });
   }
 
-  void play(String path) {
-    print('Playing $path');
-    assert(_mPlayerIsInited &&
-        _mRecorder!.isStopped &&
-        _mPlayer!.isStopped);
-    _mPlayer!
-        .startPlayer(
-        fromURI: path,
-        //codec: kIsWeb ? Codec.opusWebM : Codec.aacADTS,
-        whenFinished: () {
-          setState(() {});
-        })
-        .then((value) {
-      setState(() {});
-    });
-  }
-
-  void stopPlayer() {
-    _mPlayer!.stopPlayer().then((value) {
-      setState(() {});
-    });
-  }
-
   _Fn? getRecorderFn() {
-    if (!_mRecorderIsInited || !_mPlayer!.isStopped) {
+    if (!_mRecorderIsInited /*|| !_mPlayer!.isStopped*/) {
       return null;
     }
     return _mRecorder!.isStopped ? record : stopRecorder;
-  }
-
-  _Fn? getPlaybackFn(String path) {
-    if (!_mPlayerIsInited || !_mRecorder!.isStopped) {
-      return null;
-    }
-    return _mPlayer!.isStopped ? (){play(path);} : stopPlayer;
   }
 
   void _cancelRecording() async {
@@ -242,115 +204,91 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: <Widget>[
-          ListView.builder(
-            itemCount: _messages.length,
-            shrinkWrap: true,
-            padding: EdgeInsets.only(top: 10, bottom: 10),
-            physics: NeverScrollableScrollPhysics(),
-            itemBuilder: (context, index) {
-              return Container(
-                padding: EdgeInsets.only(left: 14, right: 14, top: 10, bottom: 10),
-                child: Align(
-                  alignment: (_messages[index].IsFromCurrentUser ? Alignment.topRight : Alignment.topLeft),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      color: (_messages[index].IsFromCurrentUser ? Colors.blue[200] : Colors.grey.shade200),
-                    ),
-                    padding: EdgeInsets.all(16),
-                    child: Column(
-                      children: <Widget>[
-                        Text(_messages[index].Text, style: TextStyle(fontSize: 15)),
-                        Visibility(
-                          visible: _messages[index].AudioUrl != '',
-                          child: GestureDetector(
-                            onTap: getPlaybackFn(_messages[index].AudioUrl),
-                            child: Container(
-                              height: 30,
-                              width: 30,
-                              decoration: BoxDecoration(
-                                color: Colors.black,
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                              child: Icon(Icons.play_arrow, color: Colors.white, size: 20),
-                            ),
-                          ),
-                        ),
-                      ]
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-          Align(
-            alignment: Alignment.bottomLeft,
-            child: Container(
-              padding: EdgeInsets.only(left: 10, bottom: 10, top: 10),
-              height: 60,
-              width: double.infinity,
-              color: Colors.white,
-              child: Row(
-                children: <Widget>[
-                  GestureDetector(
-                    onTap: getRecorderFn(),
-                    child: Container(
-                      height: 30,
-                      width: 30,
-                      decoration: BoxDecoration(
-                        color: _mRecorder!.isRecording ? Colors.red : Colors.lightBlue,
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      child: Icon(_mRecorder!.isRecording ? Icons.stop : Icons.mic, color: Colors.white, size: 20),
-                    ),
-                  ),
-                  Visibility(
-                    visible: _mRecorder!.isRecording,
-                    child: GestureDetector(
-                      onTap: _cancelRecording,
+    return ChangeNotifierProvider(
+      create: (context) => AudioPlayerService(),
+      child: Scaffold(
+        body: Stack(
+          children: <Widget>[
+            ListView.builder(
+              itemCount: _messages.length,
+              shrinkWrap: true,
+              padding: EdgeInsets.only(top: 10, bottom: 10),
+              physics: NeverScrollableScrollPhysics(),
+              itemBuilder: (context, index) {
+                return MessageWidget(
+                  key: ValueKey(_messages[index].Timestamp),
+                  text: _messages[index].Text,
+                  audioUrl: _messages[index].AudioUrl,
+                  isFromCurrentUser: _messages[index].IsFromCurrentUser,
+                );
+              },
+            ),
+            Align(
+              alignment: Alignment.bottomLeft,
+              child: Container(
+                padding: EdgeInsets.only(left: 10, bottom: 10, top: 10),
+                height: 60,
+                width: double.infinity,
+                color: Colors.white,
+                child: Row(
+                  children: <Widget>[
+                    GestureDetector(
+                      onTap: getRecorderFn(),
                       child: Container(
                         height: 30,
                         width: 30,
                         decoration: BoxDecoration(
-                          color: Colors.black,
+                          color: _mRecorder!.isRecording ? Colors.red : Colors.lightBlue,
                           borderRadius: BorderRadius.circular(30),
                         ),
-                        child: Icon(Icons.delete, color: Colors.white, size: 20),
+                        child: Icon(_mRecorder!.isRecording ? Icons.stop : Icons.mic, color: Colors.white, size: 20),
                       ),
                     ),
-                  ),
-                  SizedBox(width: 15),
-                  Expanded(
-                    child: TextField(
-                      decoration: InputDecoration(
-                          hintText: "Write message...",
-                          hintStyle: TextStyle(color: Colors.black54),
-                          border: InputBorder.none
+                    Visibility(
+                      visible: _mRecorder!.isRecording,
+                      child: GestureDetector(
+                        onTap: _cancelRecording,
+                        child: Container(
+                          height: 30,
+                          width: 30,
+                          decoration: BoxDecoration(
+                            color: Colors.black,
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          child: Icon(Icons.delete, color: Colors.white, size: 20),
+                        ),
                       ),
-                      controller: _messageController,
                     ),
-                  ),
-                  SizedBox(width: 15),
-                  FloatingActionButton(
-                    onPressed: () {
-                      if (_messageController.text.trim().isNotEmpty) {
-                        _handleSendPressed(_messageController.text.trim());
-                        _messageController.clear();
-                      }
-                    },
-                    child: Icon(Icons.send, color: Colors.white, size: 18),
-                    backgroundColor: Colors.blue,
-                    elevation: 0,
-                  ),
-                ],
+                    SizedBox(width: 15),
+                    Expanded(
+                      child: TextField(
+                        decoration: InputDecoration(
+                            hintText: "Write message...",
+                            hintStyle: TextStyle(color: Colors.black54),
+                            border: InputBorder.none
+                        ),
+                        controller: _messageController,
+                      ),
+                    ),
+                    SizedBox(width: 15),
+                    FloatingActionButton(
+                      onPressed: () {
+                        if (_messageController.text.trim().isNotEmpty) {
+                          _handleSendPressed(_messageController.text.trim());
+                          _messageController.clear();
+                        }
+                      },
+                      child: Icon(Icons.send, color: Colors.white, size: 18),
+                      backgroundColor: Colors.blue,
+                      elevation: 0,
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
+      )
     );
   }
 }
