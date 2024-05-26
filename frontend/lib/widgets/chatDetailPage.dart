@@ -191,7 +191,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   }
 
   _Fn? getRecorderFn() {
-    if (!_mRecorderIsInited /*|| !_mPlayer!.isStopped*/) {
+    if (!_mRecorderIsInited) {
       return null;
     }
     return _mRecorder!.isStopped ? record : stopRecorder;
@@ -217,9 +217,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
               itemBuilder: (context, index) {
                 return MessageWidget(
                   key: ValueKey(_messages[index].Timestamp),
-                  text: _messages[index].Text,
-                  audioUrl: _messages[index].AudioUrl,
-                  isFromCurrentUser: _messages[index].IsFromCurrentUser,
+                  message: _messages[index],
                 );
               },
             ),
