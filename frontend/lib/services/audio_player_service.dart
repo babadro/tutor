@@ -19,9 +19,17 @@ class AudioPlayerService with ChangeNotifier {
     if (_currentUrl == url && _player!.isPlaying) {
       await _player!.stopPlayer();
     } else {
-      await _player!.startPlayer(fromURI: url);
-      _currentUrl = url;
+      await _player!.startPlayer(
+        fromURI: url,
+        whenFinished: (){
+          _player!.stopPlayer();
+          _currentUrl = null;
+          notifyListeners();
+          },
+      );
     }
+
+    _currentUrl = url;
     notifyListeners();
   }
 
