@@ -232,28 +232,34 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                   children: <Widget>[
                     GestureDetector(
                       onTap: getRecorderFn(),
-                      child: Container(
-                        height: 30,
-                        width: 30,
-                        decoration: BoxDecoration(
-                          color: _mRecorder!.isRecording ? Colors.red : Colors.lightBlue,
-                          borderRadius: BorderRadius.circular(30),
+                      child: MouseRegion(
+                        cursor: SystemMouseCursors.click,
+                        child: Container(
+                          height: 30,
+                          width: 30,
+                          decoration: BoxDecoration(
+                            color: _mRecorder!.isRecording ? Colors.red : Colors.lightBlue,
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          child: Icon(_mRecorder!.isRecording ? Icons.stop : Icons.mic, color: Colors.white, size: 20),
                         ),
-                        child: Icon(_mRecorder!.isRecording ? Icons.stop : Icons.mic, color: Colors.white, size: 20),
                       ),
                     ),
                     Visibility(
                       visible: _mRecorder!.isRecording,
                       child: GestureDetector(
                         onTap: _cancelRecording,
-                        child: Container(
-                          height: 30,
-                          width: 30,
-                          decoration: BoxDecoration(
-                            color: Colors.black,
-                            borderRadius: BorderRadius.circular(30),
+                        child: MouseRegion(
+                          cursor: SystemMouseCursors.click,
+                          child: Container(
+                            height: 30,
+                            width: 30,
+                            decoration: BoxDecoration(
+                              color: Colors.black,
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            child: Icon(Icons.delete, color: Colors.white, size: 20),
                           ),
-                          child: Icon(Icons.delete, color: Colors.white, size: 20),
                         ),
                       ),
                     ),

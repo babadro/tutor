@@ -26,23 +26,15 @@ class MessageWidget extends StatelessWidget {
             children: <Widget>[
               Text(message.Text, style: TextStyle(fontSize: 15)),
               if (message.AudioUrl.isNotEmpty)
-                GestureDetector(
-                  onTap: () {
+                IconButton(
+                  onPressed: () {
                     audioPlayerService.togglePlayPause(message.AudioUrl);
                   },
-                  child: Container(
-                    height: 30,
-                    width: 30,
-                    decoration: BoxDecoration(
-                      color: audioPlayerService.isPlaying(message.AudioUrl) ? Colors.red : Colors.black,
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    child: Icon(
-                      audioPlayerService.isPlaying(message.AudioUrl) ? Icons.stop : Icons.play_arrow,
-                      color: Colors.white,
-                      size: 20,
-                    ),
+                  icon: Icon(
+                    audioPlayerService.isPlaying(message.AudioUrl) ? Icons.stop : Icons.play_arrow,
+                    color: audioPlayerService.isPlaying(message.AudioUrl) ? Colors.red : Colors.black,
                   ),
+                  iconSize: 24, // Adjust the size as needed
                 ),
             ],
           ),
