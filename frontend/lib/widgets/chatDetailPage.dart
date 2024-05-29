@@ -19,7 +19,7 @@ import 'message.dart';
 typedef _Fn = void Function();
 const theSource = AudioSource.microphone;
 
-class ChatDetailPage extends StatefulWidget{
+class ChatDetailPage extends StatefulWidget {
   final String initialChatId;
 
   ChatDetailPage({Key? key, required this.initialChatId}) : super(key: key);
@@ -32,6 +32,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   late String chatId;
   late ChatService _chatService;
   List<local.ChatMessage> _messages = [];
+  bool _isRecording = false;
+  bool _isSending = false;
 
   TextEditingController _messageController = TextEditingController();
 
@@ -160,6 +162,10 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   }
 
   void record() {
+    setState(() {
+      _isRecording = true;
+    });
+
     _mRecorder!
         .startRecorder(
       toFile: _mPath,
@@ -172,8 +178,17 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   }
 
   void stopRecorder() async {
+    setState(() {
+      _isRecording = false;
+      _isSending = true;
+    });
+
     await _mRecorder!.stopRecorder().then((value) {
       _chatService.sendVoiceMessage(value ?? '', chatId).then((value) {
+        setState(() {
+          _isSending = false;
+        });
+
         if (!value.success) {
           print('Failed to send voice message: ${value.errorMessage}');
         } else {
@@ -199,7 +214,9 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
   void _cancelRecording() async {
     await _mRecorder!.stopRecorder();
-    setState(() {});
+    setState(() {
+      _isRecording = false;
+    });
   }
 
   @override
@@ -209,17 +226,48 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       child: Scaffold(
         body: Stack(
           children: <Widget>[
-            ListView.builder(
-              itemCount: _messages.length,
-              shrinkWrap: true,
-              padding: EdgeInsets.only(top: 10, bottom: 10),
-              physics: NeverScrollableScrollPhysics(),
-              itemBuilder: (context, index) {
-                return MessageWidget(
-                  key: ValueKey(_messages[index].Timestamp),
-                  message: _messages[index],
-                );
-              },
+            Column(
+              children: <Widget>[
+                ListView.builder(
+                  itemCount: _messages.length,
+                  shrinkWrap: true,
+                  padding: EdgeInsets.only(top: 10, bottom: 10),
+                  physics: NeverScrollableScrollPhysics(),
+                  itemBuilder: (context, index) {
+                    return MessageWidget(
+                      key: ValueKey(_messages[index].Timestamp),
+                      message: _messages[index],
+                    );
+                  },
+                ),
+                if (_isRecording || _isSending)
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          color: _isRecording ? Colors.orange : Colors.blue,
+                        ),
+                        padding: EdgeInsets.all(16),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(_isRecording ? Icons.mic : Icons.send, color: Colors.white),
+                            SizedBox(width: 8),
+                            Text(
+                              _isRecording ? 'Recording' : 'Sending',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                            if (_isRecording) CircularProgressIndicator(),
+                            if (_isSending) CircularProgressIndicator(),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
             Align(
               alignment: Alignment.bottomLeft,
