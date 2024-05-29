@@ -32,8 +32,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   late String chatId;
   late ChatService _chatService;
   List<local.ChatMessage> _messages = [];
-  bool _isRecording = false;
-  bool _isSending = false;
+  final ScrollController _scrollController = ScrollController();
 
   TextEditingController _messageController = TextEditingController();
 
@@ -41,6 +40,9 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   String _mPath = 'tau_file.mp4';
   FlutterSoundRecorder? _mRecorder = FlutterSoundRecorder(logLevel: Level.info);
   bool _mRecorderIsInited = false;
+
+  bool _isRecording = false;
+  bool _isSending = false;
 
   @override
   void initState() {
@@ -61,6 +63,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   void dispose() {
     _mRecorder!.closeRecorder();
     _mRecorder = null;
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -74,12 +77,14 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
     setState(() {
       _messages = loadMessagesResult.data!;
+      _scrollToBottom();
     });
   }
 
   void _addMessage(local.ChatMessage message) {
     setState(() {
       _messages.add(message);
+      _scrollToBottom();
     });
   }
 
@@ -165,7 +170,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     setState(() {
       _isRecording = true;
     });
-
     _mRecorder!
         .startRecorder(
       toFile: _mPath,
@@ -219,128 +223,146 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     });
   }
 
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (context) => AudioPlayerService(),
-      child: Scaffold(
-        body: Stack(
-          children: <Widget>[
-            Column(
-              children: <Widget>[
-                ListView.builder(
-                  itemCount: _messages.length,
-                  shrinkWrap: true,
-                  padding: EdgeInsets.only(top: 10, bottom: 10),
-                  physics: NeverScrollableScrollPhysics(),
-                  itemBuilder: (context, index) {
-                    return MessageWidget(
-                      key: ValueKey(_messages[index].Timestamp),
-                      message: _messages[index],
-                    );
-                  },
-                ),
-                if (_isRecording || _isSending)
-                  Align(
-                    alignment: Alignment.topRight,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          color: _isRecording ? Colors.orange : Colors.blue,
-                        ),
-                        padding: EdgeInsets.all(16),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(_isRecording ? Icons.mic : Icons.send, color: Colors.white),
-                            SizedBox(width: 8),
-                            Text(
-                              _isRecording ? 'Recording' : 'Sending',
-                              style: TextStyle(color: Colors.white),
+        create: (context) => AudioPlayerService(),
+        child: Scaffold(
+          body: Stack(
+            children: <Widget>[
+              Column(
+                children: <Widget>[
+                  Expanded(
+                    child: SingleChildScrollView(
+                      controller: _scrollController,
+                      child: Column(
+                        children: <Widget>[
+                          ListView.builder(
+                            itemCount: _messages.length,
+                            shrinkWrap: true,
+                            padding: EdgeInsets.only(top: 10, bottom: 10),
+                            physics: NeverScrollableScrollPhysics(),
+                            itemBuilder: (context, index) {
+                              return MessageWidget(
+                                key: ValueKey(_messages[index].Timestamp),
+                                message: _messages[index],
+                              );
+                            },
+                          ),
+                          if (_isRecording || _isSending)
+                            Align(
+                              alignment: Alignment.topRight,
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(20),
+                                    color: _isRecording ? Colors.orange : Colors.blue,
+                                  ),
+                                  padding: EdgeInsets.all(16),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(_isRecording ? Icons.mic : Icons.send, color: Colors.white),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        _isRecording ? 'Recording' : 'Sending',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                      SizedBox(width: 8),
+                                      CircularProgressIndicator(),
+                                    ],
+                                  ),
+                                ),
+                              ),
                             ),
-                            if (_isRecording) CircularProgressIndicator(),
-                            if (_isSending) CircularProgressIndicator(),
-                          ],
-                        ),
+                        ],
                       ),
                     ),
                   ),
-              ],
-            ),
-            Align(
-              alignment: Alignment.bottomLeft,
-              child: Container(
-                padding: EdgeInsets.only(left: 10, bottom: 10, top: 10),
-                height: 60,
-                width: double.infinity,
-                color: Colors.white,
-                child: Row(
-                  children: <Widget>[
-                    GestureDetector(
-                      onTap: getRecorderFn(),
-                      child: MouseRegion(
-                        cursor: SystemMouseCursors.click,
-                        child: Container(
-                          height: 30,
-                          width: 30,
-                          decoration: BoxDecoration(
-                            color: _mRecorder!.isRecording ? Colors.red : Colors.lightBlue,
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                          child: Icon(_mRecorder!.isRecording ? Icons.stop : Icons.mic, color: Colors.white, size: 20),
-                        ),
-                      ),
-                    ),
-                    Visibility(
-                      visible: _mRecorder!.isRecording,
-                      child: GestureDetector(
-                        onTap: _cancelRecording,
-                        child: MouseRegion(
-                          cursor: SystemMouseCursors.click,
-                          child: Container(
-                            height: 30,
-                            width: 30,
-                            decoration: BoxDecoration(
-                              color: Colors.black,
-                              borderRadius: BorderRadius.circular(30),
+                  Align(
+                    alignment: Alignment.bottomLeft,
+                    child: Container(
+                      padding: EdgeInsets.only(left: 10, bottom: 10, top: 10),
+                      height: 60,
+                      width: double.infinity,
+                      color: Colors.white,
+                      child: Row(
+                        children: <Widget>[
+                          GestureDetector(
+                            onTap: getRecorderFn(),
+                            child: MouseRegion(
+                              cursor: SystemMouseCursors.click,
+                              child: Container(
+                                height: 30,
+                                width: 30,
+                                decoration: BoxDecoration(
+                                  color: _mRecorder!.isRecording ? Colors.red : Colors.lightBlue,
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                child: Icon(_mRecorder!.isRecording ? Icons.stop : Icons.mic, color: Colors.white, size: 20),
+                              ),
                             ),
-                            child: Icon(Icons.delete, color: Colors.white, size: 20),
                           ),
-                        ),
+                          Visibility(
+                            visible: _mRecorder!.isRecording,
+                            child: GestureDetector(
+                              onTap: _cancelRecording,
+                              child: MouseRegion(
+                                cursor: SystemMouseCursors.click,
+                                child: Container(
+                                  height: 30,
+                                  width: 30,
+                                  decoration: BoxDecoration(
+                                    color: Colors.black,
+                                    borderRadius: BorderRadius.circular(30),
+                                  ),
+                                  child: Icon(Icons.delete, color: Colors.white, size: 20),
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 15),
+                          Expanded(
+                            child: TextField(
+                              decoration: InputDecoration(
+                                  hintText: "Write message...",
+                                  hintStyle: TextStyle(color: Colors.black54),
+                                  border: InputBorder.none
+                              ),
+                              controller: _messageController,
+                            ),
+                          ),
+                          SizedBox(width: 15),
+                          FloatingActionButton(
+                            onPressed: () {
+                              if (_messageController.text.trim().isNotEmpty) {
+                                _handleSendPressed(_messageController.text.trim());
+                                _messageController.clear();
+                              }
+                            },
+                            child: Icon(Icons.send, color: Colors.white, size: 18),
+                            backgroundColor: Colors.blue,
+                            elevation: 0,
+                          ),
+                        ],
                       ),
                     ),
-                    SizedBox(width: 15),
-                    Expanded(
-                      child: TextField(
-                        decoration: InputDecoration(
-                            hintText: "Write message...",
-                            hintStyle: TextStyle(color: Colors.black54),
-                            border: InputBorder.none
-                        ),
-                        controller: _messageController,
-                      ),
-                    ),
-                    SizedBox(width: 15),
-                    FloatingActionButton(
-                      onPressed: () {
-                        if (_messageController.text.trim().isNotEmpty) {
-                          _handleSendPressed(_messageController.text.trim());
-                          _messageController.clear();
-                        }
-                      },
-                      child: Icon(Icons.send, color: Colors.white, size: 18),
-                      backgroundColor: Colors.blue,
-                      elevation: 0,
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
-      )
+            ],
+          ),
+        )
     );
   }
 }
+
