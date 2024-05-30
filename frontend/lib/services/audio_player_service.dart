@@ -16,12 +16,18 @@ class AudioPlayerService with ChangeNotifier {
   }
 
   void togglePlayPause(String url) async {
+    print('togglePlayPause: $url');
     if (_currentUrl == url && _player!.isPlaying) {
+      print('stopping player');
       await _player!.stopPlayer();
     } else {
+      print('starting player');
+      // log player
+      print('player: $_player');
       await _player!.startPlayer(
         fromURI: url,
         whenFinished: (){
+          print('whenFinished');
           _player!.stopPlayer();
           _currentUrl = null;
           notifyListeners();
