@@ -167,17 +167,15 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   }
 
   void record() {
-    setState(() {
-      _isRecording = true;
-    });
     _mRecorder!
         .startRecorder(
       toFile: _mPath,
       codec: _codec,
       audioSource: theSource,
-    )
-        .then((value) {
-      setState(() {});
+    ).then((value) {
+      setState(() {
+        _isRecording = true;
+      });
     });
   }
 
