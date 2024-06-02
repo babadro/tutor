@@ -144,14 +144,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       }
     }
 
-    await _mRecorder!.startRecorder(
-      toFile: _mPath,
-      codec: _codec,
-      audioSource: theSource,
-    );
-
-    await _mRecorder!.stopRecorder();
-
     _mRecorderIsInited = true;
   }
 
