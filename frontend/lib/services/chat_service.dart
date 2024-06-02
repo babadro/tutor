@@ -10,12 +10,6 @@ import 'dart:convert';
 import 'package:tutor/models/local/chat/chats.dart' as localChat;
 import 'package:tutor/services/service_response.dart';
 import 'package:tutor/models/backend/chats/get_chats_response.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'dart:io';
-import 'package:path_provider/path_provider.dart';
-import 'package:mime/mime.dart';
-import 'package:http_parser/http_parser.dart';
 import 'package:tutor/models/backend/chat_messages/send_voice_message_response.dart';
 
 class sendMessageResult {
