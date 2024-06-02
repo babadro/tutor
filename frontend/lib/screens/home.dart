@@ -6,6 +6,7 @@ import 'package:tutor/services/chat_service.dart';
 import 'package:tutor/widgets/chatDetailPage.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:audio_session/audio_session.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -22,6 +23,29 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _chatService = ChatService(Provider.of<AuthService>(context, listen: false));
     _loadChats();
+
+    _initAudioSession();
+  }
+
+  Future<void> _initAudioSession() async {
+    final session = await AudioSession.instance;
+    await session.configure(AudioSessionConfiguration(
+      avAudioSessionCategory: AVAudioSessionCategory.playAndRecord,
+      avAudioSessionCategoryOptions:
+      AVAudioSessionCategoryOptions.allowBluetooth |
+      AVAudioSessionCategoryOptions.defaultToSpeaker,
+      avAudioSessionMode: AVAudioSessionMode.spokenAudio,
+      avAudioSessionRouteSharingPolicy:
+      AVAudioSessionRouteSharingPolicy.defaultPolicy,
+      avAudioSessionSetActiveOptions: AVAudioSessionSetActiveOptions.none,
+      androidAudioAttributes: const AndroidAudioAttributes(
+        contentType: AndroidAudioContentType.speech,
+        flags: AndroidAudioFlags.none,
+        usage: AndroidAudioUsage.voiceCommunication,
+      ),
+      androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
+      androidWillPauseWhenDucked: true,
+    ));
   }
 
   void _loadChats() async {

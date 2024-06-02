@@ -7,7 +7,6 @@ import 'package:tutor/services/auth_service.dart';
 import 'package:tutor/models/local/chat/chat_message.dart' as local;
 import 'package:tutor/services/chat_service.dart';
 import 'dart:async';
-import 'package:audio_session/audio_session.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:flutter_sound_platform_interface/flutter_sound_recorder_platform_interface.dart';
@@ -144,24 +143,14 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         return;
       }
     }
-    final session = await AudioSession.instance;
-    await session.configure(AudioSessionConfiguration(
-      avAudioSessionCategory: AVAudioSessionCategory.playAndRecord,
-      avAudioSessionCategoryOptions:
-      AVAudioSessionCategoryOptions.allowBluetooth |
-      AVAudioSessionCategoryOptions.defaultToSpeaker,
-      avAudioSessionMode: AVAudioSessionMode.spokenAudio,
-      avAudioSessionRouteSharingPolicy:
-      AVAudioSessionRouteSharingPolicy.defaultPolicy,
-      avAudioSessionSetActiveOptions: AVAudioSessionSetActiveOptions.none,
-      androidAudioAttributes: const AndroidAudioAttributes(
-        contentType: AndroidAudioContentType.speech,
-        flags: AndroidAudioFlags.none,
-        usage: AndroidAudioUsage.voiceCommunication,
-      ),
-      androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
-      androidWillPauseWhenDucked: true,
-    ));
+
+    await _mRecorder!.startRecorder(
+      toFile: _mPath,
+      codec: _codec,
+      audioSource: theSource,
+    );
+
+    await _mRecorder!.stopRecorder();
 
     _mRecorderIsInited = true;
   }
