@@ -21,7 +21,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _chatService = ChatService(Provider.of<AuthService>(context, listen: false));
+    _chatService =
+        ChatService(Provider.of<AuthService>(context, listen: false));
     _loadChats();
 
     _initAudioSession();
@@ -32,11 +33,11 @@ class _HomeScreenState extends State<HomeScreen> {
     await session.configure(AudioSessionConfiguration(
       avAudioSessionCategory: AVAudioSessionCategory.playAndRecord,
       avAudioSessionCategoryOptions:
-      AVAudioSessionCategoryOptions.allowBluetooth |
-      AVAudioSessionCategoryOptions.defaultToSpeaker,
+          AVAudioSessionCategoryOptions.allowBluetooth |
+              AVAudioSessionCategoryOptions.defaultToSpeaker,
       avAudioSessionMode: AVAudioSessionMode.spokenAudio,
       avAudioSessionRouteSharingPolicy:
-      AVAudioSessionRouteSharingPolicy.defaultPolicy,
+          AVAudioSessionRouteSharingPolicy.defaultPolicy,
       avAudioSessionSetActiveOptions: AVAudioSessionSetActiveOptions.none,
       androidAudioAttributes: const AndroidAudioAttributes(
         contentType: AndroidAudioContentType.speech,
@@ -57,8 +58,8 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     setState(() {
-      Provider.of<localChat.ChatModel>(context, listen: false).
-        setChats(loadChatsRes.data!);
+      Provider.of<localChat.ChatModel>(context, listen: false)
+          .setChats(loadChatsRes.data!);
     });
   }
 
@@ -67,7 +68,8 @@ class _HomeScreenState extends State<HomeScreen> {
     List<localChat.Chat> chats = context.watch<localChat.ChatModel>().chats;
     localChat.ChatModel chatModel = context.watch<localChat.ChatModel>();
     if (chatModel.isNewChatCreated) {
-      selectedIndex = 2; // 0 is home, 1 is 'new chat' button, so the first chat is at index 2
+      selectedIndex =
+          2; // 0 is home, 1 is 'new chat' button, so the first chat is at index 2
       selectedChatId = chats[0].ChatId;
       chatModel.resetIsNewChatCreated();
     }
@@ -86,77 +88,78 @@ class _HomeScreenState extends State<HomeScreen> {
 
       // Append old chats to the destinations
       destinations.addAll(chats.map((chat) => NavigationRailDestination(
-        icon: Icon(Icons.chat),
-        label: Text(chat.Title),
-      )));
+            icon: Icon(Icons.chat),
+            label: Text(chat.Title),
+          )));
 
       return destinations;
     }
 
-    return LayoutBuilder(
-        builder: (context, constraints) {
-          return Scaffold(
-            appBar: AppBar(
-              actions: [
-                const SignOutButton(),
-                IconButton(
-                  icon: const Icon(Icons.person),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute<ProfileScreen>(
-                        builder: (context) => ProfileScreen(
-                          appBar: AppBar(
-                            title: const Text('User Profile'),
-                          ),
-                          actions: [
-                            SignedOutAction((context) {
-                              Navigator.of(context).pop();
-                            })
-                          ],
-                          children: [
-                            const Divider(),
-                            Padding(
-                              padding: const EdgeInsets.all(2),
-                              child: AspectRatio(
-                                aspectRatio: 1,
-                                child: Image.asset('flutterfire_300x.png'),
-                              ),
-                            ),
-                          ],
-                        ),
+    return LayoutBuilder(builder: (context, constraints) {
+      return Scaffold(
+        appBar: AppBar(
+          actions: [
+            const SignOutButton(),
+            IconButton(
+              icon: const Icon(Icons.person),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute<ProfileScreen>(
+                    builder: (context) => ProfileScreen(
+                      appBar: AppBar(
+                        title: const Text('User Profile'),
                       ),
-                    );
-                  },
-                )
-              ],
-              automaticallyImplyLeading: false,
-            ),
-            body: Row(
-              children: [
-                SafeArea(
-                  child: NavigationRail(
-                    extended: constraints.maxWidth >= 600,
-                    destinations: getDestinations(),
-                    selectedIndex: selectedIndex,
-                    onDestinationSelected: (value) {
-                      setState((){
-                        selectedIndex = value;
-                        selectedChatId = (value > 1) ? chats[value - 2].ChatId : '';
-                      });
-                    },
+                      actions: [
+                        SignedOutAction((context) {
+                          Navigator.of(context).pop();
+                        })
+                      ],
+                      children: [
+                        const Divider(),
+                        Padding(
+                          padding: const EdgeInsets.all(2),
+                          child: AspectRatio(
+                            aspectRatio: 1,
+                            child: Image.asset('flutterfire_300x.png'),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: Container(
-                    color: Theme.of(context).colorScheme.primaryContainer,
-                    child: (selectedIndex > 0) ? ChatDetailPage(key: Key(selectedChatId), initialChatId: selectedChatId) : SimpleRecorder(key: Key('recording_screen')),
-                  ),
-                ),
-              ],
+                );
+              },
+            )
+          ],
+          automaticallyImplyLeading: false,
+        ),
+        body: Row(
+          children: [
+            SafeArea(
+              child: NavigationRail(
+                extended: constraints.maxWidth >= 600,
+                destinations: getDestinations(),
+                selectedIndex: selectedIndex,
+                onDestinationSelected: (value) {
+                  setState(() {
+                    selectedIndex = value;
+                    selectedChatId = (value > 1) ? chats[value - 2].ChatId : '';
+                  });
+                },
+              ),
             ),
-          );
-        }
-    );
+            Expanded(
+              child: Container(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                child: (selectedIndex > 0)
+                    ? ChatDetailPage(
+                        key: Key(selectedChatId), initialChatId: selectedChatId)
+                    : SimpleRecorder(key: Key('recording_screen')),
+              ),
+            ),
+          ],
+        ),
+      );
+    });
   }
 }
