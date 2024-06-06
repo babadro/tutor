@@ -1,5 +1,6 @@
 import 'package:provider/provider.dart';
 import 'package:tutor/models/local/chat/chats.dart' as localChat;
+import 'package:tutor/services/audio_recorder_service.dart';
 import 'package:tutor/widgets/audio_page_2_flutter_sound.dart';
 import 'package:tutor/services/auth_service.dart';
 import 'package:tutor/services/chat_service.dart';
@@ -17,6 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
   var selectedIndex = 0;
   var selectedChatId = '';
   late ChatService _chatService;
+  AudioRecorderService _audioRecorderService = AudioRecorderService();
 
   @override
   void initState() {
@@ -61,6 +63,12 @@ class _HomeScreenState extends State<HomeScreen> {
       Provider.of<localChat.ChatModel>(context, listen: false)
           .setChats(loadChatsRes.data!);
     });
+  }
+
+  @override
+  void dispose() {
+    _audioRecorderService.dispose();
+    super.dispose();
   }
 
   @override
@@ -153,7 +161,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: Theme.of(context).colorScheme.primaryContainer,
                 child: (selectedIndex > 0)
                     ? ChatDetailPage(
-                        key: Key(selectedChatId), initialChatId: selectedChatId)
+                        key: Key(selectedChatId),
+                        initialChatId: selectedChatId,
+                        mRecorder: _audioRecorderService,
+                      )
                     : SimpleRecorder(key: Key('recording_screen')),
               ),
             ),

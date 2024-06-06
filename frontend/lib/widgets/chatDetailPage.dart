@@ -6,12 +6,9 @@ import 'package:tutor/services/audio_player_service.dart';
 import 'package:tutor/services/auth_service.dart';
 import 'package:tutor/models/local/chat/chat_message.dart' as local;
 import 'package:tutor/services/chat_service.dart';
-import 'dart:async';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter_sound/flutter_sound.dart';
 import 'package:flutter_sound_platform_interface/flutter_sound_recorder_platform_interface.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:logger/logger.dart';
+
+import 'package:tutor/services/audio_recorder_service.dart';
 
 import 'message.dart';
 
@@ -20,8 +17,9 @@ const theSource = AudioSource.microphone;
 
 class ChatDetailPage extends StatefulWidget {
   final String initialChatId;
+  final AudioRecorderService mRecorder;
 
-  ChatDetailPage({Key? key, required this.initialChatId}) : super(key: key);
+  ChatDetailPage({Key? key, required this.initialChatId, required this.mRecorder}) : super(key: key);
 
   @override
   _ChatDetailPageState createState() => _ChatDetailPageState();
@@ -34,34 +32,23 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   final ScrollController _scrollController = ScrollController();
 
   TextEditingController _messageController = TextEditingController();
-
-  Codec _codec = Codec.aacMP4;
-  String _mPath = 'tau_file.mp4';
-  FlutterSoundRecorder? _mRecorder = FlutterSoundRecorder(logLevel: Level.info);
-  bool _mRecorderIsInited = false;
+  AudioRecorderService get _mRecorder => widget.mRecorder;
 
   bool _isRecording = false;
   bool _isSending = false;
 
   @override
   void initState() {
-    openTheRecorder().then((value) {
-      setState(() {
-        _mRecorderIsInited = true;
-      });
-    });
-
     chatId = widget.initialChatId;
     _chatService = ChatService(Provider.of<AuthService>(context, listen: false));
     _loadMessages();
+    _mRecorder.init();
 
     super.initState();
   }
 
   @override
   void dispose() {
-    _mRecorder!.closeRecorder();
-    _mRecorder = null;
     _scrollController.dispose();
     super.dispose();
   }
@@ -127,33 +114,9 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     });
   }
 
-  Future<void> openTheRecorder() async {
-    if (!kIsWeb) {
-      var status = await Permission.microphone.request();
-      if (status != PermissionStatus.granted) {
-        throw RecordingPermissionException('Microphone permission not granted');
-      }
-    }
-    await _mRecorder!.openRecorder();
-    if (!await _mRecorder!.isEncoderSupported(_codec) && kIsWeb) {
-      _codec = Codec.opusWebM;
-      _mPath = 'tau_file.webm';
-      if (!await _mRecorder!.isEncoderSupported(_codec) && kIsWeb) {
-        _mRecorderIsInited = true;
-        return;
-      }
-    }
-
-    _mRecorderIsInited = true;
-  }
-
   void record() {
-    _mRecorder!
-        .startRecorder(
-      toFile: _mPath,
-      codec: _codec,
-      audioSource: theSource,
-    ).then((value) {
+    _mRecorder.record(
+    ).then((_) {
       setState(() {
         _isRecording = true;
       });
@@ -166,7 +129,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       _isSending = true;
     });
 
-    await _mRecorder!.stopRecorder().then((value) {
+    await _mRecorder.stopRecording().then((value) {
       _chatService.sendVoiceMessage(value ?? '', chatId).then((value) {
         setState(() {
           _isSending = false;
@@ -189,14 +152,14 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   }
 
   _Fn? getRecorderFn() {
-    if (!_mRecorderIsInited) {
+    if (!_mRecorder.inited) {
       return null;
     }
-    return _mRecorder!.isStopped ? record : stopRecorder;
+    return _mRecorder.isStopped ? record : stopRecorder;
   }
 
   void _cancelRecording() async {
-    await _mRecorder!.stopRecorder();
+    await _mRecorder.stopRecording();
     setState(() {
       _isRecording = false;
     });
@@ -284,15 +247,15 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                                 height: 30,
                                 width: 30,
                                 decoration: BoxDecoration(
-                                  color: _mRecorder!.isRecording ? Colors.red : Colors.lightBlue,
+                                  color: _mRecorder.isRecording ? Colors.red : Colors.lightBlue,
                                   borderRadius: BorderRadius.circular(30),
                                 ),
-                                child: Icon(_mRecorder!.isRecording ? Icons.stop : Icons.mic, color: Colors.white, size: 20),
+                                child: Icon(_mRecorder.isRecording ? Icons.stop : Icons.mic, color: Colors.white, size: 20),
                               ),
                             ),
                           ),
                           Visibility(
-                            visible: _mRecorder!.isRecording,
+                            visible: _mRecorder.isRecording,
                             child: GestureDetector(
                               onTap: _cancelRecording,
                               child: MouseRegion(
