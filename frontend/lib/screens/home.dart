@@ -18,7 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
   var selectedIndex = 0;
   var selectedChatId = '';
   late ChatService _chatService;
-  AudioRecorderService _audioRecorderService = AudioRecorderService();
+  AudioRecorderService? _audioRecorderService = AudioRecorderService();
 
   @override
   void initState() {
@@ -67,7 +67,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
-    _audioRecorderService.dispose();
+    _audioRecorderService!.dispose();
+    _audioRecorderService = null;
     super.dispose();
   }
 
@@ -163,7 +164,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ? ChatDetailPage(
                         key: Key(selectedChatId),
                         initialChatId: selectedChatId,
-                        mRecorder: _audioRecorderService,
+                        mRecorder: _audioRecorderService!,
                       )
                     : SimpleRecorder(key: Key('recording_screen')),
               ),
