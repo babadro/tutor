@@ -1,7 +1,6 @@
 import 'package:provider/provider.dart';
 import 'package:tutor/models/local/chat/chats.dart' as localChat;
 import 'package:tutor/services/audio_recorder_service.dart';
-import 'package:tutor/widgets/audio_page_2_flutter_sound.dart';
 import 'package:tutor/services/auth_service.dart';
 import 'package:tutor/services/chat_service.dart';
 import 'package:tutor/widgets/chatDetailPage.dart';
@@ -166,7 +165,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         initialChatId: selectedChatId,
                         mRecorder: _audioRecorderService!,
                       )
-                    : SimpleRecorder(key: Key('recording_screen')),
+                    : Placeholder(),
               ),
             ),
           ],
