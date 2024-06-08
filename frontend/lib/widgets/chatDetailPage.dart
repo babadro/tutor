@@ -183,123 +183,114 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
               Column(
                 children: <Widget>[
                   Expanded(
-                    child: SingleChildScrollView(
+                    child: ListView.builder(
                       controller: _scrollController,
-                      child: Column(
-                        children: <Widget>[
-                          ListView.builder(
-                            itemCount: _messages.length,
-                            shrinkWrap: true,
-                            padding: EdgeInsets.only(top: 10, bottom: 10),
-                            physics: NeverScrollableScrollPhysics(),
-                            itemBuilder: (context, index) {
-                              return MessageWidget(
-                                key: ValueKey(_messages[index].Timestamp),
-                                message: _messages[index],
-                              );
-                            },
-                          ),
-                          if (_isRecording || _isSending)
-                            Align(
-                              alignment: Alignment.topRight,
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(20),
-                                    color: _isRecording ? Colors.orange : Colors.blue,
+                      itemCount: _messages.length + (_isRecording || _isSending ? 1 : 0),
+                      padding: EdgeInsets.only(top: 10, bottom: 70), // Adjust bottom padding
+                      itemBuilder: (context, index) {
+                        if (index < _messages.length) {
+                          return MessageWidget(
+                            key: ValueKey(_messages[index].Timestamp),
+                            message: _messages[index],
+                          );
+                        } else {
+                          return Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(20),
+                                color: _isRecording ? Colors.orange : Colors.blue,
+                              ),
+                              padding: EdgeInsets.all(16),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(_isRecording ? Icons.mic : Icons.send, color: Colors.white),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    _isRecording ? 'Recording' : 'Sending',
+                                    style: TextStyle(color: Colors.white),
                                   ),
-                                  padding: EdgeInsets.all(16),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(_isRecording ? Icons.mic : Icons.send, color: Colors.white),
-                                      SizedBox(width: 8),
-                                      Text(
-                                        _isRecording ? 'Recording' : 'Sending',
-                                        style: TextStyle(color: Colors.white),
-                                      ),
-                                      SizedBox(width: 8),
-                                      CircularProgressIndicator(),
-                                    ],
-                                  ),
-                                ),
+                                  SizedBox(width: 8),
+                                  CircularProgressIndicator(),
+                                ],
                               ),
                             ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Align(
-                    alignment: Alignment.bottomLeft,
-                    child: Container(
-                      padding: EdgeInsets.only(left: 10, bottom: 10, top: 10),
-                      height: 60,
-                      width: double.infinity,
-                      color: Colors.white,
-                      child: Row(
-                        children: <Widget>[
-                          GestureDetector(
-                            onTap: getRecorderFn(),
-                            child: MouseRegion(
-                              cursor: SystemMouseCursors.click,
-                              child: Container(
-                                height: 30,
-                                width: 30,
-                                decoration: BoxDecoration(
-                                  color: _mRecorder.isRecording ? Colors.red : Colors.lightBlue,
-                                  borderRadius: BorderRadius.circular(30),
-                                ),
-                                child: Icon(_mRecorder.isRecording ? Icons.stop : Icons.mic, color: Colors.white, size: 20),
-                              ),
-                            ),
-                          ),
-                          Visibility(
-                            visible: _mRecorder.isRecording,
-                            child: GestureDetector(
-                              onTap: _cancelRecording,
-                              child: MouseRegion(
-                                cursor: SystemMouseCursors.click,
-                                child: Container(
-                                  height: 30,
-                                  width: 30,
-                                  decoration: BoxDecoration(
-                                    color: Colors.black,
-                                    borderRadius: BorderRadius.circular(30),
-                                  ),
-                                  child: Icon(Icons.delete, color: Colors.white, size: 20),
-                                ),
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: 15),
-                          Expanded(
-                            child: TextField(
-                              decoration: InputDecoration(
-                                  hintText: "Write message...",
-                                  hintStyle: TextStyle(color: Colors.black54),
-                                  border: InputBorder.none
-                              ),
-                              controller: _messageController,
-                            ),
-                          ),
-                          SizedBox(width: 15),
-                          FloatingActionButton(
-                            onPressed: () {
-                              if (_messageController.text.trim().isNotEmpty) {
-                                _handleSendPressed(_messageController.text.trim());
-                                _messageController.clear();
-                              }
-                            },
-                            child: Icon(Icons.send, color: Colors.white, size: 18),
-                            backgroundColor: Colors.blue,
-                            elevation: 0,
-                          ),
-                        ],
-                      ),
+                          );
+                        }
+                      },
                     ),
                   ),
                 ],
+              ),
+              Align(
+                alignment: Alignment.bottomLeft,
+                child: Container(
+                  padding: EdgeInsets.only(left: 10, bottom: 10, top: 10),
+                  height: 70, // Ensure this matches the padding
+                  width: double.infinity,
+                  color: Colors.white,
+                  child: Row(
+                    children: <Widget>[
+                      GestureDetector(
+                        onTap: getRecorderFn(),
+                        child: MouseRegion(
+                          cursor: SystemMouseCursors.click,
+                          child: Container(
+                            height: 30,
+                            width: 30,
+                            decoration: BoxDecoration(
+                              color: _mRecorder.isRecording ? Colors.red : Colors.lightBlue,
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            child: Icon(_mRecorder.isRecording ? Icons.stop : Icons.mic, color: Colors.white, size: 20),
+                          ),
+                        ),
+                      ),
+                      Visibility(
+                        visible: _mRecorder.isRecording,
+                        child: GestureDetector(
+                          onTap: _cancelRecording,
+                          child: MouseRegion(
+                            cursor: SystemMouseCursors.click,
+                            child: Container(
+                              height: 30,
+                              width: 30,
+                              decoration: BoxDecoration(
+                                color: Colors.black,
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              child: Icon(Icons.delete, color: Colors.white, size: 20),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 15),
+                      Expanded(
+                        child: TextField(
+                          decoration: InputDecoration(
+                              hintText: "Write message...",
+                              hintStyle: TextStyle(color: Colors.black54),
+                              border: InputBorder.none
+                          ),
+                          controller: _messageController,
+                        ),
+                      ),
+                      SizedBox(width: 15),
+                      FloatingActionButton(
+                        onPressed: () {
+                          if (_messageController.text.trim().isNotEmpty) {
+                            _handleSendPressed(_messageController.text.trim());
+                            _messageController.clear();
+                          }
+                        },
+                        child: Icon(Icons.send, color: Colors.white, size: 18),
+                        backgroundColor: Colors.blue,
+                        elevation: 0,
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
