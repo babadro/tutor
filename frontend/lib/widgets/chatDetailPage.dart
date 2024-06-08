@@ -119,6 +119,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     ).then((_) {
       setState(() {
         _isRecording = true;
+        _scrollToBottom();
       });
     });
   }
@@ -127,6 +128,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     setState(() {
       _isRecording = false;
       _isSending = true;
+      _scrollToBottom();
     });
 
     await _mRecorder.stopRecording().then((value) {
