@@ -185,43 +185,45 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                   Expanded(
                     child: ListView.builder(
                       controller: _scrollController,
-                      itemCount: _messages.length,
+                      itemCount: _messages.length + (_isRecording || _isSending ? 1 : 0),
                       padding: EdgeInsets.only(top: 10, bottom: 70),
                       itemBuilder: (context, index) {
-                        return MessageWidget(
-                          key: ValueKey(_messages[index].Timestamp),
-                          message: _messages[index],
+                        if (index < _messages.length) {
+                          return MessageWidget(
+                            key: ValueKey(_messages[index].Timestamp),
+                            message: _messages[index],
+                          );
+                        }
+
+                        return Align(
+                          alignment: Alignment.topRight,
+                          child: Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(20),
+                                color: _isRecording ? Colors.orange : Colors.blue,
+                              ),
+                              padding: EdgeInsets.all(16),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(_isRecording ? Icons.mic : Icons.send, color: Colors.white),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    _isRecording ? 'Recording' : 'Sending',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                  SizedBox(width: 8),
+                                  CircularProgressIndicator(),
+                                ],
+                              ),
+                            ),
+                          ),
                         );
                       },
                     ),
                   ),
-                  if (_isRecording || _isSending)
-                    Align(
-                      alignment: Alignment.topRight,
-                      child: Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            color: _isRecording ? Colors.orange : Colors.blue,
-                          ),
-                          padding: EdgeInsets.all(16),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(_isRecording ? Icons.mic : Icons.send, color: Colors.white),
-                              SizedBox(width: 8),
-                              Text(
-                                _isRecording ? 'Recording' : 'Sending',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                              SizedBox(width: 8),
-                              CircularProgressIndicator(),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
                 ],
               ),
               Align(
