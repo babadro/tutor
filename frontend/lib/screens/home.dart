@@ -142,17 +142,30 @@ class _HomeScreenState extends State<HomeScreen> {
           automaticallyImplyLeading: false,
         ),
         body: Row(
-          children: [
+          children: <Widget>[
             SafeArea(
-              child: NavigationRail(
-                extended: constraints.maxWidth >= 600,
-                destinations: getDestinations(),
-                selectedIndex: selectedIndex,
-                onDestinationSelected: (value) {
-                  setState(() {
-                    selectedIndex = value;
-                    selectedChatId = (value > 1) ? chats[value - 2].ChatId : '';
-                  });
+              child: LayoutBuilder(
+                builder: (context, constraint) {
+                  return SingleChildScrollView(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(minHeight: constraint
+                          .maxHeight),
+                      child: IntrinsicHeight(
+                        child: NavigationRail(
+                          extended: constraints.maxWidth >= 600,
+                          destinations: getDestinations(),
+                          selectedIndex: selectedIndex,
+                          onDestinationSelected: (value) {
+                            setState(() {
+                              selectedIndex = value;
+                              selectedChatId =
+                              (value > 1) ? chats[value - 2].ChatId : '';
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                  );
                 },
               ),
             ),
