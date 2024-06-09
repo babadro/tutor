@@ -52,7 +52,8 @@ class ChatService {
       });
 
       if (response.statusCode == 200) {
-        final messagesResponse = GetChatMessagesResponse.fromJson(jsonDecode(response.body));
+        final decodedResponseBody = utf8.decode(response.bodyBytes);
+        final messagesResponse = GetChatMessagesResponse.fromJson(jsonDecode(decodedResponseBody));
         return ServiceResult.success(messagesResponse.Messages.map((message) => local.ChatMessage(
           IsFromCurrentUser: message.IsFromCurrentUser,
           Text: message.Text,
