@@ -4,13 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/url"
-	"os"
 	"time"
 
 	"cloud.google.com/go/firestore"
 	"firebase.google.com/go/storage"
 	"github.com/Azure/azure-sdk-for-go/sdk/ai/azopenai"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/babadro/tutor/internal/models"
 	"github.com/babadro/tutor/internal/models/swagger"
 	"github.com/sashabaranov/go-openai"
@@ -129,9 +130,8 @@ func (s *Service) saveMessageToDB(
 }
 
 func (s *Service) SendVoiceMessage(
-	ctx context.Context, voiceMsgBytes []byte, userID string, chatID string, userMsgTimestamp int64,
+	ctx context.Context, userAudio []byte, userID string, chatID string, userMsgTimestamp int64,
 ) (models.SendVoiceMessageResult, error) {
-	/* todo uncomment when front end is ready
 	req := azopenai.AudioTranscriptionOptions{
 		File:           userAudio,
 		ResponseFormat: to.Ptr(azopenai.AudioTranscriptionFormatText),
@@ -171,13 +171,15 @@ func (s *Service) SendVoiceMessage(
 	if err != nil {
 		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to read voice response: %s", err.Error())
 	}
+
+	/*
+		// open mp3 file to []byte on local machine
+		// todo use real llm audio
+		llmReplyAudio, err := os.ReadFile("cmd/server/example123456.mp3")
+		if err != nil {
+			return models.SendVoiceMessageResult{}, fmt.Errorf("unable to read voice response: %s", err.Error())
+		}
 	*/
-	// open mp3 file to []byte on local machine
-	// todo use real llm audio
-	llmReplyAudio, err := os.ReadFile("cmd/server/example123456.mp3")
-	if err != nil {
-		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to read voice response: %s", err.Error())
-	}
 
 	// for llm audio we use mp3
 	llmReplyAudioName := fmt.Sprintf("users/%s/backend_uploads/%d.mp3", userID, time.Now().UnixNano())
@@ -188,14 +190,16 @@ func (s *Service) SendVoiceMessage(
 
 	// for user audio we use webm
 	userAudioName := fmt.Sprintf("users/%s/backend_uploads/%d.webm", userID, time.Now().UnixNano())
-	userAudioURL, err := s.uploadFileToStorage(ctx, voiceMsgBytes, userAudioName)
+	userAudioURL, err := s.uploadFileToStorage(ctx, userAudio, userAudioName)
 	if err != nil {
 		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to upload voice message to storage: %s", err.Error())
 	}
 
-	// todo generated userText and llmReplyText
-	userText := fmt.Sprintf("User text %d", time.Now().UnixNano())
-	llmReplyText := fmt.Sprintf("LLM reply text %d", time.Now().UnixNano())
+	/*
+		// todo generated userText and llmReplyText
+		userText := fmt.Sprintf("User text %d", time.Now().UnixNano())
+		llmReplyText := fmt.Sprintf("LLM reply text %d", time.Now().UnixNano())
+	*/
 
 	createdChat, err := s.saveMessageToDB(ctx, userText, userID, chatID, userAudioURL, userMsgTimestamp)
 	if err != nil {
