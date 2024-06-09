@@ -9,6 +9,7 @@ import 'package:tutor/services/chat_service.dart';
 import 'package:flutter_sound_platform_interface/flutter_sound_recorder_platform_interface.dart';
 
 import 'package:tutor/services/audio_recorder_service.dart';
+import 'package:tutor/widgets/infoMessage.dart';
 
 import 'message.dart';
 
@@ -197,32 +198,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                           );
                         }
 
-                        return Align(
-                          alignment: Alignment.topRight,
-                          child: Padding(
-                            padding: const EdgeInsets.all(20),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20),
-                                color: _isRecording ? Colors.orange : Colors.blue,
-                              ),
-                              padding: EdgeInsets.all(16),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(_isRecording ? Icons.mic : Icons.send, color: Colors.white),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    _isRecording ? 'Recording' : 'Sending',
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                                  SizedBox(width: 8),
-                                  CircularProgressIndicator(),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
+                        return InfoMessageWidget(isRecording: _isRecording);
                       },
                     ),
                   ),
