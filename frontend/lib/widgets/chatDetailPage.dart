@@ -98,7 +98,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       return;
     }
 
-    if (sendResult.data!.createdChat != '') {
+    if (sendResult.data!.createdChat.ChatId != '') {
       switchToNewChat(sendResult.data!.createdChat);
     };
 
