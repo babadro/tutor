@@ -10,9 +10,7 @@ class AudioPlayerService with ChangeNotifier {
   }
 
   void togglePlayPause(String url) async {
-    print('togglePlayPause: $url');
     if (_currentUrl == url) {
-      print('stopping player');
       await _player.stop();
       _currentUrl = null;
       notifyListeners();
@@ -20,12 +18,9 @@ class AudioPlayerService with ChangeNotifier {
       return;
     }
 
-
-    print('starting player');
     await _player.stop();
     await _player.setUrl(url);
 
-    print('stopped player');
     _currentUrl = url;
     notifyListeners();
 
