@@ -40,11 +40,15 @@ class AudioRecorderService {
   }
 
   Future<void> record() async {
-    await _mRecorder.startRecorder(
-      codec: _codec,
-      toFile: _mPath,
-      audioSource: theSource,
-    );
+    try {
+      await _mRecorder.startRecorder(
+        codec: _codec,
+        toFile: _mPath,
+        audioSource: theSource,
+      );
+    } catch (e) {
+      Logger().e('Error recording: $e');
+    }
   }
 
   Future<String?> stopRecording() async {

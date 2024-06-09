@@ -10,25 +10,29 @@ class AudioPlayerService with ChangeNotifier {
   }
 
   void togglePlayPause(String url) async {
-    if (_currentUrl == url) {
+    try {
+      if (_currentUrl == url) {
+        await _player.stop();
+        _currentUrl = null;
+        notifyListeners();
+
+        return;
+      }
+
       await _player.stop();
-      _currentUrl = null;
+      await _player.setUrl(url);
+
+      _currentUrl = url;
       notifyListeners();
 
-      return;
+      await _player.play();
+      _currentUrl = null;
+
+
+      notifyListeners();
+    } catch (e) {
+      print('Error playing audio: $e');
     }
-
-    await _player.stop();
-    await _player.setUrl(url);
-
-    _currentUrl = url;
-    notifyListeners();
-
-    await _player.play();
-    _currentUrl = null;
-
-
-    notifyListeners();
   }
 
   @override
