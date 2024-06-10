@@ -1,8 +1,12 @@
 package models
 
+import "github.com/babadro/tutor/internal/models/swagger"
+
 type SendVoiceMessageResult struct {
-	VoiceMessageURL         string
-	VoiceMessageTranscript  string
-	VoiceResponseURL        string
-	VoiceResponseTranscript string
+	UserAudioURL string
+	UserText     string
+	LLMAudioURL  string
+	LLMText      string
+	LLMTimestamp int64
+	CreatedChat  swagger.Chat
 }

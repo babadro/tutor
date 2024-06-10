@@ -22,6 +22,13 @@ dependencies:
   uuid: ^4.3.3
   provider: ^6.1.2
   json_annotation: ^4.8.1
+  flutter_sound: ^9.4.6
+  permission_handler: ^11.3.1
+  record: ^4.4.4
+  audioplayers: ^6.0.0
+  just_audio: ^0.9.38
+  audio_session: ^0.1.19
+  logger: ^2.3.0
 
 dev_dependencies:
   flutter_test:

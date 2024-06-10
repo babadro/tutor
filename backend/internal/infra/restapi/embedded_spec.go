@@ -34,7 +34,7 @@ func init() {
         "produces": [
           "application/json"
         ],
-        "summary": "Sends a message to the AI and receives a response.",
+        "summary": "Sends a text message to the AI and receives a response.",
         "operationId": "SendChatMessage",
         "parameters": [
           {
@@ -187,6 +187,107 @@ func init() {
         }
       }
     },
+    "/chat_voice_messages": {
+      "post": {
+        "description": "This endpoint receives a user's audio message and returns the AI's response.",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Sends an audio message to the AI and receives a response.",
+        "operationId": "SendVoiceMessage",
+        "parameters": [
+          {
+            "type": "file",
+            "description": "The audio file to be sent.",
+            "name": "file",
+            "in": "formData",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The chat ID.",
+            "name": "chatId",
+            "in": "formData"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "The timestamp of the message.",
+            "name": "timestamp",
+            "in": "formData",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "chat": {
+                  "description": "If the chatId is not provided in the request, the new chat will be created and this chat will be returned in the response.",
+                  "type": "object",
+                  "$ref": "#/definitions/Chat"
+                },
+                "replyAudio": {
+                  "description": "Url to the AI's audio response.",
+                  "type": "string"
+                },
+                "replyTime": {
+                  "description": "The timestamp of the AI's response.",
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "replyTxt": {
+                  "description": "AI's text response to the user's message.",
+                  "type": "string"
+                },
+                "usrAudio": {
+                  "description": "Url to the user's audio message.",
+                  "type": "string"
+                },
+                "usrTime": {
+                  "description": "The timestamp of the user's message.",
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "usrTxt": {
+                  "description": "The user's message in text format.",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
     "/chats": {
       "get": {
         "description": "Get chats",
@@ -252,85 +353,6 @@ func init() {
           }
         }
       }
-    },
-    "/voice_messages": {
-      "post": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "summary": "Processes a voice message and returns a response.",
-        "operationId": "SendVoiceMessage",
-        "parameters": [
-          {
-            "description": "User message containing a voice message url",
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "type": "object",
-              "properties": {
-                "voiceMessageUrl": {
-                  "description": "URL of the voice message file",
-                  "type": "string"
-                }
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "voiceMessageTranscript": {
-                  "description": "Transcription of the input voice message.",
-                  "type": "string"
-                },
-                "voiceMessageUrl": {
-                  "description": "URL of the voice message input file.",
-                  "type": "string"
-                },
-                "voiceResponseTranscript": {
-                  "description": "Text transcription of the voice response.",
-                  "type": "string"
-                },
-                "voiceResponseUrl": {
-                  "description": "URL to the voice response file.",
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          },
-          "401": {
-            "description": "unauthorized",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
-      }
     }
   },
   "definitions": {
@@ -352,6 +374,10 @@ func init() {
     "ChatMessage": {
       "type": "object",
       "properties": {
+        "audio": {
+          "type": "string",
+          "x-go-name": "AudioURL"
+        },
         "curUsr": {
           "type": "boolean",
           "x-go-name": "IsFromCurrentUser"
@@ -412,7 +438,7 @@ func init() {
         "produces": [
           "application/json"
         ],
-        "summary": "Sends a message to the AI and receives a response.",
+        "summary": "Sends a text message to the AI and receives a response.",
         "operationId": "SendChatMessage",
         "parameters": [
           {
@@ -565,6 +591,107 @@ func init() {
         }
       }
     },
+    "/chat_voice_messages": {
+      "post": {
+        "description": "This endpoint receives a user's audio message and returns the AI's response.",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Sends an audio message to the AI and receives a response.",
+        "operationId": "SendVoiceMessage",
+        "parameters": [
+          {
+            "type": "file",
+            "description": "The audio file to be sent.",
+            "name": "file",
+            "in": "formData",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The chat ID.",
+            "name": "chatId",
+            "in": "formData"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "The timestamp of the message.",
+            "name": "timestamp",
+            "in": "formData",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "chat": {
+                  "description": "If the chatId is not provided in the request, the new chat will be created and this chat will be returned in the response.",
+                  "type": "object",
+                  "$ref": "#/definitions/Chat"
+                },
+                "replyAudio": {
+                  "description": "Url to the AI's audio response.",
+                  "type": "string"
+                },
+                "replyTime": {
+                  "description": "The timestamp of the AI's response.",
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "replyTxt": {
+                  "description": "AI's text response to the user's message.",
+                  "type": "string"
+                },
+                "usrAudio": {
+                  "description": "Url to the user's audio message.",
+                  "type": "string"
+                },
+                "usrTime": {
+                  "description": "The timestamp of the user's message.",
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "usrTxt": {
+                  "description": "The user's message in text format.",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
     "/chats": {
       "get": {
         "description": "Get chats",
@@ -630,85 +757,6 @@ func init() {
           }
         }
       }
-    },
-    "/voice_messages": {
-      "post": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "summary": "Processes a voice message and returns a response.",
-        "operationId": "SendVoiceMessage",
-        "parameters": [
-          {
-            "description": "User message containing a voice message url",
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "type": "object",
-              "properties": {
-                "voiceMessageUrl": {
-                  "description": "URL of the voice message file",
-                  "type": "string"
-                }
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "voiceMessageTranscript": {
-                  "description": "Transcription of the input voice message.",
-                  "type": "string"
-                },
-                "voiceMessageUrl": {
-                  "description": "URL of the voice message input file.",
-                  "type": "string"
-                },
-                "voiceResponseTranscript": {
-                  "description": "Text transcription of the voice response.",
-                  "type": "string"
-                },
-                "voiceResponseUrl": {
-                  "description": "URL to the voice response file.",
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          },
-          "401": {
-            "description": "unauthorized",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
-      }
     }
   },
   "definitions": {
@@ -730,6 +778,10 @@ func init() {
     "ChatMessage": {
       "type": "object",
       "properties": {
+        "audio": {
+          "type": "string",
+          "x-go-name": "AudioURL"
+        },
         "curUsr": {
           "type": "boolean",
           "x-go-name": "IsFromCurrentUser"

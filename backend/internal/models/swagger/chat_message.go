@@ -17,6 +17,9 @@ import (
 // swagger:model ChatMessage
 type ChatMessage struct {
 
+	// audio URL
+	AudioURL string `json:"audio,omitempty"`
+
 	// is from current user
 	IsFromCurrentUser bool `json:"curUsr,omitempty"`
 

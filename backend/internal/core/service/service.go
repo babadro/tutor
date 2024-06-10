@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
 	"net/url"
 	"time"
 
@@ -57,6 +56,32 @@ type llm interface {
 func (s *Service) SendMessage(
 	ctx context.Context, message, userID string, timestamp int64, chatID string,
 ) (string, swagger.Chat, error) {
+	newlyCreatedChat, err := s.saveMessageToDB(ctx, message, userID, chatID, "", timestamp)
+	if err != nil {
+		return "", swagger.Chat{}, fmt.Errorf("unable to save message to db: %s", err.Error())
+	}
+
+	if chatID == "" {
+		chatID = newlyCreatedChat.ChatID
+	}
+
+	aiResponse, err := s.llm.Call(ctx, message)
+	if err != nil {
+		return "", swagger.Chat{}, fmt.Errorf("unable to get AI response from llm: %s", err.Error())
+	}
+
+	_, err = s.saveMessageToDB(ctx, aiResponse, "", chatID, "", time.Now().UnixMilli())
+	if err != nil {
+		return "", swagger.Chat{}, fmt.Errorf("unable to add AI response message to firestore: %s", err.Error())
+	}
+
+	return aiResponse, newlyCreatedChat, nil
+}
+
+// saveMessageToDB saves the message to the database and returns the newly created chat if it was created.
+func (s *Service) saveMessageToDB(
+	ctx context.Context, message, userID, chatID, audioURL string, timestamp int64,
+) (swagger.Chat, error) {
 	var newlyCreatedChat swagger.Chat
 
 	if chatID == "" {
@@ -69,7 +94,7 @@ func (s *Service) SendMessage(
 			})
 
 		if err != nil {
-			return "", swagger.Chat{}, fmt.Errorf("unable to create chat: %s", err.Error())
+			return swagger.Chat{}, fmt.Errorf("unable to create chat: %s", err.Error())
 		}
 
 		newlyCreatedChat = swagger.Chat{
@@ -81,123 +106,134 @@ func (s *Service) SendMessage(
 		chatID = newChat.ID
 	}
 
-	_, _, err := s.firestoreClient.Collection("messages").
-		Add(ctx, map[string]interface{}{
-			"text":    message,
-			"user_id": userID,
-			"chat_id": chatID,
-			"time":    timestamp,
-		})
-
-	if err != nil {
-		return "", swagger.Chat{}, fmt.Errorf("unable to add user's message to firestore: %s", err.Error())
+	dbMessage := map[string]interface{}{
+		"text":    message,
+		"chat_id": chatID,
+		"time":    timestamp,
 	}
 
-	aiResponse, err := s.llm.Call(ctx, message)
-	if err != nil {
-		return "", swagger.Chat{}, fmt.Errorf("unable to get AI response from llm: %s", err.Error())
+	if userID != "" {
+		dbMessage["user_id"] = userID
 	}
 
-	_, _, err = s.firestoreClient.Collection("messages").
-		Add(ctx, map[string]interface{}{
-			"text":    aiResponse,
-			"chat_id": chatID,
-			"time":    time.Now().UnixMilli(),
-		})
-
-	if err != nil {
-		return "", swagger.Chat{}, fmt.Errorf("unable to add AI response message to firestore: %s", err.Error())
+	if audioURL != "" {
+		dbMessage["audio_url"] = audioURL
 	}
 
-	return aiResponse, newlyCreatedChat, nil
+	_, _, err := s.firestoreClient.Collection("messages").Add(ctx, dbMessage)
+
+	if err != nil {
+		return swagger.Chat{}, fmt.Errorf("unable to add user's message to firestore: %s", err.Error())
+	}
+
+	return newlyCreatedChat, nil
 }
 
 func (s *Service) SendVoiceMessage(
-	ctx context.Context, voiceMsgFileURL string, userID string,
+	ctx context.Context, userAudio []byte, userID string, chatID string, userMsgTimestamp int64,
 ) (models.SendVoiceMessageResult, error) {
-	resp, err := http.Get(voiceMsgFileURL)
-	if err != nil {
-		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to download voice message: %s", err.Error())
-	}
-
-	defer func() { _ = resp.Body.Close() }()
-
-	if resp.StatusCode != http.StatusOK {
-		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to download voice message: %s", resp.Status)
-	}
-
-	audioBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to file from body: %s", err.Error())
-	}
-
-	// download voice message
 	req := azopenai.AudioTranscriptionOptions{
-		File:           audioBytes,
+		File:           userAudio,
 		ResponseFormat: to.Ptr(azopenai.AudioTranscriptionFormatText),
 		DeploymentName: to.Ptr("whisper-1"),
 	}
 
-	voiceResponseTranscript, err := s.azureOpenai.GetAudioTranscription(ctx, req, nil)
+	userTranscript, err := s.azureOpenai.GetAudioTranscription(ctx, req, nil)
 	if err != nil {
 		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to transcribe voice message: %s", err.Error())
 	}
 
-	if voiceResponseTranscript.Text == nil {
-		return models.SendVoiceMessageResult{}, fmt.Errorf("voiceResponseTranscript.Text is nil")
+	if userTranscript.Text == nil {
+		return models.SendVoiceMessageResult{}, fmt.Errorf("userTranscript.Text is nil")
 	}
 
-	responseTranscript := *voiceResponseTranscript.Text
+	userText := *userTranscript.Text
 
-	llmTextResponse, err := s.llm.Call(ctx, responseTranscript)
+	llmReplyText, err := s.llm.Call(ctx, userText)
 	if err != nil {
-		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to get llmTextResponse from llm: %s", err.Error())
+		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to get llmReplyText from llm: %s", err.Error())
 	}
 
 	textToSpeechReq := openai.CreateSpeechRequest{
 		Model:          "tts-1",
-		Input:          llmTextResponse,
+		Input:          llmReplyText,
 		Voice:          openai.VoiceFable,
 		ResponseFormat: "mp3",
 	}
 
-	voiceResponse, err := s.baranovOpenai.CreateSpeech(ctx, textToSpeechReq)
+	llmAudio, err := s.baranovOpenai.CreateSpeech(ctx, textToSpeechReq)
 	if err != nil {
 		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to get speech from text: %s", err.Error())
 	}
 
-	// convert voiceResponse to []byte
-	voiceResponseBytes, err := io.ReadAll(voiceResponse)
+	// convert llmAudio to []byte
+	llmReplyAudio, err := io.ReadAll(llmAudio)
 	if err != nil {
 		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to read voice response: %s", err.Error())
 	}
 
-	bucket, err := s.storageClient.DefaultBucket()
+	// for llm audio we use mp3
+	llmReplyAudioName := fmt.Sprintf("users/%s/backend_uploads/%d.mp3", userID, time.Now().UnixNano())
+
+	llmReplyAudioURL, err := s.uploadFileToStorage(ctx, llmReplyAudio, llmReplyAudioName)
 	if err != nil {
-		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to get default bucket: %s", err.Error())
+		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to upload voice response to storage: %s", err.Error())
 	}
 
-	fileName := fmt.Sprintf("users/%s/backend_uploads/%d.mp3", userID, time.Now().UnixNano())
+	// for user audio we use webm
+	userAudioName := fmt.Sprintf("users/%s/backend_uploads/%d.webm", userID, time.Now().UnixNano())
+
+	userAudioURL, err := s.uploadFileToStorage(ctx, userAudio, userAudioName)
+	if err != nil {
+		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to upload voice message to storage: %s", err.Error())
+	}
+
+	createdChat, err := s.saveMessageToDB(ctx, userText, userID, chatID, userAudioURL, userMsgTimestamp)
+	if err != nil {
+		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to save user message to db: %s", err.Error())
+	}
+
+	if chatID == "" {
+		chatID = createdChat.ChatID
+	}
+
+	llmReplyTimestamp := time.Now().UnixMilli()
+
+	_, err = s.saveMessageToDB(ctx, llmReplyText, "", chatID, llmReplyAudioURL, llmReplyTimestamp)
+	if err != nil {
+		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to save llm reply to db: %s", err.Error())
+	}
+
+	return models.SendVoiceMessageResult{
+		UserAudioURL: userAudioURL,
+		LLMAudioURL:  llmReplyAudioURL,
+		UserText:     userText,
+		LLMText:      llmReplyText,
+		CreatedChat:  createdChat,
+		LLMTimestamp: llmReplyTimestamp,
+	}, nil
+}
+
+func (s *Service) uploadFileToStorage(
+	ctx context.Context, fileBytes []byte, fileName string,
+) (string, error) {
+	bucket, err := s.storageClient.DefaultBucket()
+	if err != nil {
+		return "", fmt.Errorf("unable to get default bucket: %s", err.Error())
+	}
 
 	object := bucket.Object(fileName)
 	wc := object.NewWriter(ctx)
 
-	if _, err = wc.Write(voiceResponseBytes); err != nil {
-		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to write voice response to storage: %s", err.Error())
+	if _, err = wc.Write(fileBytes); err != nil {
+		return "", fmt.Errorf("unable to write file to storage: %s", err.Error())
 	}
 
 	if err = wc.Close(); err != nil {
-		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to close writer: %s", err.Error())
+		return "", fmt.Errorf("unable to close writer: %s", err.Error())
 	}
 
-	voiceResponseURL := generateFirebaseStorageURL(object.BucketName(), object.ObjectName())
-
-	return models.SendVoiceMessageResult{
-		VoiceMessageURL:         "",
-		VoiceResponseURL:        voiceResponseURL,
-		VoiceMessageTranscript:  responseTranscript,
-		VoiceResponseTranscript: llmTextResponse,
-	}, nil
+	return generateFirebaseStorageURL(object.BucketName(), object.ObjectName()), nil
 }
 
 func generateFirebaseStorageURL(bucketName, filePath string) string {
@@ -216,10 +252,11 @@ func generateFirebaseStorageURL(bucketName, filePath string) string {
 }
 
 type ChatMessage struct {
-	ChatID string `firestore:"chat_id"`
-	Text   string `firestore:"text"`
-	Time   int64  `firestore:"time"`
-	UserID string `firestore:"user_id"`
+	ChatID   string `firestore:"chat_id"`
+	Text     string `firestore:"text"`
+	Time     int64  `firestore:"time"`
+	UserID   string `firestore:"user_id"`
+	AudioURL string `firestore:"audio_url"`
 }
 
 func (s *Service) GetChatMessages(
@@ -288,6 +325,7 @@ func (s *Service) GetChatMessages(
 			Timestamp:         message.Time,
 			UserID:            message.UserID,
 			IsFromCurrentUser: message.UserID != "",
+			AudioURL:          message.AudioURL,
 		})
 	}
 
