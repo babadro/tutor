@@ -64,7 +64,6 @@ func (t *Tutor) SendVoiceMessage(
 	params operations.SendVoiceMessageParams, principal *models.Principal,
 ) middleware.Responder {
 	// todo check if the userID matches with the chatID, otherwise return unauthorized
-
 	// read file to []byte
 	voiceMsgBytes, err := io.ReadAll(params.File)
 	if err != nil {
@@ -80,7 +79,9 @@ func (t *Tutor) SendVoiceMessage(
 		chatID = *params.ChatID
 	}
 
-	result, err := t.svc.SendVoiceMessage(params.HTTPRequest.Context(), voiceMsgBytes, principal.UserID, chatID, params.Timestamp)
+	result, err := t.svc.SendVoiceMessage(
+		params.HTTPRequest.Context(), voiceMsgBytes, principal.UserID, chatID, params.Timestamp,
+	)
 	if err != nil {
 		hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to send voice message")
 		return operations.NewSendVoiceMessageBadRequest()
