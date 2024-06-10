@@ -80,14 +80,6 @@ func (t *Tutor) SendVoiceMessage(
 		chatID = *params.ChatID
 	}
 
-	// log chatID
-	hlog.FromRequest(params.HTTPRequest).Info().Msgf("ChatID: %s", chatID)
-
-	//voiceMessage := params.File
-
-	// log voice message
-	//hlog.FromRequest(params.HTTPRequest).Info().Msgf("Voice message: %s", voiceMessage)
-	//
 	result, err := t.svc.SendVoiceMessage(params.HTTPRequest.Context(), voiceMsgBytes, principal.UserID, chatID, params.Timestamp)
 	if err != nil {
 		hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to send voice message")

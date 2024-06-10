@@ -78,7 +78,7 @@ func (s *Service) SendMessage(
 	return aiResponse, newlyCreatedChat, nil
 }
 
-// saveMessageToDB saves the message to the database and returns the newly created chat if it was created
+// saveMessageToDB saves the message to the database and returns the newly created chat if it was created.
 func (s *Service) saveMessageToDB(
 	ctx context.Context, message, userID, chatID, audioURL string, timestamp int64,
 ) (swagger.Chat, error) {
@@ -172,17 +172,9 @@ func (s *Service) SendVoiceMessage(
 		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to read voice response: %s", err.Error())
 	}
 
-	/*
-		// open mp3 file to []byte on local machine
-		// todo use real llm audio
-		llmReplyAudio, err := os.ReadFile("cmd/server/example123456.mp3")
-		if err != nil {
-			return models.SendVoiceMessageResult{}, fmt.Errorf("unable to read voice response: %s", err.Error())
-		}
-	*/
-
 	// for llm audio we use mp3
 	llmReplyAudioName := fmt.Sprintf("users/%s/backend_uploads/%d.mp3", userID, time.Now().UnixNano())
+
 	llmReplyAudioURL, err := s.uploadFileToStorage(ctx, llmReplyAudio, llmReplyAudioName)
 	if err != nil {
 		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to upload voice response to storage: %s", err.Error())
@@ -190,16 +182,11 @@ func (s *Service) SendVoiceMessage(
 
 	// for user audio we use webm
 	userAudioName := fmt.Sprintf("users/%s/backend_uploads/%d.webm", userID, time.Now().UnixNano())
+
 	userAudioURL, err := s.uploadFileToStorage(ctx, userAudio, userAudioName)
 	if err != nil {
 		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to upload voice message to storage: %s", err.Error())
 	}
-
-	/*
-		// todo generated userText and llmReplyText
-		userText := fmt.Sprintf("User text %d", time.Now().UnixNano())
-		llmReplyText := fmt.Sprintf("LLM reply text %d", time.Now().UnixNano())
-	*/
 
 	createdChat, err := s.saveMessageToDB(ctx, userText, userID, chatID, userAudioURL, userMsgTimestamp)
 	if err != nil {
@@ -211,6 +198,7 @@ func (s *Service) SendVoiceMessage(
 	}
 
 	llmReplyTimestamp := time.Now().UnixMilli()
+
 	_, err = s.saveMessageToDB(ctx, llmReplyText, "", chatID, llmReplyAudioURL, llmReplyTimestamp)
 	if err != nil {
 		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to save llm reply to db: %s", err.Error())
