@@ -5,6 +5,7 @@ release/
 .env.secrets
 .env.ngrok
 temp/
+sound_example.mp3
 
 cmd/server/server
 secrets
