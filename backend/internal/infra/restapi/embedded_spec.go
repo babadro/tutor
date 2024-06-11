@@ -352,6 +352,89 @@ func init() {
             }
           }
         }
+      },
+      "post": {
+        "description": "This endpoint creates a new chat.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Creates a new chat.",
+        "operationId": "CreateChat",
+        "parameters": [
+          {
+            "description": "Chat information",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "chatType",
+                "time"
+              ],
+              "properties": {
+                "chatType": {
+                  "description": "Enum values:\n  - 2: Job Interview\n",
+                  "type": "integer",
+                  "format": "int32",
+                  "enum": [
+                    2
+                  ],
+                  "x-enum-descriptions": [
+                    "Job Interview"
+                  ]
+                },
+                "time": {
+                  "description": "The timestamp of the chat.",
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "chat": {
+                  "description": "The created chat.",
+                  "type": "object",
+                  "$ref": "#/definitions/Chat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
       }
     }
   },
@@ -727,6 +810,89 @@ func init() {
                   "items": {
                     "$ref": "#/definitions/Chat"
                   }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "This endpoint creates a new chat.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Creates a new chat.",
+        "operationId": "CreateChat",
+        "parameters": [
+          {
+            "description": "Chat information",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "chatType",
+                "time"
+              ],
+              "properties": {
+                "chatType": {
+                  "description": "Enum values:\n  - 2: Job Interview\n",
+                  "type": "integer",
+                  "format": "int32",
+                  "enum": [
+                    2
+                  ],
+                  "x-enum-descriptions": [
+                    "Job Interview"
+                  ]
+                },
+                "time": {
+                  "description": "The timestamp of the chat.",
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "chat": {
+                  "description": "The created chat.",
+                  "type": "object",
+                  "$ref": "#/definitions/Chat"
                 }
               }
             }
