@@ -77,7 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
     localChat.ChatModel chatModel = context.watch<localChat.ChatModel>();
     if (chatModel.isNewChatCreated) {
       selectedIndex =
-          2; // 0 is home, 1 is 'new chat' button, so the first chat is at index 2
+          3; // home, new generic chat, job interview chat, then old chats
       selectedChatId = chats[0].ChatId;
       chatModel.resetIsNewChatCreated();
     }
@@ -90,7 +90,11 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         NavigationRailDestination(
           icon: Icon(Icons.chat),
-          label: Text('New Chat'),
+          label: Text('New Generic Chat'),
+        ),
+        NavigationRailDestination(
+          icon: Icon(Icons.chat),
+          label: Text('New Job Interview Chat'),
         ),
       ];
 
@@ -159,7 +163,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             setState(() {
                               selectedIndex = value;
                               selectedChatId =
-                              (value > 1) ? chats[value - 2].ChatId : '';
+                              (value > 3) ? chats[value - 3].ChatId : '';
                             });
                           },
                         ),
