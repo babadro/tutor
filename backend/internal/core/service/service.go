@@ -29,6 +29,7 @@ type Service struct {
 	baranovOpenai   *openai.Client
 	storageClient   *storage.Client
 	firestoreClient *firestore.Client
+	prompts         []string
 }
 
 func NewService(
@@ -37,6 +38,7 @@ func NewService(
 	baranovOpenai *openai.Client,
 	storageClient *storage.Client,
 	firestoreClient *firestore.Client,
+	prompts []string,
 ) *Service {
 	return &Service{
 		llm:             llm,
@@ -44,6 +46,7 @@ func NewService(
 		baranovOpenai:   baranovOpenai,
 		storageClient:   storageClient,
 		firestoreClient: firestoreClient,
+		prompts:         prompts,
 	}
 }
 

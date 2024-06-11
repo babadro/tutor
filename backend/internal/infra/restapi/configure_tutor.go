@@ -110,7 +110,14 @@ func configureAPI(api *operations.TutorAPI) http.Handler {
 		l.Fatal().Err(err).Msg("Unable to init firestore client")
 	}
 
-	tutorService := service.NewService(llm, openaiClient, baranovClient, storageClient, firestoreClient)
+	prompts, err := readPrompts()
+	if err != nil {
+		l.Fatal().Err(err).Msg("Unable to read prompts")
+	}
+
+	tutorService := service.NewService(
+		llm, openaiClient, baranovClient, storageClient, firestoreClient, prompts,
+	)
 	tutorAPI := tutor.NewTutor(tutorService)
 
 	api.SendChatMessageHandler = operations.SendChatMessageHandlerFunc(tutorAPI.SendChatMessage)
@@ -128,6 +135,17 @@ func configureAPI(api *operations.TutorAPI) http.Handler {
 	}
 
 	return setupGlobalMiddleware(l, api.Serve(setupMiddlewares()))
+}
+
+func readPrompts() ([]string, error) {
+	b, err := os.ReadFile("/app/secrets/prompts/job_interview/1.txt")
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println(string(b))
+
+	return []string{string(b)}, nil
 }
 
 // The TLS configuration before HTTPS server starts.
