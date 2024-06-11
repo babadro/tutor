@@ -131,3 +131,10 @@ func (t *Tutor) GetChats(params operations.GetChatsParams, principal *models.Pri
 
 	return operations.NewGetChatsOK().WithPayload(&operations.GetChatsOKBody{Chats: chats})
 }
+
+func (t *Tutor) CreateChat(
+	params operations.CreateChatParams, principal *models.Principal,
+) middleware.Responder {
+	// todo check if the userID matches with the chatID, otherwise return unauthorized
+	return nil
+}
