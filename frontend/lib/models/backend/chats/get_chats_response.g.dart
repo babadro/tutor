@@ -22,10 +22,12 @@ Chat _$ChatFromJson(Map<String, dynamic> json) => Chat(
       ChatId: json['chatId'] as String,
       Timestamp: (json['time'] as num?)?.toInt() ?? 0,
       Title: json['title'] as String? ?? '',
+      ChatType: (json['typ'] as num?)?.toInt() ?? 0,
     );
 
 Map<String, dynamic> _$ChatToJson(Chat instance) => <String, dynamic>{
       'chatId': instance.ChatId,
       'time': instance.Timestamp,
       'title': instance.Title,
+      'typ': instance.ChatType,
     };
