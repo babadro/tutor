@@ -377,15 +377,7 @@ func init() {
               ],
               "properties": {
                 "chatType": {
-                  "description": "Enum values:\n  - 2: Job Interview\n",
-                  "type": "integer",
-                  "format": "int32",
-                  "enum": [
-                    2
-                  ],
-                  "x-enum-descriptions": [
-                    "Job Interview"
-                  ]
+                  "$ref": "#/definitions/ChatType"
                 },
                 "time": {
                   "description": "The timestamp of the chat.",
@@ -451,6 +443,9 @@ func init() {
         },
         "title": {
           "type": "string"
+        },
+        "typ": {
+          "$ref": "#/definitions/ChatType"
         }
       }
     },
@@ -476,6 +471,18 @@ func init() {
           "type": "string"
         }
       }
+    },
+    "ChatType": {
+      "type": "integer",
+      "format": "int32",
+      "enum": [
+        1,
+        2
+      ],
+      "x-enum-descriptions": [
+        "General",
+        "Job Interview"
+      ]
     },
     "error": {
       "type": "object",
@@ -864,15 +871,7 @@ func init() {
               ],
               "properties": {
                 "chatType": {
-                  "description": "Enum values:\n  - 2: Job Interview\n",
-                  "type": "integer",
-                  "format": "int32",
-                  "enum": [
-                    2
-                  ],
-                  "x-enum-descriptions": [
-                    "Job Interview"
-                  ]
+                  "$ref": "#/definitions/ChatType"
                 },
                 "time": {
                   "description": "The timestamp of the chat.",
@@ -938,6 +937,9 @@ func init() {
         },
         "title": {
           "type": "string"
+        },
+        "typ": {
+          "$ref": "#/definitions/ChatType"
         }
       }
     },
@@ -963,6 +965,18 @@ func init() {
           "type": "string"
         }
       }
+    },
+    "ChatType": {
+      "type": "integer",
+      "format": "int32",
+      "enum": [
+        1,
+        2
+      ],
+      "x-enum-descriptions": [
+        "General",
+        "Job Interview"
+      ]
     },
     "error": {
       "type": "object",

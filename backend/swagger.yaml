@@ -139,15 +139,7 @@ paths:
               - time
               properties:
                 chatType:
-                  type: integer
-                  format: int32
-                  enum:
-                    - 2
-                  x-enum-descriptions:
-                    - "Job Interview"
-                  description: |
-                    Enum values:
-                      - 2: Job Interview
+                  $ref: '#/definitions/ChatType'
                 time:
                   type: integer
                   format: int64
@@ -326,6 +318,15 @@ definitions:
       audio:
         type: string
         x-go-name: AudioURL
+  ChatType:
+    type: integer
+    format: int32
+    enum:
+      - 1
+      - 2
+    x-enum-descriptions:
+      - "General"
+      - "Job Interview"
   Chat:
     type: object
     properties:
@@ -336,3 +337,5 @@ definitions:
         format: int64
       title:
         type: string
+      typ:
+        $ref: '#/definitions/ChatType'

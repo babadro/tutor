@@ -8,6 +8,7 @@ package swagger
 import (
 	"context"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 )
@@ -25,15 +26,63 @@ type Chat struct {
 
 	// title
 	Title string `json:"title,omitempty"`
+
+	// typ
+	Typ ChatType `json:"typ,omitempty"`
 }
 
 // Validate validates this chat
 func (m *Chat) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateTyp(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
 	return nil
 }
 
-// ContextValidate validates this chat based on context it is used
+func (m *Chat) validateTyp(formats strfmt.Registry) error {
+	if swag.IsZero(m.Typ) { // not required
+		return nil
+	}
+
+	if err := m.Typ.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("typ")
+		}
+		return err
+	}
+
+	return nil
+}
+
+// ContextValidate validate this chat based on the context it is used
 func (m *Chat) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateTyp(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *Chat) contextValidateTyp(ctx context.Context, formats strfmt.Registry) error {
+
+	if err := m.Typ.ContextValidate(ctx, formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("typ")
+		}
+		return err
+	}
+
 	return nil
 }
 
