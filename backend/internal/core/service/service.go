@@ -23,6 +23,11 @@ var (
 	ErrUserNotAuthorizedToViewThisChat = errors.New("user is not authorized to view this chat")
 )
 
+const (
+	mp3AudioPathTemplate  = "users/%s/backend_uploads/%d.mp3"
+	webmAudioPathTemplate = "users/%s/backend_uploads/%d.webm"
+)
+
 type Service struct {
 	llm             llm
 	azureOpenai     *azopenai.Client
@@ -59,7 +64,8 @@ type llm interface {
 func (s *Service) SendMessage(
 	ctx context.Context, message, userID string, timestamp int64, chatID string,
 ) (string, swagger.Chat, error) {
-	newlyCreatedChat, err := s.saveMessageToDB(ctx, message, userID, chatID, "", timestamp)
+	chatType := GeneralChatType // todo
+	newlyCreatedChat, err := s.saveMessageToDB(ctx, message, userID, chatID, "", chatType, timestamp)
 	if err != nil {
 		return "", swagger.Chat{}, fmt.Errorf("unable to save message to db: %s", err.Error())
 	}
@@ -73,7 +79,7 @@ func (s *Service) SendMessage(
 		return "", swagger.Chat{}, fmt.Errorf("unable to get AI response from llm: %s", err.Error())
 	}
 
-	_, err = s.saveMessageToDB(ctx, aiResponse, "", chatID, "", time.Now().UnixMilli())
+	_, err = s.saveMessageToDB(ctx, aiResponse, "", chatID, "", chatType, time.Now().UnixMilli())
 	if err != nil {
 		return "", swagger.Chat{}, fmt.Errorf("unable to add AI response message to firestore: %s", err.Error())
 	}
@@ -83,7 +89,7 @@ func (s *Service) SendMessage(
 
 // saveMessageToDB saves the message to the database and returns the newly created chat if it was created.
 func (s *Service) saveMessageToDB(
-	ctx context.Context, message, userID, chatID, audioURL string, timestamp int64,
+	ctx context.Context, message, userID, chatID, audioURL string, chatTyp ChatType, timestamp int64,
 ) (swagger.Chat, error) {
 	var newlyCreatedChat swagger.Chat
 
@@ -94,6 +100,7 @@ func (s *Service) saveMessageToDB(
 				"user_id": userID,
 				"time":    timestamp,
 				"title":   message,
+				"type":    chatTyp,
 			})
 
 		if err != nil {
@@ -104,6 +111,7 @@ func (s *Service) saveMessageToDB(
 			ChatID: newChat.ID,
 			Time:   timestamp,
 			Title:  message,
+			Typ:    swagger.ChatType(chatTyp),
 		}
 
 		chatID = newChat.ID
@@ -152,46 +160,22 @@ func (s *Service) SendVoiceMessage(
 
 	userText := *userTranscript.Text
 
-	llmReplyText, err := s.llm.Call(ctx, userText)
+	llmReplyText, llmReplyAudioURL, err := s.getTextAndAudioFromAIByPrompt(ctx, userText, userID)
 	if err != nil {
-		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to get llmReplyText from llm: %s", err.Error())
-	}
-
-	textToSpeechReq := openai.CreateSpeechRequest{
-		Model:          "tts-1",
-		Input:          llmReplyText,
-		Voice:          openai.VoiceFable,
-		ResponseFormat: "mp3",
-	}
-
-	llmAudio, err := s.baranovOpenai.CreateSpeech(ctx, textToSpeechReq)
-	if err != nil {
-		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to get speech from text: %s", err.Error())
-	}
-
-	// convert llmAudio to []byte
-	llmReplyAudio, err := io.ReadAll(llmAudio)
-	if err != nil {
-		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to read voice response: %s", err.Error())
-	}
-
-	// for llm audio we use mp3
-	llmReplyAudioName := fmt.Sprintf("users/%s/backend_uploads/%d.mp3", userID, time.Now().UnixNano())
-
-	llmReplyAudioURL, err := s.uploadFileToStorage(ctx, llmReplyAudio, llmReplyAudioName)
-	if err != nil {
-		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to upload voice response to storage: %s", err.Error())
+		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to get AI text and audio reply: %s", err.Error())
 	}
 
 	// for user audio we use webm
-	userAudioName := fmt.Sprintf("users/%s/backend_uploads/%d.webm", userID, time.Now().UnixNano())
+	userAudioName := fmt.Sprintf(webmAudioPathTemplate, userID, time.Now().UnixNano())
 
 	userAudioURL, err := s.uploadFileToStorage(ctx, userAudio, userAudioName)
 	if err != nil {
 		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to upload voice message to storage: %s", err.Error())
 	}
 
-	createdChat, err := s.saveMessageToDB(ctx, userText, userID, chatID, userAudioURL, userMsgTimestamp)
+	chatType := GeneralChatType // todo
+
+	createdChat, err := s.saveMessageToDB(ctx, userText, userID, chatID, userAudioURL, chatType, userMsgTimestamp)
 	if err != nil {
 		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to save user message to db: %s", err.Error())
 	}
@@ -202,7 +186,7 @@ func (s *Service) SendVoiceMessage(
 
 	llmReplyTimestamp := time.Now().UnixMilli()
 
-	_, err = s.saveMessageToDB(ctx, llmReplyText, "", chatID, llmReplyAudioURL, llmReplyTimestamp)
+	_, err = s.saveMessageToDB(ctx, llmReplyText, "", chatID, llmReplyAudioURL, chatType, llmReplyTimestamp)
 	if err != nil {
 		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to save llm reply to db: %s", err.Error())
 	}
@@ -377,4 +361,73 @@ func (s *Service) GetChats(ctx context.Context, userID string, limit int32, time
 	}
 
 	return chats, nil
+}
+
+type ChatType int32
+
+const (
+	UnknownChatType      = ChatType(0)
+	GeneralChatType      = ChatType(1)
+	JobInterviewChatType = ChatType(2)
+)
+
+func (s *Service) CreateChat(
+	ctx context.Context, userID string, chatType ChatType, timestamp int64,
+) (swagger.Chat, error) {
+	if chatType != JobInterviewChatType {
+		return swagger.Chat{}, fmt.Errorf("can't create chat for type: %d", chatType)
+	}
+
+	if len(s.prompts) == 0 {
+		return swagger.Chat{}, errors.New("no prompts available")
+	}
+
+	greetingText, greetingAudioURL, err := s.getTextAndAudioFromAIByPrompt(ctx, s.prompts[0], userID)
+	if err != nil {
+		return swagger.Chat{}, fmt.Errorf("unable to get AI text and audio greeting: %s", err.Error())
+	}
+
+	createdChat, err := s.saveMessageToDB(ctx, greetingText, userID, "", greetingAudioURL, chatType, timestamp)
+	if err != nil {
+		return swagger.Chat{}, fmt.Errorf("unable to create chat: %s", err.Error())
+	}
+
+	return createdChat, nil
+}
+
+func (s *Service) getTextAndAudioFromAIByPrompt(
+	ctx context.Context, prompt, userID string,
+) (string, string, error) {
+	text, err := s.llm.Call(context.Background(), prompt)
+	if err != nil {
+		return "", "", fmt.Errorf("unable to get text from llm: %s", err.Error())
+	}
+
+	textToSpeechReq := openai.CreateSpeechRequest{
+		Model:          "tts-1",
+		Input:          text,
+		Voice:          openai.VoiceFable,
+		ResponseFormat: "mp3",
+	}
+
+	llmAudio, err := s.baranovOpenai.CreateSpeech(context.Background(), textToSpeechReq)
+	if err != nil {
+		return "", "", fmt.Errorf("unable to get speech from text: %s", err.Error())
+	}
+
+	// convert llmAudio to []byte
+	audio, err := io.ReadAll(llmAudio)
+	if err != nil {
+		return "", "", fmt.Errorf("unable to read voice message: %s", err.Error())
+	}
+
+	// for llm audio we use mp3
+	audioName := fmt.Sprintf(mp3AudioPathTemplate, userID, time.Now().UnixNano())
+
+	audioURL, err := s.uploadFileToStorage(ctx, audio, audioName)
+	if err != nil {
+		return "", "", fmt.Errorf("unable to upload voice message to storage: %s", err.Error())
+	}
+
+	return text, audioURL, nil
 }
