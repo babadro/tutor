@@ -18,9 +18,10 @@ const theSource = AudioSource.microphone;
 
 class ChatDetailPage extends StatefulWidget {
   final String initialChatId;
+  final localChat.ChatType chatType;
   final AudioRecorderService mRecorder;
 
-  ChatDetailPage({Key? key, required this.initialChatId, required this.mRecorder}) : super(key: key);
+  ChatDetailPage({Key? key, required this.initialChatId, required this.mRecorder, required this.chatType}) : super(key: key);
 
   @override
   _ChatDetailPageState createState() => _ChatDetailPageState();
@@ -53,6 +54,19 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     _scrollController.dispose();
     super.dispose();
   }
+
+  /*
+  void _startDiscussionIfNeeded() async {
+    if (chatId.isEmpty && widget.chatType == localChat.ChatType.JobInterview)
+      var createChatResult = await _chatService.createChat(
+          localChat.ChatType.General);
+      if (!createChatResult.success) {
+        print('Failed to create chat: ${createChatResult.errorMessage}');
+      }
+    }
+  }
+*/
+
 
   void _loadMessages() async {
     var loadMessagesResult = await _chatService.loadMessages(chatId);

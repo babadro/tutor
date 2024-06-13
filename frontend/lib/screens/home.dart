@@ -16,6 +16,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   var selectedIndex = 0;
   var selectedChatId = '';
+  var selectedChatType = localChat.ChatType.General;
   late ChatService _chatService;
   AudioRecorderService? _audioRecorderService = AudioRecorderService();
 
@@ -73,12 +74,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    List<localChat.Chat> chats = context.watch<localChat.ChatModel>().chats;
     localChat.ChatModel chatModel = context.watch<localChat.ChatModel>();
+    List<localChat.Chat> chats = chatModel.chats;
     if (chatModel.isNewChatCreated) {
       selectedIndex =
           3; // home, new generic chat, job interview chat, then old chats
       selectedChatId = chats[0].ChatId;
+      selectedChatType = chats[0].Type;
       chatModel.resetIsNewChatCreated();
     }
 
@@ -160,10 +162,22 @@ class _HomeScreenState extends State<HomeScreen> {
                           destinations: getDestinations(),
                           selectedIndex: selectedIndex,
                           onDestinationSelected: (value) {
+                            print("Selected index: $value");
                             setState(() {
                               selectedIndex = value;
-                              selectedChatId =
-                              (value > 3) ? chats[value - 3].ChatId : '';
+
+                              switch (value) {
+                                case 0 || 1:
+                                  selectedChatType = localChat.ChatType.General;
+                                  selectedChatId = '';
+                                case 2:
+                                  selectedChatType = localChat.ChatType.JobInterview;
+                                  selectedChatId = '';
+                                default:
+                                  var currChat = chats[value - 2];
+                                  selectedChatType = currChat.Type;
+                                  selectedChatId = currChat.ChatId;
+                              }
                             });
                           },
                         ),
@@ -181,6 +195,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         key: Key(selectedChatId),
                         initialChatId: selectedChatId,
                         mRecorder: _audioRecorderService!,
+                        chatType: selectedChatType,
                       )
                     : Placeholder(),
               ),
