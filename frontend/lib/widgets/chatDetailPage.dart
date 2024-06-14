@@ -66,7 +66,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   Future<void> _startDiscussionIfNeeded()  async {
     if (chatId.isEmpty && widget.chatType == localChat.ChatType.JobInterview) {
       var createChatResult =
-          await _chatService.createChat(localChat.ChatType.General);
+          await _chatService.createChat(widget.chatType);
 
       if (!createChatResult.success) {
         print('Failed to create chat: ${createChatResult.errorMessage}');
