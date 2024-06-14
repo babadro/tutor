@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
+import 'package:tutor/models/backend/chat_messages/create_chat_request.dart';
+import 'package:tutor/models/backend/chat_messages/create_chat_response.dart';
 import 'package:tutor/models/backend/chat_messages/send_text_message_request.dart';
 import 'package:tutor/models/backend/chat_messages/send_text_message_response.dart';
 import 'package:tutor/models/backend/chat_messages/get_chat_messages_response.dart';
@@ -217,28 +219,32 @@ class ChatService {
       return ServiceResult.failure(errorMessage: 'Failed to fetch chats: $e');
     }
   }
-/*
+
   // Create chat
-  Future<ServiceResult<localChat.Chat>> createChat(localChat.ChatType type) async {
+  Future<ServiceResult<localChat.Chat>> createChat(
+      localChat.ChatType type) async {
     final apiUrl = 'http://localhost:8080/chats';
     final uri = Uri.parse(apiUrl);
     String? authToken = await _authService.getCurrentUserIdToken();
 
     try {
-      final response = await http.post(
-        uri,
-        headers: {
-          'Authorization': 'Bearer $authToken',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode(localChat.Chat.toChatRequest(type).toJson(),
-      );
+      final response = await http.post(uri,
+          headers: {
+            'Authorization': 'Bearer $authToken',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode(CreateChatRequest(
+                  ChatType: localChat.chatTypeToInt(type),
+                  Timestamp: DateTime.now().microsecondsSinceEpoch)
+              .toJson()));
 
       if (response.statusCode == 200) {
-        final chatResponse = localChat.Chat.fromChatResponse(
+        final chatResponse = CreateChatResponse.fromJson(
             jsonDecode(response.body) as Map<String, dynamic>);
 
-        return ServiceResult.success(chatResponse);
+        final chat = localChat.Chat.fromChatResponse(chatResponse.CreatedChat!);
+
+        return ServiceResult.success(chat);
       } else {
         return ServiceResult.failure(
             errorMessage: 'Failed to create chat: ${response.statusCode}');
@@ -247,6 +253,4 @@ class ChatService {
       return ServiceResult.failure(errorMessage: 'Failed to create chat: $e');
     }
   }
-
- */
 }

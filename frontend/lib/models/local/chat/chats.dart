@@ -40,6 +40,15 @@ ChatType chatTypeFromInt(int type) {
   }
 }
 
+int chatTypeToInt(ChatType type) {
+  switch (type) {
+    case ChatType.JobInterview:
+      return 2;
+    default:
+      return 1;
+  }
+}
+
 class ChatModel extends ChangeNotifier {
   List<Chat> _chats = [];
 

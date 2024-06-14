@@ -21,7 +21,12 @@ class ChatDetailPage extends StatefulWidget {
   final localChat.ChatType chatType;
   final AudioRecorderService mRecorder;
 
-  ChatDetailPage({Key? key, required this.initialChatId, required this.mRecorder, required this.chatType}) : super(key: key);
+  ChatDetailPage(
+      {Key? key,
+      required this.initialChatId,
+      required this.mRecorder,
+      required this.chatType})
+      : super(key: key);
 
   @override
   _ChatDetailPageState createState() => _ChatDetailPageState();
@@ -42,11 +47,14 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   @override
   void initState() {
     chatId = widget.initialChatId;
-    _chatService = ChatService(Provider.of<AuthService>(context, listen: false));
+    _chatService =
+        ChatService(Provider.of<AuthService>(context, listen: false));
     _loadMessages();
     _mRecorder.init();
 
     super.initState();
+
+    _startDiscussionIfNeeded();
   }
 
   @override
@@ -55,18 +63,19 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     super.dispose();
   }
 
-  /*
-  void _startDiscussionIfNeeded() async {
-    if (chatId.isEmpty && widget.chatType == localChat.ChatType.JobInterview)
-      var createChatResult = await _chatService.createChat(
-          localChat.ChatType.General);
+  Future<void> _startDiscussionIfNeeded()  async {
+    if (chatId.isEmpty && widget.chatType == localChat.ChatType.JobInterview) {
+      var createChatResult =
+          await _chatService.createChat(localChat.ChatType.General);
+
       if (!createChatResult.success) {
         print('Failed to create chat: ${createChatResult.errorMessage}');
+        return;
       }
+
+      switchToNewChat(createChatResult.data!);
     }
   }
-*/
-
 
   void _loadMessages() async {
     var loadMessagesResult = await _chatService.loadMessages(chatId);
@@ -97,13 +106,11 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       Timestamp: timestamp,
     );
 
-    _addMessage(
-        local.ChatMessage(
-          IsFromCurrentUser: true,
-          Text: text,
-          Timestamp: timestamp,
-        )
-    );
+    _addMessage(local.ChatMessage(
+      IsFromCurrentUser: true,
+      Text: text,
+      Timestamp: timestamp,
+    ));
 
     var sendResult = await _chatService.sendMessage(message);
     if (!sendResult.success) {
@@ -114,7 +121,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
     if (sendResult.data!.createdChat.ChatId != '') {
       switchToNewChat(sendResult.data!.createdChat);
-    };
+    }
+    ;
 
     _addMessage(sendResult.data!.message);
   }
@@ -130,8 +138,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   }
 
   void record() {
-    _mRecorder.record(
-    ).then((_) {
+    _mRecorder.record().then((_) {
       setState(() {
         _isRecording = true;
         _scrollToBottom();
@@ -159,7 +166,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
           if (value.data!.createdChat.ChatId != '') {
             switchToNewChat(value.data!.createdChat);
-          };
+          }
+          ;
 
           _addMessage(res.userMessage);
           _addMessage(res.replyMessage);
@@ -202,7 +210,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                   Expanded(
                     child: ListView.builder(
                       controller: _scrollController,
-                      itemCount: _messages.length + (_isRecording || _isSending ? 1 : 0),
+                      itemCount: _messages.length +
+                          (_isRecording || _isSending ? 1 : 0),
                       padding: EdgeInsets.only(top: 10, bottom: 70),
                       itemBuilder: (context, index) {
                         if (index < _messages.length) {
@@ -235,10 +244,15 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                             height: 30,
                             width: 30,
                             decoration: BoxDecoration(
-                              color: _mRecorder.isRecording ? Colors.red : Colors.lightBlue,
+                              color: _mRecorder.isRecording
+                                  ? Colors.red
+                                  : Colors.lightBlue,
                               borderRadius: BorderRadius.circular(30),
                             ),
-                            child: Icon(_mRecorder.isRecording ? Icons.stop : Icons.mic, color: Colors.white, size: 20),
+                            child: Icon(
+                                _mRecorder.isRecording ? Icons.stop : Icons.mic,
+                                color: Colors.white,
+                                size: 20),
                           ),
                         ),
                       ),
@@ -255,7 +269,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                                 color: Colors.black,
                                 borderRadius: BorderRadius.circular(30),
                               ),
-                              child: Icon(Icons.delete, color: Colors.white, size: 20),
+                              child: Icon(Icons.delete,
+                                  color: Colors.white, size: 20),
                             ),
                           ),
                         ),
@@ -266,8 +281,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                           decoration: InputDecoration(
                               hintText: "Write message...",
                               hintStyle: TextStyle(color: Colors.black54),
-                              border: InputBorder.none
-                          ),
+                              border: InputBorder.none),
                           controller: _messageController,
                         ),
                       ),
@@ -289,8 +303,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
               ),
             ],
           ),
-        )
-    );
+        ));
   }
 }
-
