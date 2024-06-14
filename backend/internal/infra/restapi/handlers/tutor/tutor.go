@@ -23,6 +23,9 @@ type service interface {
 		ctx context.Context, chatID string, userID string, limit int32, timestamp int64,
 	) ([]*swagger.ChatMessage, error)
 	GetChats(ctx context.Context, userID string, limit int32, timestamp int64) ([]*swagger.Chat, error)
+	CreateChat(
+		ctx context.Context, userID string, chatType service2.ChatType, timestamp int64,
+	) (swagger.Chat, error)
 }
 
 type Tutor struct {
@@ -136,5 +139,14 @@ func (t *Tutor) CreateChat(
 	params operations.CreateChatParams, principal *models.Principal,
 ) middleware.Responder {
 	// todo check if the userID matches with the chatID, otherwise return unauthorized
-	return nil
+
+	chat, err := t.svc.CreateChat(
+		params.HTTPRequest.Context(), principal.UserID, service2.ChatType(params.Body.ChatType), *params.Body.Time,
+	)
+	if err != nil {
+		hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to create chat")
+		return operations.NewCreateChatBadRequest()
+	}
+
+	return operations.NewCreateChatOK().WithPayload(&operations.CreateChatOKBody{Chat: &chat})
 }
