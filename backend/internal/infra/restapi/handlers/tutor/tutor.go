@@ -3,6 +3,7 @@ package tutor
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"time"
 
@@ -139,6 +140,8 @@ func (t *Tutor) CreateChat(
 	params operations.CreateChatParams, principal *models.Principal,
 ) middleware.Responder {
 	// todo check if the userID matches with the chatID, otherwise return unauthorized
+
+	fmt.Println("Chat type is", params.Body.ChatType)
 
 	chat, err := t.svc.CreateChat(
 		params.HTTPRequest.Context(), principal.UserID, service2.ChatType(params.Body.ChatType), *params.Body.Time,

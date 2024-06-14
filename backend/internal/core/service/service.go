@@ -99,7 +99,7 @@ func (s *Service) saveMessageToDB(
 			Add(ctx, map[string]interface{}{
 				"user_id": userID,
 				"time":    timestamp,
-				"title":   message,
+				"title":   cutChatTitle(message),
 				"type":    chatTyp,
 			})
 
@@ -138,6 +138,14 @@ func (s *Service) saveMessageToDB(
 	}
 
 	return newlyCreatedChat, nil
+}
+
+func cutChatTitle(str string) string {
+	if len(str) > 20 {
+		return str[:20]
+	}
+
+	return str
 }
 
 func (s *Service) SendVoiceMessage(
@@ -352,10 +360,9 @@ func (s *Service) GetChats(ctx context.Context, userID string, limit int32, time
 		if err = doc.DataTo(&chatModel); err != nil {
 			return nil, fmt.Errorf("unable to get chat data: %s", err.Error())
 		}
-
 		chats = append(chats, &swagger.Chat{
 			ChatID: doc.Ref.ID,
-			Title:  chatModel.Title,
+			Title:  cutChatTitle(chatModel.Title),
 			Time:   chatModel.Timestamp,
 		})
 	}
