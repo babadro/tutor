@@ -138,7 +138,7 @@ paths:
               - typ
               - time
               properties:
-                chatType:
+                typ:
                   $ref: '#/definitions/ChatType'
                 time:
                   type: integer

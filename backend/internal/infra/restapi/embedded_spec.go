@@ -376,13 +376,13 @@ func init() {
                 "time"
               ],
               "properties": {
-                "chatType": {
-                  "$ref": "#/definitions/ChatType"
-                },
                 "time": {
                   "description": "The timestamp of the chat.",
                   "type": "integer",
                   "format": "int64"
+                },
+                "typ": {
+                  "$ref": "#/definitions/ChatType"
                 }
               }
             }
@@ -870,13 +870,13 @@ func init() {
                 "time"
               ],
               "properties": {
-                "chatType": {
-                  "$ref": "#/definitions/ChatType"
-                },
                 "time": {
                   "description": "The timestamp of the chat.",
                   "type": "integer",
                   "format": "int64"
+                },
+                "typ": {
+                  "$ref": "#/definitions/ChatType"
                 }
               }
             }
