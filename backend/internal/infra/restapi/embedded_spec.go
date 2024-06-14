@@ -382,6 +382,7 @@ func init() {
                   "format": "int64"
                 },
                 "typ": {
+                  "x-go-name": "ChatType",
                   "$ref": "#/definitions/ChatType"
                 }
               }
@@ -876,6 +877,7 @@ func init() {
                   "format": "int64"
                 },
                 "typ": {
+                  "x-go-name": "ChatType",
                   "$ref": "#/definitions/ChatType"
                 }
               }

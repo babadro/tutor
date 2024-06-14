@@ -140,6 +140,7 @@ paths:
               properties:
                 typ:
                   $ref: '#/definitions/ChatType'
+                  x-go-name: ChatType
                 time:
                   type: integer
                   format: int64

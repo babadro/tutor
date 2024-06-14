@@ -85,30 +85,46 @@ func (o *CreateChat) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 // swagger:model CreateChatBody
 type CreateChatBody struct {
 
+	// chat type
+	// Required: true
+	ChatType swagger.ChatType `json:"typ"`
+
 	// The timestamp of the chat.
 	// Required: true
 	Time *int64 `json:"time"`
-
-	// typ
-	// Required: true
-	Typ swagger.ChatType `json:"typ"`
 }
 
 // Validate validates this create chat body
 func (o *CreateChatBody) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := o.validateTime(formats); err != nil {
+	if err := o.validateChatType(formats); err != nil {
 		res = append(res, err)
 	}
 
-	if err := o.validateTyp(formats); err != nil {
+	if err := o.validateTime(formats); err != nil {
 		res = append(res, err)
 	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (o *CreateChatBody) validateChatType(formats strfmt.Registry) error {
+
+	if err := validate.Required("body"+"."+"typ", "body", swagger.ChatType(o.ChatType)); err != nil {
+		return err
+	}
+
+	if err := o.ChatType.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("body" + "." + "typ")
+		}
+		return err
+	}
+
 	return nil
 }
 
@@ -121,27 +137,11 @@ func (o *CreateChatBody) validateTime(formats strfmt.Registry) error {
 	return nil
 }
 
-func (o *CreateChatBody) validateTyp(formats strfmt.Registry) error {
-
-	if err := validate.Required("body"+"."+"typ", "body", swagger.ChatType(o.Typ)); err != nil {
-		return err
-	}
-
-	if err := o.Typ.Validate(formats); err != nil {
-		if ve, ok := err.(*errors.Validation); ok {
-			return ve.ValidateName("body" + "." + "typ")
-		}
-		return err
-	}
-
-	return nil
-}
-
 // ContextValidate validate this create chat body based on the context it is used
 func (o *CreateChatBody) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
-	if err := o.contextValidateTyp(ctx, formats); err != nil {
+	if err := o.contextValidateChatType(ctx, formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -151,9 +151,9 @@ func (o *CreateChatBody) ContextValidate(ctx context.Context, formats strfmt.Reg
 	return nil
 }
 
-func (o *CreateChatBody) contextValidateTyp(ctx context.Context, formats strfmt.Registry) error {
+func (o *CreateChatBody) contextValidateChatType(ctx context.Context, formats strfmt.Registry) error {
 
-	if err := o.Typ.ContextValidate(ctx, formats); err != nil {
+	if err := o.ChatType.ContextValidate(ctx, formats); err != nil {
 		if ve, ok := err.(*errors.Validation); ok {
 			return ve.ValidateName("body" + "." + "typ")
 		}
