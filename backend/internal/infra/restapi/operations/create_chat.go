@@ -86,8 +86,7 @@ func (o *CreateChat) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 type CreateChatBody struct {
 
 	// chat type
-	// Required: true
-	ChatType swagger.ChatType `json:"chatType"`
+	ChatType swagger.ChatType `json:"chatType,omitempty"`
 
 	// The timestamp of the chat.
 	// Required: true
@@ -113,9 +112,8 @@ func (o *CreateChatBody) Validate(formats strfmt.Registry) error {
 }
 
 func (o *CreateChatBody) validateChatType(formats strfmt.Registry) error {
-
-	if err := validate.Required("body"+"."+"chatType", "body", swagger.ChatType(o.ChatType)); err != nil {
-		return err
+	if swag.IsZero(o.ChatType) { // not required
+		return nil
 	}
 
 	if err := o.ChatType.Validate(formats); err != nil {

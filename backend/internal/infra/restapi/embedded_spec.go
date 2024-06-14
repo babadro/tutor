@@ -372,7 +372,7 @@ func init() {
             "schema": {
               "type": "object",
               "required": [
-                "chatType",
+                "typ",
                 "time"
               ],
               "properties": {
@@ -866,7 +866,7 @@ func init() {
             "schema": {
               "type": "object",
               "required": [
-                "chatType",
+                "typ",
                 "time"
               ],
               "properties": {

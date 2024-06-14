@@ -135,7 +135,7 @@ paths:
             schema:
               type: object
               required:
-              - chatType
+              - typ
               - time
               properties:
                 chatType:
