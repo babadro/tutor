@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"net/url"
+	"os"
 	"time"
 
 	"cloud.google.com/go/firestore"
@@ -57,8 +57,8 @@ func NewService(
 
 type llm interface {
 	Call(ctx context.Context, prompt string, options ...llms.CallOption) (string, error)
-	Generate(ctx context.Context, prompts []string, options ...llms.CallOption) ([]*llms.Generation, error)
 	CreateEmbedding(ctx context.Context, inputTexts []string) ([][]float32, error)
+	GenerateContent(ctx context.Context, messages []llms.MessageContent, options ...llms.CallOption) (*llms.ContentResponse, error)
 }
 
 func (s *Service) SendMessage(
@@ -94,12 +94,14 @@ func (s *Service) saveMessageToDB(
 	var newlyCreatedChat swagger.Chat
 
 	if chatID == "" {
+		chatTitle := cutChatTitle(message)
+
 		newChat, _, err := s.firestoreClient.
 			Collection("chats").
 			Add(ctx, map[string]interface{}{
 				"user_id": userID,
 				"time":    timestamp,
-				"title":   cutChatTitle(message),
+				"title":   chatTitle,
 				"type":    chatTyp,
 			})
 
@@ -110,7 +112,7 @@ func (s *Service) saveMessageToDB(
 		newlyCreatedChat = swagger.Chat{
 			ChatID: newChat.ID,
 			Time:   timestamp,
-			Title:  message,
+			Title:  chatTitle,
 			Typ:    swagger.ChatType(chatTyp),
 		}
 
@@ -168,7 +170,11 @@ func (s *Service) SendVoiceMessage(
 
 	userText := *userTranscript.Text
 
-	llmReplyText, llmReplyAudioURL, err := s.getTextAndAudioFromAIByPrompt(ctx, userText, userID)
+	content := []llms.MessageContent{
+		llms.TextParts(llms.ChatMessageTypeHuman, userText),
+	}
+
+	llmReplyText, llmReplyAudioURL, err := s.generateTextAndAudioContent(ctx, content, userID)
 	if err != nil {
 		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to get AI text and audio reply: %s", err.Error())
 	}
@@ -389,7 +395,13 @@ func (s *Service) CreateChat(
 		return swagger.Chat{}, errors.New("no prompts available")
 	}
 
-	greetingText, greetingAudioURL, err := s.getTextAndAudioFromAIByPrompt(ctx, s.prompts[0], userID)
+	content := []llms.MessageContent{
+		llms.TextParts(llms.ChatMessageTypeSystem, "You are an AI recruiter conducting a mock job interview based on the candidate's CV provided below. Your role is to ask relevant and insightful questions to help the candidate practice their interview skills. Start with a friendly introduction and then proceed to ask about their background, skills, and experiences. Use the information from the CV to tailor your questions."),
+		llms.TextParts(llms.ChatMessageTypeSystem, "Candidate's CV:"),
+		llms.TextParts(llms.ChatMessageTypeSystem, s.prompts[0]),
+	}
+
+	greetingText, greetingAudioURL, err := s.generateTextAndAudioContent(ctx, content, userID)
 	if err != nil {
 		return swagger.Chat{}, fmt.Errorf("unable to get AI text and audio greeting: %s", err.Error())
 	}
@@ -402,14 +414,24 @@ func (s *Service) CreateChat(
 	return createdChat, nil
 }
 
-func (s *Service) getTextAndAudioFromAIByPrompt(
-	ctx context.Context, prompt, userID string,
+func (s *Service) generateTextAndAudioContent(
+	ctx context.Context, content []llms.MessageContent, userID string,
 ) (string, string, error) {
-	text, err := s.llm.Call(context.Background(), prompt)
+	resp, err := s.llm.GenerateContent(ctx, content,
+		llms.WithMaxTokens(200),
+	)
+
 	if err != nil {
-		return "", "", fmt.Errorf("unable to get text from llm: %s", err.Error())
+		return "", "", fmt.Errorf("unable to get content from llm: %s", err.Error())
 	}
 
+	if len(resp.Choices) == 0 {
+		return "", "", errors.New("no choices in response")
+	}
+
+	text := resp.Choices[0].Content
+
+	/* todo unkomment when front is ready
 	textToSpeechReq := openai.CreateSpeechRequest{
 		Model:          "tts-1",
 		Input:          text,
@@ -426,6 +448,13 @@ func (s *Service) getTextAndAudioFromAIByPrompt(
 	audio, err := io.ReadAll(llmAudio)
 	if err != nil {
 		return "", "", fmt.Errorf("unable to read voice message: %s", err.Error())
+	}
+
+	*/
+
+	audio, err := os.ReadFile("cmd/server/sound_example.mp3")
+	if err != nil {
+		return "", "", fmt.Errorf("unable to read voice response: %s", err.Error())
 	}
 
 	// for llm audio we use mp3
