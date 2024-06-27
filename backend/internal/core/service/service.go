@@ -174,7 +174,7 @@ func (s *Service) SendVoiceMessage(
 		llms.TextParts(llms.ChatMessageTypeHuman, userText),
 	}
 
-	llmReplyText, llmReplyAudioURL, err := s.generateTextAndAudioContent(ctx, content, userID)
+	llmReplyText, llmReplyAudioURL, err := s.generateTextAndAudioContent(ctx, content, userID, "gpt-3")
 	if err != nil {
 		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to get AI text and audio reply: %s", err.Error())
 	}
@@ -396,12 +396,13 @@ func (s *Service) CreateChat(
 	}
 
 	content := []llms.MessageContent{
-		llms.TextParts(llms.ChatMessageTypeSystem, "You are an AI recruiter conducting a mock job interview based on the candidate's CV provided below. Your role is to ask relevant and insightful questions to help the candidate practice their interview skills. Start with a friendly introduction and then proceed to ask about their background, skills, and experiences. Use the information from the CV to tailor your questions."),
+		llms.TextParts(llms.ChatMessageTypeSystem, "You are an AI recruiter conducting a mock job interview based on the candidate's CV provided below. Your role is to ask relevant and insightful questions to help the candidate practice their interview skills. Start with a friendly introduction and then proceed to ask short, interactive questions about their background, skills, and experiences. Use the information from the CV to tailor your questions and keep each question concise and to the point, as it would be in a real interview."+
+			"ask please one question a time. Start with a very short introduction and then ask a first question, that suits to be a first one in interview."),
 		llms.TextParts(llms.ChatMessageTypeSystem, "Candidate's CV:"),
 		llms.TextParts(llms.ChatMessageTypeSystem, s.prompts[0]),
 	}
 
-	greetingText, greetingAudioURL, err := s.generateTextAndAudioContent(ctx, content, userID)
+	greetingText, greetingAudioURL, err := s.generateTextAndAudioContent(ctx, content, userID, "gpt-3")
 	if err != nil {
 		return swagger.Chat{}, fmt.Errorf("unable to get AI text and audio greeting: %s", err.Error())
 	}
@@ -415,10 +416,11 @@ func (s *Service) CreateChat(
 }
 
 func (s *Service) generateTextAndAudioContent(
-	ctx context.Context, content []llms.MessageContent, userID string,
+	ctx context.Context, content []llms.MessageContent, userID, model string,
 ) (string, string, error) {
 	resp, err := s.llm.GenerateContent(ctx, content,
 		llms.WithMaxTokens(200),
+		llms.WithModel(model),
 	)
 
 	if err != nil {
