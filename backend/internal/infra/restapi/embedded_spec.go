@@ -484,7 +484,7 @@ func init() {
       "x-enum-descriptions": [
         "General",
         "Job Interview",
-        "Working through specific questions from a job interview"
+        "Training specific questions from job interviews"
       ]
     },
     "error": {
@@ -981,7 +981,7 @@ func init() {
       "x-enum-descriptions": [
         "General",
         "Job Interview",
-        "Working through specific questions from a job interview"
+        "Training specific questions from job interviews"
       ]
     },
     "error": {

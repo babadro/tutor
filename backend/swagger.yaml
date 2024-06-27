@@ -329,7 +329,7 @@ definitions:
     x-enum-descriptions:
       - "General"
       - "Job Interview"
-      - "Working through specific questions from a job interview"
+      - "Training specific questions from job interviews"
   Chat:
     type: object
     properties:
