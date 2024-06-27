@@ -478,11 +478,13 @@ func init() {
       "format": "int32",
       "enum": [
         1,
-        2
+        2,
+        3
       ],
       "x-enum-descriptions": [
         "General",
-        "Job Interview"
+        "Job Interview",
+        "Working through specific questions from a job interview"
       ]
     },
     "error": {
@@ -973,11 +975,13 @@ func init() {
       "format": "int32",
       "enum": [
         1,
-        2
+        2,
+        3
       ],
       "x-enum-descriptions": [
         "General",
-        "Job Interview"
+        "Job Interview",
+        "Working through specific questions from a job interview"
       ]
     },
     "error": {

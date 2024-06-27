@@ -325,9 +325,11 @@ definitions:
     enum:
       - 1
       - 2
+      - 3
     x-enum-descriptions:
       - "General"
       - "Job Interview"
+      - "Working through specific questions from a job interview"
   Chat:
     type: object
     properties:
