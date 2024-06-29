@@ -24,7 +24,7 @@ var chatTypeEnum []interface{}
 
 func init() {
 	var res []ChatType
-	if err := json.Unmarshal([]byte(`[1,2,3]`), &res); err != nil {
+	if err := json.Unmarshal([]byte(`[1,2]`), &res); err != nil {
 		panic(err)
 	}
 	for _, v := range res {

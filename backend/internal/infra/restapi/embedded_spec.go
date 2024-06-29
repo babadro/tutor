@@ -485,12 +485,10 @@ func init() {
       "format": "int32",
       "enum": [
         1,
-        2,
-        3
+        2
       ],
       "x-enum-descriptions": [
         "General",
-        "Job Interview",
         "Training specific questions from job interviews"
       ]
     },
@@ -989,12 +987,10 @@ func init() {
       "format": "int32",
       "enum": [
         1,
-        2,
-        3
+        2
       ],
       "x-enum-descriptions": [
         "General",
-        "Job Interview",
         "Training specific questions from job interviews"
       ]
     },
