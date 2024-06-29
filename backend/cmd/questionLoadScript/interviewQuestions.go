@@ -1,18 +1,5 @@
 package main
 
-type MessageType uint8
-
-const (
-	UnknownMessageType   = MessageType(0)
-	JobInterviewQuestion = MessageType(1)
-)
-
-type PreparedMessage struct {
-	Type        MessageType `firestore:"typ"`
-	GermanText  string      `firestore:"de_txt"`
-	GermanAudio string      `firestore:"de_audio"`
-}
-
 var interviewQuestions = []string{
 	"Können Sie mir kurz von einigen Projekten erzählen, an denen Sie gearbeitet haben, und wie Sie diese von Anfang bis Ende umgesetzt haben?",
 	"Stellen Sie sich vor, ich bin ein Technik-Laie. Können Sie mir in einfachen Worten erklären, was Sie tun?",

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand"
 	"net/url"
 	"os"
 	"time"
@@ -260,6 +261,16 @@ type ChatMessage struct {
 	AudioURL string `firestore:"audio_url"`
 }
 
+func (c *ChatMessage) toSwagger() swagger.ChatMessage {
+	return swagger.ChatMessage{
+		Text:              c.Text,
+		Timestamp:         c.Time,
+		UserID:            c.UserID,
+		IsFromCurrentUser: c.UserID != "",
+		AudioURL:          c.AudioURL,
+	}
+}
+
 func (s *Service) GetChatMessages(
 	ctx context.Context, chatID string, userID string, limit int32, timestamp int64,
 ) ([]*swagger.ChatMessage, error) {
@@ -334,8 +345,22 @@ func (s *Service) GetChatMessages(
 }
 
 type chat struct {
-	Timestamp int64  `firestore:"time"`
-	Title     string `firestore:"title"`
+	ID               string
+	UserID           string   `firestore:"user_id"`
+	Timestamp        int64    `firestore:"time"`
+	Title            string   `firestore:"title"`
+	PreparedMessages []string `firestore:"prep_msgs"`
+	Type             ChatType `firestore:"type"`
+}
+
+func (c *chat) toSwagger() swagger.Chat {
+	return swagger.Chat{
+		ChatID:           c.ID,
+		Time:             c.Timestamp,
+		Title:            c.Title,
+		Typ:              swagger.ChatType(c.Type),
+		PreparedMessages: c.PreparedMessages,
+	}
 }
 
 func (s *Service) GetChats(ctx context.Context, userID string, limit int32, timestamp int64) ([]*swagger.Chat, error) {
@@ -376,43 +401,107 @@ func (s *Service) GetChats(ctx context.Context, userID string, limit int32, time
 	return chats, nil
 }
 
-type ChatType int32
+type ChatType int16
 
 const (
-	UnknownChatType      = ChatType(0)
-	GeneralChatType      = ChatType(1)
-	JobInterviewChatType = ChatType(2)
+	UnknownChatType                       = ChatType(0)
+	GeneralChatType                       = ChatType(1)
+	JobInterviewSeparateQuestionsChatType = ChatType(2)
 )
 
 func (s *Service) CreateChat(
 	ctx context.Context, userID string, chatType ChatType, timestamp int64,
 ) (swagger.Chat, error) {
-	if chatType != JobInterviewChatType {
+	if chatType != JobInterviewSeparateQuestionsChatType {
 		return swagger.Chat{}, fmt.Errorf("can't create chat for type: %d", chatType)
 	}
 
-	if len(s.prompts) == 0 {
-		return swagger.Chat{}, errors.New("no prompts available")
-	}
-
-	content := []llms.MessageContent{
-		llms.TextParts(llms.ChatMessageTypeSystem, "You are an AI recruiter conducting a mock job interview based on the candidate's CV provided below. Your role is to ask relevant and insightful questions to help the candidate practice their interview skills. Start with a friendly introduction and then proceed to ask short, interactive questions about their background, skills, and experiences. Use the information from the CV to tailor your questions and keep each question concise and to the point, as it would be in a real interview."+
-			"ask please one question a time. Start with a very short introduction and then ask a first question, that suits to be a first one in interview."),
-		llms.TextParts(llms.ChatMessageTypeSystem, "Candidate's CV:"),
-		llms.TextParts(llms.ChatMessageTypeSystem, s.prompts[0]),
-	}
-
-	greetingText, greetingAudioURL, err := s.generateTextAndAudioContent(ctx, content, userID, "gpt-3")
-	if err != nil {
-		return swagger.Chat{}, fmt.Errorf("unable to get AI text and audio greeting: %s", err.Error())
-	}
-
-	createdChat, err := s.saveMessageToDB(ctx, greetingText, userID, "", greetingAudioURL, chatType, timestamp)
+	createdChat, firstQuestion, err := s.createSeparateJobQuestionsChat(ctx, userID, timestamp)
 	if err != nil {
 		return swagger.Chat{}, fmt.Errorf("unable to create chat: %s", err.Error())
 	}
 
+	_, err = s.saveMessageToDB(
+		ctx, firstQuestion.GermanText, userID, createdChat.ChatID, firstQuestion.GermanAudio, chatType, timestamp)
+
+	if err != nil {
+		return swagger.Chat{}, fmt.Errorf("unable to save first message to db: %s", err.Error())
+	}
+
 	return createdChat, nil
+}
+
+func (s *Service) createSeparateJobQuestionsChat(
+	ctx context.Context, userID string, timestamp int64,
+) (swagger.Chat, models.PreparedMessage, error) {
+	query := s.firestoreClient.
+		Collection("prepared_messages").
+		Where("typ", "==", models.JobInterviewQuestion)
+
+	iter := query.Documents(ctx)
+	defer iter.Stop()
+
+	var messageIDs []string
+
+	for {
+		doc, err := iter.Next()
+
+		if err != nil {
+			if errors.Is(err, iterator.Done) {
+				break
+			}
+
+			return swagger.Chat{}, models.PreparedMessage{},
+				fmt.Errorf("unable to get prepared_messages from firestore: %s", err.Error())
+		}
+
+		messageIDs = append(messageIDs, doc.Ref.ID)
+	}
+
+	rand.Shuffle(len(messageIDs), func(i, j int) {
+		messageIDs[i], messageIDs[j] = messageIDs[j], messageIDs[i]
+	})
+
+	firstMsgID := messageIDs[0]
+
+	// get first message from firestore
+	doc, err := s.firestoreClient.Collection("prepared_messages").Doc(firstMsgID).Get(ctx)
+	if err != nil {
+		return swagger.Chat{}, models.PreparedMessage{},
+			fmt.Errorf("unable to get first message from firestore: %s", err.Error())
+	}
+
+	var firstMsg models.PreparedMessage
+	if err = doc.DataTo(&firstMsg); err != nil {
+		return swagger.Chat{}, models.PreparedMessage{},
+			fmt.Errorf("unable to get first message data: %s", err.Error())
+	}
+
+	createdChat := swagger.Chat{
+		PreparedMessages: messageIDs,
+		Time:             timestamp,
+		Title:            cutChatTitle(firstMsg.GermanText),
+		Typ:              swagger.ChatType(JobInterviewSeparateQuestionsChatType),
+	}
+
+	newChat, _, err := s.firestoreClient.
+		Collection("chats").
+		Add(ctx, chat{
+			UserID:           userID,
+			Type:             JobInterviewSeparateQuestionsChatType,
+			Timestamp:        time.Now().UnixMilli(),
+			Title:            cutChatTitle(firstMsg.GermanText),
+			PreparedMessages: messageIDs,
+		})
+
+	if err != nil {
+		return swagger.Chat{}, models.PreparedMessage{},
+			fmt.Errorf("unable to create chat: %s", err.Error())
+	}
+
+	createdChat.ChatID = newChat.ID
+
+	return createdChat, firstMsg, nil
 }
 
 func (s *Service) generateTextAndAudioContent(
@@ -441,7 +530,7 @@ func (s *Service) generateTextAndAudioContent(
 		ResponseFormat: "mp3",
 	}
 
-	llmAudio, err := s.baranovOpenai.CreateSpeech(context.Background(), textToSpeechReq)
+	llmAudio, err := s.baranovOpenai.CreateSpeech(ctx, textToSpeechReq)
 	if err != nil {
 		return "", "", fmt.Errorf("unable to get speech from text: %s", err.Error())
 	}

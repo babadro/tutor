@@ -11,6 +11,7 @@ import (
 	"cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go"
 	"firebase.google.com/go/storage"
+	"github.com/babadro/tutor/internal/models"
 	"github.com/caarlos0/env"
 	"github.com/joho/godotenv"
 	"github.com/sashabaranov/go-openai"
@@ -62,8 +63,8 @@ func main() {
 			log.Fatalf("unable to upload audio to storage: %s", err.Error())
 		}
 
-		message := PreparedMessage{
-			Type:        JobInterviewQuestion,
+		message := models.PreparedMessage{
+			Type:        models.JobInterviewQuestion,
 			GermanText:  txt,
 			GermanAudio: audioURL,
 		}
