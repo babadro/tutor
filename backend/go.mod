@@ -16,6 +16,7 @@ require (
 	github.com/go-openapi/swag v0.22.7
 	github.com/go-openapi/validate v0.22.6
 	github.com/jessevdk/go-flags v1.5.0
+	github.com/joho/godotenv v1.3.0
 	github.com/justinas/alice v1.2.0
 	github.com/rs/zerolog v1.31.0
 	github.com/sashabaranov/go-openai v1.19.2
