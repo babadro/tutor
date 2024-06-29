@@ -438,6 +438,13 @@ func init() {
         "chatId": {
           "type": "string"
         },
+        "prep_msgs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "PreparedMessages"
+        },
         "time": {
           "type": "integer",
           "format": "int64"
@@ -934,6 +941,13 @@ func init() {
       "properties": {
         "chatId": {
           "type": "string"
+        },
+        "prep_msgs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "PreparedMessages"
         },
         "time": {
           "type": "integer",

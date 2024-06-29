@@ -18,6 +18,9 @@ import (
 // swagger:model Chat
 type Chat struct {
 
+	// prepared messages
+	PreparedMessages []string `json:"prep_msgs"`
+
 	// chat Id
 	ChatID string `json:"chatId,omitempty"`
 

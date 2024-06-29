@@ -342,3 +342,8 @@ definitions:
         type: string
       typ:
         $ref: '#/definitions/ChatType'
+      prep_msgs:
+        type: array
+        items:
+          type: string
+        x-go-name: PreparedMessages
