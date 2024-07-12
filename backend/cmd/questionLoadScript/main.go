@@ -116,10 +116,11 @@ func saveDocToFirestore(ctx context.Context, cl *firestore.Client, doc any) erro
 
 func getAudio(ctx context.Context, text string, cl *openai.Client) ([]byte, error) {
 	textToSpeechReq := openai.CreateSpeechRequest{
-		Model:          "tts-1",
+		Model:          openai.TTSModel1,
 		Input:          text,
-		Voice:          openai.VoiceFable,
+		Voice:          openai.VoiceNova,
 		ResponseFormat: "mp3",
+		Speed:          1,
 	}
 
 	llmAudio, err := cl.CreateSpeech(ctx, textToSpeechReq)
