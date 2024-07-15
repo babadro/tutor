@@ -65,7 +65,7 @@ type llm interface {
 func (s *Service) SendMessage(
 	ctx context.Context, message, userID string, timestamp int64, chatID string,
 ) (string, swagger.Chat, error) {
-	chatType := GeneralChatType // todo
+	chatType := models.GeneralChatType // todo
 	newlyCreatedChat, err := s.saveMessageToDB(ctx, message, userID, chatID, "", chatType, timestamp)
 	if err != nil {
 		return "", swagger.Chat{}, fmt.Errorf("unable to save message to db: %s", err.Error())
@@ -90,7 +90,7 @@ func (s *Service) SendMessage(
 
 // saveMessageToDB saves the message to the database and returns the newly created chat if it was created.
 func (s *Service) saveMessageToDB(
-	ctx context.Context, message, userID, chatID, audioURL string, chatTyp ChatType, timestamp int64,
+	ctx context.Context, message, userID, chatID, audioURL string, chatTyp models.ChatType, timestamp int64,
 ) (swagger.Chat, error) {
 	var newlyCreatedChat swagger.Chat
 
@@ -152,7 +152,11 @@ func cutChatTitle(str string) string {
 }
 
 func (s *Service) SendVoiceMessage(
-	ctx context.Context, userAudio []byte, userID string, chatID string, userMsgTimestamp int64,
+	ctx context.Context,
+	userAudio []byte,
+	userID string,
+	chatID string,
+	userMsgTimestamp int64,
 ) (models.SendVoiceMessageResult, error) {
 	req := azopenai.AudioTranscriptionOptions{
 		File:           userAudio,
@@ -171,11 +175,17 @@ func (s *Service) SendVoiceMessage(
 
 	userText := *userTranscript.Text
 
-	content := []llms.MessageContent{
-		llms.TextParts(llms.ChatMessageTypeHuman, userText),
+	chatType, err := s.getChatType(ctx, chatID)
+	if err != nil {
+		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to get chat type: %s", err.Error())
 	}
 
-	llmReplyText, llmReplyAudioURL, err := s.generateTextAndAudioContent(ctx, content, userID, "gpt-3")
+	content, err := s.getContent(userText, chatType)
+	if err != nil {
+		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to get content: %s", err.Error())
+	}
+
+	llmReplyText, llmReplyAudioURL, err := s.generateTextAndAudioContent(ctx, content, userID, "gpt-3.5-turbo-0125")
 	if err != nil {
 		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to get AI text and audio reply: %s", err.Error())
 	}
@@ -187,8 +197,6 @@ func (s *Service) SendVoiceMessage(
 	if err != nil {
 		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to upload voice message to storage: %s", err.Error())
 	}
-
-	chatType := GeneralChatType // todo
 
 	createdChat, err := s.saveMessageToDB(ctx, userText, userID, chatID, userAudioURL, chatType, userMsgTimestamp)
 	if err != nil {
@@ -213,6 +221,46 @@ func (s *Service) SendVoiceMessage(
 		LLMText:      llmReplyText,
 		CreatedChat:  createdChat,
 		LLMTimestamp: llmReplyTimestamp,
+	}, nil
+}
+
+func (s *Service) getChatType(ctx context.Context, chatID string) (models.ChatType, error) {
+	docRef := s.firestoreClient.Collection("chats").Doc(chatID)
+
+	// Attempt to retrieve the document
+	docSnapshot, err := docRef.Get(ctx)
+	if err != nil {
+		return models.UnknownChatType, fmt.Errorf("failed to retrieve chat by id: %s", err.Error())
+	}
+
+	// Read the user_id property from the document
+	chatType, err := docSnapshot.DataAt("type")
+	if err != nil {
+		return models.UnknownChatType, fmt.Errorf("failed to read type from chat: %s", err.Error())
+	}
+
+	// Assert the type of userID if necessary, assuming it's a string
+	chatTypeInt, ok := chatType.(int64)
+	if !ok {
+		return models.UnknownChatType, fmt.Errorf("type in chat is not an int64, got: %T", chatType)
+	}
+
+	return models.GetChatTypeFromNumber(chatTypeInt)
+}
+
+func (s *Service) getContent(userTxt string, chatType models.ChatType,
+) ([]llms.MessageContent, error) {
+	if chatType == models.JobInterviewSeparateQuestionsChatType {
+		return s.getInterviewSeparateQuestionsContent(userTxt)
+	}
+
+	return []llms.MessageContent{llms.TextParts(llms.ChatMessageTypeHuman, userTxt)}, nil
+}
+
+func (s *Service) getInterviewSeparateQuestionsContent(userTxt string) ([]llms.MessageContent, error) {
+	return []llms.MessageContent{
+		llms.TextParts(llms.ChatMessageTypeSystem, "You are a German language teacher. You are preparing for a job interview. Correct the following text in case of mistakes:"),
+		llms.TextParts(llms.ChatMessageTypeHuman, userTxt),
 	}, nil
 }
 
@@ -346,11 +394,11 @@ func (s *Service) GetChatMessages(
 
 type chat struct {
 	ID               string
-	UserID           string   `firestore:"user_id"`
-	Timestamp        int64    `firestore:"time"`
-	Title            string   `firestore:"title"`
-	PreparedMessages []string `firestore:"prep_msgs"`
-	Type             ChatType `firestore:"type"`
+	UserID           string          `firestore:"user_id"`
+	Timestamp        int64           `firestore:"time"`
+	Title            string          `firestore:"title"`
+	PreparedMessages []string        `firestore:"prep_msgs"`
+	Type             models.ChatType `firestore:"type"`
 }
 
 func (c *chat) toSwagger() swagger.Chat {
@@ -401,18 +449,10 @@ func (s *Service) GetChats(ctx context.Context, userID string, limit int32, time
 	return chats, nil
 }
 
-type ChatType int16
-
-const (
-	UnknownChatType                       = ChatType(0)
-	GeneralChatType                       = ChatType(1)
-	JobInterviewSeparateQuestionsChatType = ChatType(2)
-)
-
 func (s *Service) CreateChat(
-	ctx context.Context, userID string, chatType ChatType, timestamp int64,
+	ctx context.Context, userID string, chatType models.ChatType, timestamp int64,
 ) (swagger.Chat, error) {
-	if chatType != JobInterviewSeparateQuestionsChatType {
+	if chatType != models.JobInterviewSeparateQuestionsChatType {
 		return swagger.Chat{}, fmt.Errorf("can't create chat for type: %d", chatType)
 	}
 
@@ -481,14 +521,14 @@ func (s *Service) createSeparateJobQuestionsChat(
 		PreparedMessages: messageIDs,
 		Time:             timestamp,
 		Title:            cutChatTitle(firstMsg.GermanText),
-		Typ:              swagger.ChatType(JobInterviewSeparateQuestionsChatType),
+		Typ:              swagger.ChatType(models.JobInterviewSeparateQuestionsChatType),
 	}
 
 	newChat, _, err := s.firestoreClient.
 		Collection("chats").
 		Add(ctx, chat{
 			UserID:           userID,
-			Type:             JobInterviewSeparateQuestionsChatType,
+			Type:             models.JobInterviewSeparateQuestionsChatType,
 			Timestamp:        time.Now().UnixMilli(),
 			Title:            cutChatTitle(firstMsg.GermanText),
 			PreparedMessages: messageIDs,

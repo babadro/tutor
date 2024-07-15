@@ -24,7 +24,7 @@ type service interface {
 	) ([]*swagger.ChatMessage, error)
 	GetChats(ctx context.Context, userID string, limit int32, timestamp int64) ([]*swagger.Chat, error)
 	CreateChat(
-		ctx context.Context, userID string, chatType service2.ChatType, timestamp int64,
+		ctx context.Context, userID string, chatType models.ChatType, timestamp int64,
 	) (swagger.Chat, error)
 }
 
@@ -141,7 +141,7 @@ func (t *Tutor) CreateChat(
 	// todo check if the userID matches with the chatID, otherwise return unauthorized
 
 	chat, err := t.svc.CreateChat(
-		params.HTTPRequest.Context(), principal.UserID, service2.ChatType(params.Body.ChatType), *params.Body.Time,
+		params.HTTPRequest.Context(), principal.UserID, models.ChatType(params.Body.ChatType), *params.Body.Time,
 	)
 	if err != nil {
 		hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to create chat")
