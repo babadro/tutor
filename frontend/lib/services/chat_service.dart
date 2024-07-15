@@ -91,8 +91,9 @@ class ChatService {
         body: jsonEncode(message.toJson()),
       );
       if (response.statusCode == 200) {
+        final decodedResponseBody = utf8.decode(response.bodyBytes);
         final resp =
-            SendTextMessageResponse.fromJson(jsonDecode(response.body));
+            SendTextMessageResponse.fromJson(jsonDecode(decodedResponseBody));
 
         return ServiceResult.success(
           sendMessageResult(
@@ -149,8 +150,9 @@ class ChatService {
       final response = await http.Response.fromStream(streamedResponse);
 
       if (response.statusCode == 200) {
+        final decodedResponseBody = utf8.decode(response.bodyBytes);
         final resp =
-            SendVoiceMessageResponse.fromJson(jsonDecode(response.body));
+            SendVoiceMessageResponse.fromJson(jsonDecode(decodedResponseBody));
 
         return ServiceResult.success(
           sendVoiceMessageResult(
@@ -203,8 +205,9 @@ class ChatService {
         },
       ).timeout(Duration(seconds: 10));
       if (response.statusCode == 200) {
+        final decodedResponseBody = utf8.decode(response.bodyBytes);
         final chatsResponse = GetChatsResponse.fromJson(
-            jsonDecode(response.body) as Map<String, dynamic>);
+            jsonDecode(decodedResponseBody) as Map<String, dynamic>);
 
         var chats =
             chatsResponse.Chats.map((e) => (localChat.Chat.fromChatResponse(e)))
@@ -239,8 +242,9 @@ class ChatService {
               .toJson()));
 
       if (response.statusCode == 200) {
+        final decodedResponseBody = utf8.decode(response.bodyBytes);
         final chatResponse = CreateChatResponse.fromJson(
-            jsonDecode(response.body) as Map<String, dynamic>);
+            jsonDecode(decodedResponseBody) as Map<String, dynamic>);
 
         final chat = localChat.Chat.fromChatResponse(chatResponse.CreatedChat!);
 
