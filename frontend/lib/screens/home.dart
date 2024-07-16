@@ -174,7 +174,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   selectedChatType = localChat.ChatType.JobInterview;
                                   selectedChatId = '';
                                 default:
-                                  var currChat = chats[value - 2];
+                                  var currChat = chats[value - 3];
                                   selectedChatType = currChat.Type;
                                   selectedChatId = currChat.ChatId;
                               }
