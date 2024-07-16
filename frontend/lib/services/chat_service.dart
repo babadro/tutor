@@ -238,7 +238,7 @@ class ChatService {
           },
           body: jsonEncode(CreateChatRequest(
                   ChatType: localChat.chatTypeToInt(type),
-                  Timestamp: DateTime.now().microsecondsSinceEpoch)
+                  Timestamp: DateTime.now().millisecondsSinceEpoch)
               .toJson()));
 
       if (response.statusCode == 200) {
