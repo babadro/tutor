@@ -438,6 +438,12 @@ func init() {
         "chatId": {
           "type": "string"
         },
+        "cur_q": {
+          "description": "The current question in the chat. 0 based index.",
+          "type": "integer",
+          "format": "int32",
+          "x-go-name": "CurrentQuestionIDx"
+        },
         "prep_msgs": {
           "type": "array",
           "items": {
@@ -939,6 +945,12 @@ func init() {
       "properties": {
         "chatId": {
           "type": "string"
+        },
+        "cur_q": {
+          "description": "The current question in the chat. 0 based index.",
+          "type": "integer",
+          "format": "int32",
+          "x-go-name": "CurrentQuestionIDx"
         },
         "prep_msgs": {
           "type": "array",

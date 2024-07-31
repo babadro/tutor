@@ -425,6 +425,7 @@ type chat struct {
 	Title            string          `firestore:"title"`
 	PreparedMessages []string        `firestore:"prep_msgs"`
 	Type             models.ChatType `firestore:"type"`
+	CurrQuestionIDx  int             `firestore:"curr_q"`
 }
 
 func (c *chat) toSwagger() swagger.Chat {

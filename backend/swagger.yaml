@@ -345,3 +345,8 @@ definitions:
         items:
           type: string
         x-go-name: PreparedMessages
+      cur_q:
+        type: integer
+        format: int32
+        x-go-name: CurrentQuestionIDx
+        description: The current question in the chat. 0 based index.
