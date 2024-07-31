@@ -323,7 +323,10 @@ paths:
         200:
           description: Successful response
           schema:
-            $ref: '#/definitions/ChatMessage'
+            type: object
+            properties:
+              msg:
+                $ref: '#/definitions/ChatMessage'
         400:
           description: "Bad request"
           schema:

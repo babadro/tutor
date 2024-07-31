@@ -470,7 +470,12 @@ func init() {
           "200": {
             "description": "Successful response",
             "schema": {
-              "$ref": "#/definitions/ChatMessage"
+              "type": "object",
+              "properties": {
+                "msg": {
+                  "$ref": "#/definitions/ChatMessage"
+                }
+              }
             }
           },
           "400": {
@@ -1048,7 +1053,12 @@ func init() {
           "200": {
             "description": "Successful response",
             "schema": {
-              "$ref": "#/definitions/ChatMessage"
+              "type": "object",
+              "properties": {
+                "msg": {
+                  "$ref": "#/definitions/ChatMessage"
+                }
+              }
             }
           },
           "400": {

@@ -26,7 +26,7 @@ type GoToMessageOK struct {
 	/*
 	  In: Body
 	*/
-	Payload *swagger.ChatMessage `json:"body,omitempty"`
+	Payload *GoToMessageOKBody `json:"body,omitempty"`
 }
 
 // NewGoToMessageOK creates GoToMessageOK with default headers values
@@ -36,13 +36,13 @@ func NewGoToMessageOK() *GoToMessageOK {
 }
 
 // WithPayload adds the payload to the go to message o k response
-func (o *GoToMessageOK) WithPayload(payload *swagger.ChatMessage) *GoToMessageOK {
+func (o *GoToMessageOK) WithPayload(payload *GoToMessageOKBody) *GoToMessageOK {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the go to message o k response
-func (o *GoToMessageOK) SetPayload(payload *swagger.ChatMessage) {
+func (o *GoToMessageOK) SetPayload(payload *GoToMessageOKBody) {
 	o.Payload = payload
 }
 

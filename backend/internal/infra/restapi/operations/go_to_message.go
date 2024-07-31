@@ -16,6 +16,7 @@ import (
 	"github.com/go-openapi/validate"
 
 	"github.com/babadro/tutor/internal/models"
+	"github.com/babadro/tutor/internal/models/swagger"
 )
 
 // GoToMessageHandlerFunc turns a function with the right signature into a go to message handler
@@ -145,6 +146,92 @@ func (o *GoToMessageBody) MarshalBinary() ([]byte, error) {
 // UnmarshalBinary interface implementation
 func (o *GoToMessageBody) UnmarshalBinary(b []byte) error {
 	var res GoToMessageBody
+	if err := swag.ReadJSON(b, &res); err != nil {
+		return err
+	}
+	*o = res
+	return nil
+}
+
+// GoToMessageOKBody go to message o k body
+//
+// swagger:model GoToMessageOKBody
+type GoToMessageOKBody struct {
+
+	// msg
+	Msg *swagger.ChatMessage `json:"msg,omitempty"`
+}
+
+// Validate validates this go to message o k body
+func (o *GoToMessageOKBody) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := o.validateMsg(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (o *GoToMessageOKBody) validateMsg(formats strfmt.Registry) error {
+	if swag.IsZero(o.Msg) { // not required
+		return nil
+	}
+
+	if o.Msg != nil {
+		if err := o.Msg.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("goToMessageOK" + "." + "msg")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+// ContextValidate validate this go to message o k body based on the context it is used
+func (o *GoToMessageOKBody) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := o.contextValidateMsg(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (o *GoToMessageOKBody) contextValidateMsg(ctx context.Context, formats strfmt.Registry) error {
+
+	if o.Msg != nil {
+		if err := o.Msg.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("goToMessageOK" + "." + "msg")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+// MarshalBinary interface implementation
+func (o *GoToMessageOKBody) MarshalBinary() ([]byte, error) {
+	if o == nil {
+		return nil, nil
+	}
+	return swag.WriteJSON(o)
+}
+
+// UnmarshalBinary interface implementation
+func (o *GoToMessageOKBody) UnmarshalBinary(b []byte) error {
+	var res GoToMessageOKBody
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

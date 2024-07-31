@@ -125,6 +125,7 @@ func configureAPI(api *operations.TutorAPI) http.Handler {
 	api.GetChatMessagesHandler = operations.GetChatMessagesHandlerFunc(tutorAPI.GetChatMessages)
 	api.GetChatsHandler = operations.GetChatsHandlerFunc(tutorAPI.GetChats)
 	api.CreateChatHandler = operations.CreateChatHandlerFunc(tutorAPI.CreateChat)
+	api.GoToMessageHandler = operations.GoToMessageHandlerFunc(tutorAPI.GoToMessage)
 
 	api.PreServerShutdown = func() {}
 
