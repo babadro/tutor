@@ -429,6 +429,76 @@ func init() {
           }
         }
       }
+    },
+    "/go-to-message": {
+      "post": {
+        "description": "This endpoint goes to a specific prepared message in the chat.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Goes to a specific prepared message in the chat.",
+        "operationId": "GoToMessage",
+        "parameters": [
+          {
+            "description": "Information about the chat and the message index",
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "required": [
+                "chatId",
+                "msgIdx"
+              ],
+              "properties": {
+                "chatId": {
+                  "description": "The chat ID.",
+                  "type": "string"
+                },
+                "msgIdx": {
+                  "description": "The index of the message.",
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "schema": {
+              "$ref": "#/definitions/ChatMessage"
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -909,6 +979,76 @@ func init() {
                   "$ref": "#/definitions/Chat"
                 }
               }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
+    "/go-to-message": {
+      "post": {
+        "description": "This endpoint goes to a specific prepared message in the chat.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Goes to a specific prepared message in the chat.",
+        "operationId": "GoToMessage",
+        "parameters": [
+          {
+            "description": "Information about the chat and the message index",
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "required": [
+                "chatId",
+                "msgIdx"
+              ],
+              "properties": {
+                "chatId": {
+                  "description": "The chat ID.",
+                  "type": "string"
+                },
+                "msgIdx": {
+                  "description": "The index of the message.",
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "schema": {
+              "$ref": "#/definitions/ChatMessage"
             }
           },
           "400": {
