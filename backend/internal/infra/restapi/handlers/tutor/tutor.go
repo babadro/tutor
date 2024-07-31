@@ -26,6 +26,9 @@ type service interface {
 	CreateChat(
 		ctx context.Context, userID string, chatType models.ChatType, timestamp int64,
 	) (swagger.Chat, error)
+	GoToMessage(
+		ctx context.Context, userID, chatID string, messageIDx int32,
+	) (swagger.ChatMessage, error)
 }
 
 type Tutor struct {
@@ -149,4 +152,21 @@ func (t *Tutor) CreateChat(
 	}
 
 	return operations.NewCreateChatOK().WithPayload(&operations.CreateChatOKBody{Chat: &chat})
+}
+
+func (t *Tutor) GoToMessage(
+	params operations.GoToMessageParams, principal *models.Principal,
+) middleware.Responder {
+	// todo check if the userID matches with the chatID, otherwise return unauthorized
+
+	msg, err := t.svc.GoToMessage(
+		params.HTTPRequest.Context(), principal.UserID, *params.Body.ChatID, *params.Body.MsgIdx,
+	)
+
+	if err != nil {
+		hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to go to message")
+		return operations.NewGoToMessageBadRequest()
+	}
+
+	return operations.NewGoToMessageOK().WithPayload(&operations.GoToMessageOKBody{Msg: &msg})
 }

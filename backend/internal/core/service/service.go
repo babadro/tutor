@@ -637,3 +637,41 @@ func (s *Service) generateTextAndAudioContent(
 
 	return text, audioURL, nil
 }
+
+func (s *Service) GoToMessage(
+	ctx context.Context, userID, chatID string, messageIDx int32) (swagger.ChatMessage, error) {
+
+	doc, err := s.firestoreClient.Collection("chats").Doc(chatID).Get(ctx)
+	if err != nil {
+		return swagger.ChatMessage{}, fmt.Errorf("unable to get chat by id: %s", err.Error())
+	}
+
+	prepMsgInDB, err := doc.DataAt("prep_msgs")
+	if err != nil {
+		return swagger.ChatMessage{}, fmt.Errorf("unable to get prepared messages from chat: %s", err.Error())
+	}
+
+	preparedMessages, ok := prepMsgInDB.([]string)
+	if !ok {
+		return swagger.ChatMessage{}, fmt.Errorf("expected prepared messages to be []string, got: %T", prepMsgInDB)
+	}
+
+	if int(messageIDx) >= len(preparedMessages) {
+		return swagger.ChatMessage{}, fmt.Errorf("message index is out of range")
+	}
+
+	messageID := preparedMessages[messageIDx]
+
+	doc, err = s.firestoreClient.Collection("prepared_messages").Doc(messageID).Get(ctx)
+	if err != nil {
+		return swagger.ChatMessage{}, fmt.Errorf("unable to get prepared message by id: %s", err.Error())
+	}
+
+	var message models.PreparedMessage
+	if err = doc.DataTo(&message); err != nil {
+		return swagger.ChatMessage{}, fmt.Errorf("unable to get prepared message data: %s", err.Error())
+	}
+
+	// todo implement me
+	return swagger.ChatMessage{}, nil
+}
