@@ -62,27 +62,41 @@ type llm interface {
 	GenerateContent(ctx context.Context, messages []llms.MessageContent, options ...llms.CallOption) (*llms.ContentResponse, error)
 }
 
+const llmModel = "gpt-3.5-turbo-0125"
+
 func (s *Service) SendMessage(
-	ctx context.Context, message, userID string, timestamp int64, chatID string,
+	ctx context.Context, userText, userID string, timestamp int64, chatID string,
 ) (string, swagger.Chat, error) {
-	chatType := models.GeneralChatType // todo
-	newlyCreatedChat, err := s.saveMessageToDB(ctx, message, userID, chatID, "", chatType, timestamp)
+	chatType := models.GeneralChatType
+	if chatID != "" {
+		var err error
+		if chatType, err = s.getChatType(ctx, chatID); err != nil {
+			return "", swagger.Chat{}, fmt.Errorf("unable to get chat type: %s", err.Error())
+		}
+	}
+
+	newlyCreatedChat, err := s.saveMessageToDB(ctx, userText, userID, chatID, "", chatType, timestamp)
 	if err != nil {
-		return "", swagger.Chat{}, fmt.Errorf("unable to save message to db: %s", err.Error())
+		return "", swagger.Chat{}, fmt.Errorf("unable to save userText to db: %s", err.Error())
 	}
 
 	if chatID == "" {
 		chatID = newlyCreatedChat.ChatID
 	}
 
-	aiResponse, err := s.llm.Call(ctx, message)
+	llmIn, err := s.getLlmInput(userText, chatType)
+	if err != nil {
+		return "", swagger.Chat{}, fmt.Errorf("unable to get llmInput: %s", err.Error())
+	}
+
+	aiResponse, err := s.generateTextContent(ctx, llmIn, llmModel)
 	if err != nil {
 		return "", swagger.Chat{}, fmt.Errorf("unable to get AI response from llm: %s", err.Error())
 	}
 
 	_, err = s.saveMessageToDB(ctx, aiResponse, "", chatID, "", chatType, time.Now().UnixMilli())
 	if err != nil {
-		return "", swagger.Chat{}, fmt.Errorf("unable to add AI response message to firestore: %s", err.Error())
+		return "", swagger.Chat{}, fmt.Errorf("unable to add AI response userText to firestore: %s", err.Error())
 	}
 
 	return aiResponse, newlyCreatedChat, nil
@@ -180,12 +194,12 @@ func (s *Service) SendVoiceMessage(
 		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to get chat type: %s", err.Error())
 	}
 
-	content, err := s.getContent(userText, chatType)
+	llmIn, err := s.getLlmInput(userText, chatType)
 	if err != nil {
-		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to get content: %s", err.Error())
+		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to get llmInput: %s", err.Error())
 	}
 
-	llmReplyText, llmReplyAudioURL, err := s.generateTextAndAudioContent(ctx, content, userID, "gpt-3.5-turbo-0125")
+	llmReplyText, llmReplyAudioURL, err := s.generateTextAndAudioContent(ctx, llmIn, userID, llmModel)
 	if err != nil {
 		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to get AI text and audio reply: %s", err.Error())
 	}
@@ -248,13 +262,25 @@ func (s *Service) getChatType(ctx context.Context, chatID string) (models.ChatTy
 	return models.GetChatTypeFromNumber(chatTypeInt)
 }
 
-func (s *Service) getContent(userTxt string, chatType models.ChatType,
-) ([]llms.MessageContent, error) {
+type llmInput struct {
+	content   []llms.MessageContent
+	maxTokens int
+}
+
+func (s *Service) getLlmInput(userTxt string, chatType models.ChatType,
+) (llmInput, error) {
 	if chatType == models.JobInterviewSeparateQuestionsChatType {
-		return s.getInterviewSeparateQuestionsContent(userTxt)
+		content, err := s.getInterviewSeparateQuestionsContent(userTxt)
+		if err != nil {
+			return llmInput{}, fmt.Errorf("unable to get interview separate questions content: %s", err.Error())
+		}
+
+		return llmInput{content: content, maxTokens: 200}, nil
 	}
 
-	return []llms.MessageContent{llms.TextParts(llms.ChatMessageTypeHuman, userTxt)}, nil
+	return llmInput{
+		content: []llms.MessageContent{llms.TextParts(llms.ChatMessageTypeHuman, userTxt)},
+	}, nil
 }
 
 func (s *Service) getInterviewSeparateQuestionsContent(userTxt string) ([]llms.MessageContent, error) {
@@ -462,7 +488,7 @@ func (s *Service) CreateChat(
 	}
 
 	_, err = s.saveMessageToDB(
-		ctx, firstQuestion.GermanText, userID, createdChat.ChatID, firstQuestion.GermanAudio, chatType, timestamp)
+		ctx, firstQuestion.GermanText, "", createdChat.ChatID, firstQuestion.GermanAudio, chatType, timestamp)
 
 	if err != nil {
 		return swagger.Chat{}, fmt.Errorf("unable to save first message to db: %s", err.Error())
@@ -544,23 +570,34 @@ func (s *Service) createSeparateJobQuestionsChat(
 	return createdChat, firstMsg, nil
 }
 
-func (s *Service) generateTextAndAudioContent(
-	ctx context.Context, content []llms.MessageContent, userID, model string,
-) (string, string, error) {
-	resp, err := s.llm.GenerateContent(ctx, content,
-		llms.WithMaxTokens(200),
-		llms.WithModel(model),
-	)
+func (s *Service) generateTextContent(
+	ctx context.Context, in llmInput, model string) (string, error) {
+	options := []llms.CallOption{llms.WithModel(model)}
+
+	if in.maxTokens != 0 {
+		options = append(options, llms.WithMaxTokens(in.maxTokens))
+	}
+
+	resp, err := s.llm.GenerateContent(ctx, in.content, options...)
 
 	if err != nil {
-		return "", "", fmt.Errorf("unable to get content from llm: %s", err.Error())
+		return "", fmt.Errorf("unable to get content from llm: %s", err.Error())
 	}
 
 	if len(resp.Choices) == 0 {
-		return "", "", errors.New("no choices in response")
+		return "", errors.New("no choices in response")
 	}
 
-	text := resp.Choices[0].Content
+	return resp.Choices[0].Content, nil
+}
+
+func (s *Service) generateTextAndAudioContent(
+	ctx context.Context, llmIn llmInput, userID, model string,
+) (string, string, error) {
+	text, err := s.generateTextContent(ctx, llmIn, model)
+	if err != nil {
+		return "", "", fmt.Errorf("unable to get text from llm: %s", err.Error())
+	}
 
 	/* todo unkomment when front is ready
 	textToSpeechReq := openai.CreateSpeechRequest{
