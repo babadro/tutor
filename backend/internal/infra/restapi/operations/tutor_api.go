@@ -54,6 +54,9 @@ func NewTutorAPI(spec *loads.Document) *TutorAPI {
 		GetChatsHandler: GetChatsHandlerFunc(func(params GetChatsParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation GetChats has not yet been implemented")
 		}),
+		GoToMessageHandler: GoToMessageHandlerFunc(func(params GoToMessageParams, principal *models.Principal) middleware.Responder {
+			return middleware.NotImplemented("operation GoToMessage has not yet been implemented")
+		}),
 		SendChatMessageHandler: SendChatMessageHandlerFunc(func(params SendChatMessageParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation SendChatMessage has not yet been implemented")
 		}),
@@ -117,6 +120,8 @@ type TutorAPI struct {
 	GetChatMessagesHandler GetChatMessagesHandler
 	// GetChatsHandler sets the operation handler for the get chats operation
 	GetChatsHandler GetChatsHandler
+	// GoToMessageHandler sets the operation handler for the go to message operation
+	GoToMessageHandler GoToMessageHandler
 	// SendChatMessageHandler sets the operation handler for the send chat message operation
 	SendChatMessageHandler SendChatMessageHandler
 	// SendVoiceMessageHandler sets the operation handler for the send voice message operation
@@ -212,6 +217,9 @@ func (o *TutorAPI) Validate() error {
 	}
 	if o.GetChatsHandler == nil {
 		unregistered = append(unregistered, "GetChatsHandler")
+	}
+	if o.GoToMessageHandler == nil {
+		unregistered = append(unregistered, "GoToMessageHandler")
 	}
 	if o.SendChatMessageHandler == nil {
 		unregistered = append(unregistered, "SendChatMessageHandler")
@@ -332,6 +340,10 @@ func (o *TutorAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/chats"] = NewGetChats(o.context, o.GetChatsHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/go-to-message"] = NewGoToMessage(o.context, o.GoToMessageHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
