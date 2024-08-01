@@ -69,8 +69,12 @@ func (s *Service) SendMessage(
 ) (string, swagger.Chat, error) {
 	chatType := models.GeneralChatType
 	if chatID != "" {
-		var err error
-		if chatType, err = s.getChatType(ctx, chatID); err != nil {
+		userChat, err := s.getChatIfUserAutorized(ctx, chatID, userID)
+		if err != nil {
+			return "", swagger.Chat{}, fmt.Errorf("unable to get chat: %w", err)
+		}
+
+		if chatType, err = models.GetChatTypeFromNumber(userChat.Type); err != nil {
 			return "", swagger.Chat{}, fmt.Errorf("unable to get chat type: %s", err.Error())
 		}
 	}
@@ -172,6 +176,19 @@ func (s *Service) SendVoiceMessage(
 	chatID string,
 	userMsgTimestamp int64,
 ) (models.SendVoiceMessageResult, error) {
+	chatType := models.GeneralChatType
+	if chatID != "" {
+		userChat, err := s.getChatIfUserAutorized(ctx, chatID, userID)
+		if err != nil {
+			return models.SendVoiceMessageResult{}, fmt.Errorf("unable to get chat: %w", err)
+		}
+
+		if chatType, err = models.GetChatTypeFromNumber(userChat.Type); err != nil {
+			return models.SendVoiceMessageResult{},
+				fmt.Errorf("unable to get chat type: %s", err.Error())
+		}
+	}
+
 	req := azopenai.AudioTranscriptionOptions{
 		File:           userAudio,
 		ResponseFormat: to.Ptr(azopenai.AudioTranscriptionFormatText),
@@ -188,11 +205,6 @@ func (s *Service) SendVoiceMessage(
 	}
 
 	userText := *userTranscript.Text
-
-	chatType, err := s.getChatType(ctx, chatID)
-	if err != nil {
-		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to get chat type: %s", err.Error())
-	}
 
 	llmIn, err := s.getLlmInput(userText, chatType)
 	if err != nil {
@@ -236,30 +248,6 @@ func (s *Service) SendVoiceMessage(
 		CreatedChat:  createdChat,
 		LLMTimestamp: llmReplyTimestamp,
 	}, nil
-}
-
-func (s *Service) getChatType(ctx context.Context, chatID string) (models.ChatType, error) {
-	docRef := s.firestoreClient.Collection("chats").Doc(chatID)
-
-	// Attempt to retrieve the document
-	docSnapshot, err := docRef.Get(ctx)
-	if err != nil {
-		return models.UnknownChatType, fmt.Errorf("failed to retrieve chat by id: %s", err.Error())
-	}
-
-	// Read the user_id property from the document
-	chatType, err := docSnapshot.DataAt("type")
-	if err != nil {
-		return models.UnknownChatType, fmt.Errorf("failed to read type from chat: %s", err.Error())
-	}
-
-	// Assert the type of userID if necessary, assuming it's a string
-	chatTypeInt, ok := chatType.(int64)
-	if !ok {
-		return models.UnknownChatType, fmt.Errorf("type in chat is not an int64, got: %T", chatType)
-	}
-
-	return models.GetChatTypeFromNumber(chatTypeInt)
 }
 
 type llmInput struct {
@@ -348,28 +336,9 @@ func (c *ChatMessage) toSwagger() swagger.ChatMessage {
 func (s *Service) GetChatMessages(
 	ctx context.Context, chatID string, userID string, limit int32, timestamp int64,
 ) ([]*swagger.ChatMessage, error) {
-	docRef := s.firestoreClient.Collection("chats").Doc(chatID)
-
-	// Attempt to retrieve the document
-	docSnapshot, err := docRef.Get(ctx)
+	_, err := s.getChatIfUserAutorized(ctx, chatID, userID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve chat by id: %s", err.Error())
-	}
-
-	// Read the user_id property from the document
-	userIDinDB, err := docSnapshot.DataAt("user_id")
-	if err != nil {
-		return nil, fmt.Errorf("failed to read user_id from chat: %s", err.Error())
-	}
-
-	// Assert the type of userID if necessary, assuming it's a string
-	userIDinDBStr, ok := userIDinDB.(string)
-	if !ok {
-		return nil, fmt.Errorf("user_id in chat is not a string")
-	}
-
-	if userIDinDBStr != userID {
-		return nil, ErrUserNotAuthorizedToViewThisChat
+		return nil, fmt.Errorf("unable to get chat: %w", err)
 	}
 
 	var messages []ChatMessage
@@ -639,30 +608,20 @@ func (s *Service) generateTextAndAudioContent(
 }
 
 func (s *Service) GoToMessage(
-	ctx context.Context, userID, chatID string, messageIDx int32) (swagger.ChatMessage, error) {
-
-	doc, err := s.firestoreClient.Collection("chats").Doc(chatID).Get(ctx)
+	ctx context.Context, userID, chatID string, messageIDx int32,
+) (swagger.ChatMessage, error) {
+	userChat, err := s.getChatIfUserAutorized(ctx, chatID, userID)
 	if err != nil {
-		return swagger.ChatMessage{}, fmt.Errorf("unable to get chat by id: %s", err.Error())
+		return swagger.ChatMessage{}, fmt.Errorf("unable to get chat: %w", err)
 	}
 
-	prepMsgInDB, err := doc.DataAt("prep_msgs")
-	if err != nil {
-		return swagger.ChatMessage{}, fmt.Errorf("unable to get prepared messages from chat: %s", err.Error())
-	}
-
-	preparedMessages, ok := prepMsgInDB.([]string)
-	if !ok {
-		return swagger.ChatMessage{}, fmt.Errorf("expected prepared messages to be []string, got: %T", prepMsgInDB)
-	}
-
-	if int(messageIDx) >= len(preparedMessages) {
+	if int(messageIDx) >= len(userChat.PreparedMessages) {
 		return swagger.ChatMessage{}, fmt.Errorf("message index is out of range")
 	}
 
-	messageID := preparedMessages[messageIDx]
+	messageID := userChat.PreparedMessages[messageIDx]
 
-	doc, err = s.firestoreClient.Collection("prepared_messages").Doc(messageID).Get(ctx)
+	doc, err := s.firestoreClient.Collection("prepared_messages").Doc(messageID).Get(ctx)
 	if err != nil {
 		return swagger.ChatMessage{}, fmt.Errorf("unable to get prepared message by id: %s", err.Error())
 	}
@@ -674,4 +633,29 @@ func (s *Service) GoToMessage(
 
 	// todo implement me
 	return swagger.ChatMessage{}, nil
+}
+
+// getUsersChatIfAutorized checks if the user is authorized to view the chat.
+func (s *Service) getChatIfUserAutorized(
+	ctx context.Context, chatID, userID string,
+) (chat, error) {
+	docRef := s.firestoreClient.Collection("chats").Doc(chatID)
+
+	// Attempt to retrieve the document
+	docSnapshot, err := docRef.Get(ctx)
+	if err != nil {
+		return chat{}, fmt.Errorf("failed to retrieve chat by id: %s", err.Error())
+	}
+
+	var chatModel chat
+
+	if err = docSnapshot.DataTo(&chatModel); err != nil {
+		return chat{}, fmt.Errorf("unable to get chat data: %s", err.Error())
+	}
+
+	if chatModel.UserID != userID {
+		return chat{}, ErrUserNotAuthorizedToViewThisChat
+	}
+
+	return chatModel, nil
 }
