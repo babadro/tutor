@@ -631,8 +631,21 @@ func (s *Service) GoToMessage(
 		return swagger.ChatMessage{}, fmt.Errorf("unable to get prepared message data: %s", err.Error())
 	}
 
-	// todo implement me
-	return swagger.ChatMessage{}, nil
+	timestamp := time.Now().UnixMilli()
+	_, err = s.saveMessageToDB(
+		ctx, message.GermanText, "", chatID, message.GermanAudio, userChat.Type, timestamp,
+	)
+	if err != nil {
+		return swagger.ChatMessage{}, fmt.Errorf("unable to save message to db: %s", err.Error())
+	}
+
+	return swagger.ChatMessage{
+		AudioURL:          message.GermanAudio,
+		IsFromCurrentUser: false,
+		Text:              message.GermanText,
+		Timestamp:         timestamp,
+		UserID:            userID,
+	}, nil
 }
 
 // getUsersChatIfAutorized checks if the user is authorized to view the chat.
