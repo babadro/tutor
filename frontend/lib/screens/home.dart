@@ -15,8 +15,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   var selectedIndex = 0;
-  var selectedChatId = '';
-  var selectedChatType = localChat.ChatType.General;
+  localChat.Chat? selectedChat;
   late ChatService _chatService;
   AudioRecorderService? _audioRecorderService = AudioRecorderService();
 
@@ -79,8 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (chatModel.isNewChatCreated) {
       selectedIndex =
           3; // home, new generic chat, job interview chat, then old chats
-      selectedChatId = chats[0].ChatId;
-      selectedChatType = chats[0].Type;
+      selectedChat = chats[0];
       chatModel.resetIsNewChatCreated();
     }
 
@@ -154,8 +152,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 builder: (context, constraint) {
                   return SingleChildScrollView(
                     child: ConstrainedBox(
-                      constraints: BoxConstraints(minHeight: constraint
-                          .maxHeight),
+                      constraints:
+                          BoxConstraints(minHeight: constraint.maxHeight),
                       child: IntrinsicHeight(
                         child: NavigationRail(
                           extended: constraints.maxWidth >= 600,
@@ -168,15 +166,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
                               switch (value) {
                                 case 0 || 1:
-                                  selectedChatType = localChat.ChatType.General;
-                                  selectedChatId = '';
+                                  selectedChat = localChat.Chat.emptyWithType(localChat.ChatType.General);
                                 case 2:
-                                  selectedChatType = localChat.ChatType.JobInterview;
-                                  selectedChatId = '';
+                                  selectedChat = localChat.Chat.emptyWithType(localChat.ChatType.JobInterview);
                                 default:
-                                  var currChat = chats[value - 3];
-                                  selectedChatType = currChat.Type;
-                                  selectedChatId = currChat.ChatId;
+                                  selectedChat = chats[value - 3];
                               }
                             });
                           },
@@ -192,10 +186,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: Theme.of(context).colorScheme.primaryContainer,
                 child: (selectedIndex > 0)
                     ? ChatDetailPage(
-                        key: Key(selectedChatId),
-                        initialChatId: selectedChatId,
+                        key: Key(selectedChat!.ChatId),
+                        initialChatId: selectedChat!.ChatId,
                         mRecorder: _audioRecorderService!,
-                        chatType: selectedChatType,
+                        chatType: selectedChat!.Type,
+                        initialCurrentPreparedMsgIDx: selectedChat!.CurrentQuestionIDx,
                       )
                     : Placeholder(),
               ),

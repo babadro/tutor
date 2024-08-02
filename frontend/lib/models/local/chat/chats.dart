@@ -27,6 +27,12 @@ class Chat {
       Type: chatTypeFromInt(chat.ChatType),
     );
   }
+
+  Chat.emptyWithType(ChatType type)
+      : ChatId = '',
+        Timestamp = 0,
+        Title = '',
+        Type = type;
 }
 
 ChatType chatTypeFromInt(int type) {

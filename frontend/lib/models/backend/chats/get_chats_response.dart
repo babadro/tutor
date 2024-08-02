@@ -29,11 +29,15 @@ class Chat {
   @JsonKey(name: 'typ', defaultValue: 0)
   final int ChatType;
 
+  @JsonKey(name: 'cur_q', defaultValue: 0)
+  final int CurrentQuestionIDx;
+
   Chat({
     required this.ChatId,
     required this.Timestamp,
     required this.Title,
     required this.ChatType,
+    required this.CurrentQuestionIDx,
   });
 
   factory Chat.fromJson(Map<String, dynamic> json) => _$ChatFromJson(json);

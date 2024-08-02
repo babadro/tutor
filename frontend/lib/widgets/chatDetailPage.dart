@@ -20,12 +20,15 @@ class ChatDetailPage extends StatefulWidget {
   final String initialChatId;
   final localChat.ChatType chatType;
   final AudioRecorderService mRecorder;
+  final int initialCurrentPreparedMsgIDx;
 
   ChatDetailPage(
       {Key? key,
       required this.initialChatId,
       required this.mRecorder,
-      required this.chatType})
+      required this.chatType,
+      required this.initialCurrentPreparedMsgIDx,
+      })
       : super(key: key);
 
   @override
@@ -63,10 +66,9 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     super.dispose();
   }
 
-  Future<void> _startDiscussionIfNeeded()  async {
+  Future<void> _startDiscussionIfNeeded() async {
     if (chatId.isEmpty && widget.chatType == localChat.ChatType.JobInterview) {
-      var createChatResult =
-          await _chatService.createChat(widget.chatType);
+      var createChatResult = await _chatService.createChat(widget.chatType);
 
       if (!createChatResult.success) {
         print('Failed to create chat: ${createChatResult.errorMessage}');
@@ -297,6 +299,17 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                         backgroundColor: Colors.blue,
                         elevation: 0,
                       ),
+                      Visibility(
+                          visible: widget.chatType == localChat.ChatType.JobInterview,
+                          child: TextButton.icon(
+                            onPressed: () {
+                              // Add your onPressed logic here
+                            },
+                            icon:
+                                Icon(Icons.navigate_next, color: Colors.black),
+                            label: Text("Next question",
+                                style: TextStyle(color: Colors.black)),
+                          ))
                     ],
                   ),
                 ),
