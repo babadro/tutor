@@ -440,6 +440,7 @@ func (s *Service) GetChats(ctx context.Context, userID string, limit int32, time
 			Title:              cutChatTitle(chatModel.Title),
 			Time:               chatModel.Timestamp,
 			CurrentQuestionIDx: chatModel.CurrQuestionIDx,
+			Typ:                swagger.ChatType(chatModel.Type),
 		})
 	}
 
