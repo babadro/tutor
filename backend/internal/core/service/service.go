@@ -436,11 +436,11 @@ func (s *Service) GetChats(ctx context.Context, userID string, limit int32, time
 			return nil, fmt.Errorf("unable to get chat data: %s", err.Error())
 		}
 		chats = append(chats, &swagger.Chat{
-			ChatID:             doc.Ref.ID,
-			Title:              cutChatTitle(chatModel.Title),
-			Time:               chatModel.Timestamp,
-			CurrentQuestionIDx: chatModel.CurrQuestionIDx,
-			Typ:                swagger.ChatType(chatModel.Type),
+			ChatID:            doc.Ref.ID,
+			Title:             cutChatTitle(chatModel.Title),
+			Time:              chatModel.Timestamp,
+			CurrentMessageIDx: chatModel.CurrQuestionIDx,
+			Typ:               swagger.ChatType(chatModel.Type),
 		})
 	}
 
