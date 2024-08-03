@@ -18,8 +18,8 @@ import (
 // swagger:model Chat
 type Chat struct {
 
-	// The current question in the chat. 0 based index.
-	CurrentQuestionIDx int32 `json:"cur_q,omitempty"`
+	// The current message in the chat. 0 based index.
+	CurrentMessageIDx int32 `json:"cur_m,omitempty"`
 
 	// prepared messages
 	PreparedMessages []string `json:"prep_msgs"`
