@@ -48,6 +48,9 @@ func NewTutorAPI(spec *loads.Document) *TutorAPI {
 		CreateChatHandler: CreateChatHandlerFunc(func(params CreateChatParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation CreateChat has not yet been implemented")
 		}),
+		DeleteChatHandler: DeleteChatHandlerFunc(func(params DeleteChatParams, principal *models.Principal) middleware.Responder {
+			return middleware.NotImplemented("operation DeleteChat has not yet been implemented")
+		}),
 		GetChatMessagesHandler: GetChatMessagesHandlerFunc(func(params GetChatMessagesParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation GetChatMessages has not yet been implemented")
 		}),
@@ -116,6 +119,8 @@ type TutorAPI struct {
 
 	// CreateChatHandler sets the operation handler for the create chat operation
 	CreateChatHandler CreateChatHandler
+	// DeleteChatHandler sets the operation handler for the delete chat operation
+	DeleteChatHandler DeleteChatHandler
 	// GetChatMessagesHandler sets the operation handler for the get chat messages operation
 	GetChatMessagesHandler GetChatMessagesHandler
 	// GetChatsHandler sets the operation handler for the get chats operation
@@ -211,6 +216,9 @@ func (o *TutorAPI) Validate() error {
 
 	if o.CreateChatHandler == nil {
 		unregistered = append(unregistered, "CreateChatHandler")
+	}
+	if o.DeleteChatHandler == nil {
+		unregistered = append(unregistered, "DeleteChatHandler")
 	}
 	if o.GetChatMessagesHandler == nil {
 		unregistered = append(unregistered, "GetChatMessagesHandler")
@@ -332,6 +340,10 @@ func (o *TutorAPI) initHandlerCache() {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
 	o.handlers["POST"]["/chats"] = NewCreateChat(o.context, o.CreateChatHandler)
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/chats"] = NewDeleteChat(o.context, o.DeleteChatHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}

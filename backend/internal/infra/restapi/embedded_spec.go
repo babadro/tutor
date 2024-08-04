@@ -428,6 +428,76 @@ func init() {
             }
           }
         }
+      },
+      "delete": {
+        "description": "This endpoint deletes a chat.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Deletes a chat.",
+        "operationId": "DeleteChat",
+        "parameters": [
+          {
+            "description": "Chat information",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "chatId"
+              ],
+              "properties": {
+                "chatId": {
+                  "description": "The chat ID.",
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "chat": {
+                  "description": "The deleted chat.",
+                  "type": "object",
+                  "$ref": "#/definitions/Chat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
       }
     },
     "/go-to-message": {
@@ -980,6 +1050,76 @@ func init() {
               "properties": {
                 "chat": {
                   "description": "The created chat.",
+                  "type": "object",
+                  "$ref": "#/definitions/Chat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "This endpoint deletes a chat.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Deletes a chat.",
+        "operationId": "DeleteChat",
+        "parameters": [
+          {
+            "description": "Chat information",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "chatId"
+              ],
+              "properties": {
+                "chatId": {
+                  "description": "The chat ID.",
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "chat": {
+                  "description": "The deleted chat.",
                   "type": "object",
                   "$ref": "#/definitions/Chat"
                 }
