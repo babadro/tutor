@@ -13,6 +13,8 @@ import 'package:tutor/models/local/chat/chats.dart' as localChat;
 import 'package:tutor/services/service_response.dart';
 import 'package:tutor/models/backend/chats/get_chats_response.dart';
 import 'package:tutor/models/backend/chat_messages/send_voice_message_response.dart';
+import 'package:tutor/models/backend/go-to-message/go_to_message_request.dart';
+import 'package:tutor/models/backend/go-to-message/go_to_message_response.dart';
 
 class sendMessageResult {
   final local.ChatMessage message;
@@ -255,6 +257,41 @@ class ChatService {
       }
     } catch (e) {
       return ServiceResult.failure(errorMessage: 'Failed to create chat: $e');
+    }
+  }
+
+  Future<ServiceResult<local.ChatMessage>> goToMessage(
+      String chatId, int messageIdx) async {
+    final apiUrl = 'http://localhost:8080/go-to-message';
+    final uri = Uri.parse(apiUrl);
+
+    String? authToken = await _authService.getCurrentUserIdToken();
+
+    try {
+      final response = await http.post(uri,
+          headers: {
+            'Authorization': 'Bearer $authToken',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode(
+              GoToMessageRequest(ChatId: chatId, MessageIndex: messageIdx)
+                  .toJson()));
+
+      if (response.statusCode == 200) {
+        final decodedResponseBody = utf8.decode(response.bodyBytes);
+        final msg = GoToMessageResponse.fromJson(jsonDecode(decodedResponseBody)).Message;
+        return ServiceResult.success(local.ChatMessage(
+          IsFromCurrentUser: msg.IsFromCurrentUser,
+          Text: msg.Text,
+          Timestamp: msg.Timestamp,
+          AudioUrl: msg.AudioUrl,
+        ));
+      } else {
+        return ServiceResult.failure(
+            errorMessage: 'Failed to go to message: ${response.statusCode}');
+      }
+    } catch (e) {
+      return ServiceResult.failure(errorMessage: 'Failed to go to message: $e');
     }
   }
 }

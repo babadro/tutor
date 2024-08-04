@@ -187,10 +187,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: (selectedIndex > 0)
                     ? ChatDetailPage(
                         key: Key(selectedChat!.ChatId),
-                        initialChatId: selectedChat!.ChatId,
+                        initialChat: selectedChat!,
                         mRecorder: _audioRecorderService!,
-                        chatType: selectedChat!.Type,
-                        initialCurrentPreparedMsgIDx: selectedChat!.CurrentQuestionIDx,
                       )
                     : Placeholder(),
               ),

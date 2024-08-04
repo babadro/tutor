@@ -17,17 +17,14 @@ typedef _Fn = void Function();
 const theSource = AudioSource.microphone;
 
 class ChatDetailPage extends StatefulWidget {
-  final String initialChatId;
-  final localChat.ChatType chatType;
+  final localChat.Chat initialChat;
+
   final AudioRecorderService mRecorder;
-  final int initialCurrentPreparedMsgIDx;
 
   ChatDetailPage(
       {Key? key,
-      required this.initialChatId,
+      required this.initialChat,
       required this.mRecorder,
-      required this.chatType,
-      required this.initialCurrentPreparedMsgIDx,
       })
       : super(key: key);
 
@@ -36,7 +33,7 @@ class ChatDetailPage extends StatefulWidget {
 }
 
 class _ChatDetailPageState extends State<ChatDetailPage> {
-  late String chatId;
+  late localChat.Chat chat;
   late ChatService _chatService;
   List<local.ChatMessage> _messages = [];
   final ScrollController _scrollController = ScrollController();
@@ -49,7 +46,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
   @override
   void initState() {
-    chatId = widget.initialChatId;
+    chat = widget.initialChat;
     _chatService =
         ChatService(Provider.of<AuthService>(context, listen: false));
     _loadMessages();
@@ -67,8 +64,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   }
 
   Future<void> _startDiscussionIfNeeded() async {
-    if (chatId.isEmpty && widget.chatType == localChat.ChatType.JobInterview) {
-      var createChatResult = await _chatService.createChat(widget.chatType);
+    if (chat.ChatId.isEmpty && chat.Type == localChat.ChatType.JobInterview) {
+      var createChatResult = await _chatService.createChat(widget.initialChat.Type);
 
       if (!createChatResult.success) {
         print('Failed to create chat: ${createChatResult.errorMessage}');
@@ -79,8 +76,23 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     }
   }
 
+  Future<void> _handleGoToNextMessage() async {
+    var currPreparedMessageIDx = chat.CurrentMessageIDx;
+    var goToMessageResult = await _chatService.goToMessage(chat.ChatId, chat.CurrentMessageIDx + 1);
+    if (!goToMessageResult.success) {
+      print('Failed to go to next message: ${goToMessageResult.errorMessage}');
+      return;
+    }
+
+    _addMessage(goToMessageResult.data!);
+
+    setState(() {
+      chat.CurrentMessageIDx = currPreparedMessageIDx + 1;
+    });
+  }
+
   void _loadMessages() async {
-    var loadMessagesResult = await _chatService.loadMessages(chatId);
+    var loadMessagesResult = await _chatService.loadMessages(chat.ChatId);
     if (!loadMessagesResult.success) {
       print('Failed to load messages: ${loadMessagesResult.errorMessage}');
       // todo: show error message
@@ -103,7 +115,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   void _handleSendPressed(String text) async {
     var timestamp = DateTime.now().millisecondsSinceEpoch;
     var message = SendTextMessageRequest(
-      ChatId: chatId,
+      ChatId: chat.ChatId,
       Text: text,
       Timestamp: timestamp,
     );
@@ -135,7 +147,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     );
 
     setState(() {
-      chatId = createdChat.ChatId;
+      chat = createdChat;
     });
   }
 
@@ -156,7 +168,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     });
 
     await _mRecorder.stopRecording().then((value) {
-      _chatService.sendVoiceMessage(value ?? '', chatId).then((value) {
+      _chatService.sendVoiceMessage(value ?? '', chat.ChatId).then((value) {
         setState(() {
           _isSending = false;
         });
@@ -300,11 +312,9 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                         elevation: 0,
                       ),
                       Visibility(
-                          visible: widget.chatType == localChat.ChatType.JobInterview,
+                          visible: widget.initialChat.Type == localChat.ChatType.JobInterview && !chat.ChatId.isEmpty,
                           child: TextButton.icon(
-                            onPressed: () {
-                              // Add your onPressed logic here
-                            },
+                            onPressed: _handleGoToNextMessage,
                             icon:
                                 Icon(Icons.navigate_next, color: Colors.black),
                             label: Text("Next question",

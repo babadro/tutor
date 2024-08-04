@@ -11,12 +11,14 @@ class Chat {
   final int Timestamp;
   final String Title;
   final ChatType Type;
+  int CurrentMessageIDx;
 
   Chat({
     required this.ChatId,
     required this.Timestamp,
     required this.Title,
     required this.Type,
+    this.CurrentMessageIDx = 0,
   });
 
   factory Chat.fromChatResponse(backend.Chat chat) {
@@ -25,6 +27,7 @@ class Chat {
       Timestamp: chat.Timestamp,
       Title: chat.Title,
       Type: chatTypeFromInt(chat.ChatType),
+      CurrentMessageIDx: chat.CurrentMessageIDx,
     );
   }
 
@@ -32,7 +35,8 @@ class Chat {
       : ChatId = '',
         Timestamp = 0,
         Title = '',
-        Type = type;
+        Type = type,
+        CurrentMessageIDx = 0;
 }
 
 ChatType chatTypeFromInt(int type) {
@@ -67,7 +71,6 @@ class ChatModel extends ChangeNotifier {
   void resetIsNewChatCreated() {
     _isNewChatCreated = false;
   }
-
 
   void addChat(Chat chat) {
     _chats.insert(0, chat);

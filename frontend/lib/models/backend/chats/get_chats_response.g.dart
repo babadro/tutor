@@ -23,7 +23,7 @@ Chat _$ChatFromJson(Map<String, dynamic> json) => Chat(
       Timestamp: (json['time'] as num?)?.toInt() ?? 0,
       Title: json['title'] as String? ?? '',
       ChatType: (json['typ'] as num?)?.toInt() ?? 0,
-      CurrentQuestionIDx: (json['cur_q'] as num?)?.toInt() ?? 0,
+      CurrentMessageIDx: (json['cur_m'] as num?)?.toInt() ?? 0,
     );
 
 Map<String, dynamic> _$ChatToJson(Chat instance) => <String, dynamic>{
@@ -31,5 +31,5 @@ Map<String, dynamic> _$ChatToJson(Chat instance) => <String, dynamic>{
       'time': instance.Timestamp,
       'title': instance.Title,
       'typ': instance.ChatType,
-      'cur_q': instance.CurrentQuestionIDx,
+      'cur_m': instance.CurrentMessageIDx,
     };
