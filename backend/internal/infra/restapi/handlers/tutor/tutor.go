@@ -29,6 +29,7 @@ type service interface {
 	GoToMessage(
 		ctx context.Context, userID, chatID string, messageIDx int32,
 	) (swagger.ChatMessage, error)
+	DeleteChat(ctx context.Context, chatID, userID string) error
 }
 
 type Tutor struct {
@@ -175,4 +176,20 @@ func (t *Tutor) GoToMessage(
 	}
 
 	return operations.NewGoToMessageOK().WithPayload(&operations.GoToMessageOKBody{Msg: &msg})
+}
+
+func (t *Tutor) DeleteChat(
+	params operations.DeleteChatParams, principal *models.Principal,
+) middleware.Responder {
+	err := t.svc.DeleteChat(params.HTTPRequest.Context(), *params.Body.ChatID, principal.UserID)
+	if err != nil {
+		if errors.Is(err, service2.ErrUserNotAuthorizedToViewThisChat) {
+			return operations.NewDeleteChatUnauthorized()
+		}
+
+		hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to delete chat")
+		return operations.NewDeleteChatInternalServerError()
+	}
+
+	return operations.NewDeleteChatOK()
 }

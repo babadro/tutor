@@ -673,3 +673,35 @@ func (s *Service) getChatIfUserAutorized(
 
 	return chatModel, nil
 }
+
+func (s *Service) DeleteChat(ctx context.Context, chatID, userID string) error {
+	_, err := s.getChatIfUserAutorized(ctx, chatID, userID)
+	if err != nil {
+		return fmt.Errorf("unable to get chat: %w", err)
+	}
+
+	// delete all messages in the chat
+	iter := s.firestoreClient.Collection("messages").Where("chat_id", "==", chatID).Documents(ctx)
+	defer iter.Stop()
+
+	for {
+		doc, err := iter.Next()
+		if err != nil {
+			if errors.Is(err, iterator.Done) {
+				break
+			}
+			return fmt.Errorf("unable to get messages from firestore: %s", err.Error())
+		}
+
+		if _, err = doc.Ref.Delete(ctx); err != nil {
+			return fmt.Errorf("unable to delete message: %s", err.Error())
+		}
+	}
+
+	_, err = s.firestoreClient.Collection("chats").Doc(chatID).Delete(ctx)
+	if err != nil {
+		return fmt.Errorf("unable to delete chat: %s", err.Error())
+	}
+
+	return nil
+}
