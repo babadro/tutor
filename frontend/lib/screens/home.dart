@@ -64,6 +64,10 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void _deleteChat(String chatId) async {
+    print('Deleting chat: $chatId');
+  }
+
   @override
   void dispose() {
     _audioRecorderService!.dispose();
@@ -99,10 +103,40 @@ class _HomeScreenState extends State<HomeScreen> {
       ];
 
       // Append old chats to the destinations
-      destinations.addAll(chats.map((chat) => NavigationRailDestination(
+      // Append old chats with three dots menu to the destinations
+      /*
+       destinations.addAll(chats.map((chat) => NavigationRailDestination(
             icon: Icon(Icons.chat),
             label: Text(chat.Title),
           )));
+       */
+      destinations.addAll(chats.map((chat) {
+        return NavigationRailDestination(
+          icon: Icon(Icons.chat),
+          label: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(chat.Title),
+              PopupMenuButton<int>(
+                icon: Icon(Icons.more_vert, size: 16),
+                onSelected: (value) {
+                  if (value == 0) {
+                    _deleteChat(chat.ChatId);
+                  }
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem<int>(
+                    value: 0,
+                    child: Text("Delete Chat"),
+                  ),
+                ],
+              ),
+              SizedBox(width: 4), // Add some spacing between icon and text
+              //Expanded(child: Text(chat.Title, overflow: TextOverflow.ellipsis)),
+            ],
+          ),
+        );
+      }));
 
       return destinations;
     }
