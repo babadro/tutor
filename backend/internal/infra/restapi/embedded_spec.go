@@ -25,6 +25,53 @@ func init() {
     "version": "1.0.0"
   },
   "paths": {
+    "/chat/{chatId}": {
+      "delete": {
+        "description": "This endpoint deletes a chat.",
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Deletes a chat.",
+        "operationId": "DeleteChat",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "chatId",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful response"
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
     "/chat_messages": {
       "post": {
         "description": "This endpoint receives a user's message and returns the AI's response.",
@@ -397,76 +444,6 @@ func init() {
               "properties": {
                 "chat": {
                   "description": "The created chat.",
-                  "type": "object",
-                  "$ref": "#/definitions/Chat"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          },
-          "401": {
-            "description": "unauthorized",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
-      },
-      "delete": {
-        "description": "This endpoint deletes a chat.",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "summary": "Deletes a chat.",
-        "operationId": "DeleteChat",
-        "parameters": [
-          {
-            "description": "Chat information",
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "type": "object",
-              "required": [
-                "chatId"
-              ],
-              "properties": {
-                "chatId": {
-                  "description": "The chat ID.",
-                  "type": "string"
-                }
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "chat": {
-                  "description": "The deleted chat.",
                   "type": "object",
                   "$ref": "#/definitions/Chat"
                 }
@@ -678,6 +655,53 @@ func init() {
     "version": "1.0.0"
   },
   "paths": {
+    "/chat/{chatId}": {
+      "delete": {
+        "description": "This endpoint deletes a chat.",
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Deletes a chat.",
+        "operationId": "DeleteChat",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "chatId",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful response"
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
     "/chat_messages": {
       "post": {
         "description": "This endpoint receives a user's message and returns the AI's response.",
@@ -1050,76 +1074,6 @@ func init() {
               "properties": {
                 "chat": {
                   "description": "The created chat.",
-                  "type": "object",
-                  "$ref": "#/definitions/Chat"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          },
-          "401": {
-            "description": "unauthorized",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
-      },
-      "delete": {
-        "description": "This endpoint deletes a chat.",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "summary": "Deletes a chat.",
-        "operationId": "DeleteChat",
-        "parameters": [
-          {
-            "description": "Chat information",
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "type": "object",
-              "required": [
-                "chatId"
-              ],
-              "properties": {
-                "chatId": {
-                  "description": "The chat ID.",
-                  "type": "string"
-                }
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "chat": {
-                  "description": "The deleted chat.",
                   "type": "object",
                   "$ref": "#/definitions/Chat"
                 }

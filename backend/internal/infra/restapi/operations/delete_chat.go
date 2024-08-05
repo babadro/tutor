@@ -6,17 +6,11 @@ package operations
 // Editing this file might prove futile when you re-run the generate command
 
 import (
-	"context"
 	"net/http"
 
-	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime/middleware"
-	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
-	"github.com/go-openapi/validate"
 
 	"github.com/babadro/tutor/internal/models"
-	"github.com/babadro/tutor/internal/models/swagger"
 )
 
 // DeleteChatHandlerFunc turns a function with the right signature into a delete chat handler
@@ -38,7 +32,7 @@ func NewDeleteChat(ctx *middleware.Context, handler DeleteChatHandler) *DeleteCh
 }
 
 /*
-DeleteChat swagger:route DELETE /chats deleteChat
+DeleteChat swagger:route DELETE /chat/{chatId} deleteChat
 
 Deletes a chat.
 
@@ -78,146 +72,4 @@ func (o *DeleteChat) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
-}
-
-// DeleteChatBody delete chat body
-//
-// swagger:model DeleteChatBody
-type DeleteChatBody struct {
-
-	// The chat ID.
-	// Required: true
-	ChatID *string `json:"chatId"`
-}
-
-// Validate validates this delete chat body
-func (o *DeleteChatBody) Validate(formats strfmt.Registry) error {
-	var res []error
-
-	if err := o.validateChatID(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if len(res) > 0 {
-		return errors.CompositeValidationError(res...)
-	}
-	return nil
-}
-
-func (o *DeleteChatBody) validateChatID(formats strfmt.Registry) error {
-
-	if err := validate.Required("body"+"."+"chatId", "body", o.ChatID); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// ContextValidate validates this delete chat body based on context it is used
-func (o *DeleteChatBody) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
-	return nil
-}
-
-// MarshalBinary interface implementation
-func (o *DeleteChatBody) MarshalBinary() ([]byte, error) {
-	if o == nil {
-		return nil, nil
-	}
-	return swag.WriteJSON(o)
-}
-
-// UnmarshalBinary interface implementation
-func (o *DeleteChatBody) UnmarshalBinary(b []byte) error {
-	var res DeleteChatBody
-	if err := swag.ReadJSON(b, &res); err != nil {
-		return err
-	}
-	*o = res
-	return nil
-}
-
-// DeleteChatOKBody delete chat o k body
-//
-// swagger:model DeleteChatOKBody
-type DeleteChatOKBody struct {
-
-	// The deleted chat.
-	Chat *swagger.Chat `json:"chat,omitempty"`
-}
-
-// Validate validates this delete chat o k body
-func (o *DeleteChatOKBody) Validate(formats strfmt.Registry) error {
-	var res []error
-
-	if err := o.validateChat(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if len(res) > 0 {
-		return errors.CompositeValidationError(res...)
-	}
-	return nil
-}
-
-func (o *DeleteChatOKBody) validateChat(formats strfmt.Registry) error {
-	if swag.IsZero(o.Chat) { // not required
-		return nil
-	}
-
-	if o.Chat != nil {
-		if err := o.Chat.Validate(formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("deleteChatOK" + "." + "chat")
-			}
-			return err
-		}
-	}
-
-	return nil
-}
-
-// ContextValidate validate this delete chat o k body based on the context it is used
-func (o *DeleteChatOKBody) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
-	var res []error
-
-	if err := o.contextValidateChat(ctx, formats); err != nil {
-		res = append(res, err)
-	}
-
-	if len(res) > 0 {
-		return errors.CompositeValidationError(res...)
-	}
-	return nil
-}
-
-func (o *DeleteChatOKBody) contextValidateChat(ctx context.Context, formats strfmt.Registry) error {
-
-	if o.Chat != nil {
-		if err := o.Chat.ContextValidate(ctx, formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("deleteChatOK" + "." + "chat")
-			}
-			return err
-		}
-	}
-
-	return nil
-}
-
-// MarshalBinary interface implementation
-func (o *DeleteChatOKBody) MarshalBinary() ([]byte, error) {
-	if o == nil {
-		return nil, nil
-	}
-	return swag.WriteJSON(o)
-}
-
-// UnmarshalBinary interface implementation
-func (o *DeleteChatOKBody) UnmarshalBinary(b []byte) error {
-	var res DeleteChatOKBody
-	if err := swag.ReadJSON(b, &res); err != nil {
-		return err
-	}
-	*o = res
-	return nil
 }

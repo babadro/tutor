@@ -343,7 +343,7 @@ func (o *TutorAPI) initHandlerCache() {
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
-	o.handlers["DELETE"]["/chats"] = NewDeleteChat(o.context, o.DeleteChatHandler)
+	o.handlers["DELETE"]["/chat/{chatId}"] = NewDeleteChat(o.context, o.DeleteChatHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}

@@ -9,11 +9,16 @@ import (
 	"errors"
 	"net/url"
 	golangswaggerpaths "path"
+	"strings"
 )
 
 // DeleteChatURL generates an URL for the delete chat operation
 type DeleteChatURL struct {
+	ChatID string
+
 	_basePath string
+	// avoid unkeyed usage
+	_ struct{}
 }
 
 // WithBasePath sets the base path for this url builder, only required when it's different from the
@@ -35,7 +40,14 @@ func (o *DeleteChatURL) SetBasePath(bp string) {
 func (o *DeleteChatURL) Build() (*url.URL, error) {
 	var _result url.URL
 
-	var _path = "/chats"
+	var _path = "/chat/{chatId}"
+
+	chatID := o.ChatID
+	if chatID != "" {
+		_path = strings.Replace(_path, "{chatId}", chatID, -1)
+	} else {
+		return nil, errors.New("chatId is required on DeleteChatURL")
+	}
 
 	_basePath := o._basePath
 	_result.Path = golangswaggerpaths.Join(_basePath, _path)

@@ -171,37 +171,21 @@ paths:
             description: error
             schema:
               $ref: "#/definitions/error"
+  /chat/{chatId}:
     delete:
       summary: Deletes a chat.
       operationId: "DeleteChat"
       description: This endpoint deletes a chat.
-      consumes:
-        - application/json
       produces:
-        - application/json
+          - application/json
       parameters:
-        - in: body
-          name: body
-          description: Chat information
+        - in: path
+          name: chatId
           required: true
-          schema:
-            type: object
-            required:
-              - chatId
-            properties:
-              chatId:
-                type: string
-                description: The chat ID.
+          type: string
       responses:
-        '200':
+        204:
           description: Successful response
-          schema:
-            type: object
-            properties:
-              chat:
-                type: object
-                $ref: '#/definitions/Chat'
-                description: The deleted chat.
         400:
           description: "Bad request"
           schema:

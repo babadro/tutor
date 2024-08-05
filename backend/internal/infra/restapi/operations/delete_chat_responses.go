@@ -13,49 +13,29 @@ import (
 	"github.com/babadro/tutor/internal/models/swagger"
 )
 
-// DeleteChatOKCode is the HTTP code returned for type DeleteChatOK
-const DeleteChatOKCode int = 200
+// DeleteChatNoContentCode is the HTTP code returned for type DeleteChatNoContent
+const DeleteChatNoContentCode int = 204
 
 /*
-DeleteChatOK Successful response
+DeleteChatNoContent Successful response
 
-swagger:response deleteChatOK
+swagger:response deleteChatNoContent
 */
-type DeleteChatOK struct {
-
-	/*
-	  In: Body
-	*/
-	Payload *DeleteChatOKBody `json:"body,omitempty"`
+type DeleteChatNoContent struct {
 }
 
-// NewDeleteChatOK creates DeleteChatOK with default headers values
-func NewDeleteChatOK() *DeleteChatOK {
+// NewDeleteChatNoContent creates DeleteChatNoContent with default headers values
+func NewDeleteChatNoContent() *DeleteChatNoContent {
 
-	return &DeleteChatOK{}
-}
-
-// WithPayload adds the payload to the delete chat o k response
-func (o *DeleteChatOK) WithPayload(payload *DeleteChatOKBody) *DeleteChatOK {
-	o.Payload = payload
-	return o
-}
-
-// SetPayload sets the payload to the delete chat o k response
-func (o *DeleteChatOK) SetPayload(payload *DeleteChatOKBody) {
-	o.Payload = payload
+	return &DeleteChatNoContent{}
 }
 
 // WriteResponse to the client
-func (o *DeleteChatOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+func (o *DeleteChatNoContent) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
-	rw.WriteHeader(200)
-	if o.Payload != nil {
-		payload := o.Payload
-		if err := producer.Produce(rw, payload); err != nil {
-			panic(err) // let the recovery middleware deal with this
-		}
-	}
+	rw.Header().Del(runtime.HeaderContentType) //Remove Content-Type on empty responses
+
+	rw.WriteHeader(204)
 }
 
 // DeleteChatBadRequestCode is the HTTP code returned for type DeleteChatBadRequest
