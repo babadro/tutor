@@ -294,4 +294,31 @@ class ChatService {
       return ServiceResult.failure(errorMessage: 'Failed to go to message: $e');
     }
   }
+
+  Future<ServiceResult<void>> deleteChat(String chatId) async {
+    final apiUrl = 'http://localhost:8080/chat/$chatId';
+    final uri = Uri.parse(apiUrl);
+    String? authToken = await AuthService().getCurrentUserIdToken();
+
+    try {
+      final response = await http.delete(
+        uri,
+        headers: {
+          'Authorization': 'Bearer $authToken',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 204) {
+        print('Chat deleted');
+        return ServiceResult.success(null);
+      } else {
+        return ServiceResult.failure(
+            errorMessage: 'Failed to delete chat: ${response.statusCode}');
+      }
+    } catch (e) {
+      return ServiceResult.failure(errorMessage: 'Failed to delete chat: $e');
+    }
+  }
 }
+

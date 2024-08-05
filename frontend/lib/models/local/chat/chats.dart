@@ -85,4 +85,10 @@ class ChatModel extends ChangeNotifier {
 
     notifyListeners();
   }
+
+  void deleteChat(String chatId) {
+    _chats.removeWhere((chat) => chat.ChatId == chatId);
+
+    notifyListeners();
+  }
 }

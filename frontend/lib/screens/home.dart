@@ -58,14 +58,19 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    setState(() {
-      Provider.of<localChat.ChatModel>(context, listen: false)
-          .setChats(loadChatsRes.data!);
-    });
+    Provider.of<localChat.ChatModel>(context, listen: false)
+        .setChats(loadChatsRes.data!);
   }
 
   void _deleteChat(String chatId) async {
-    print('Deleting chat: $chatId');
+    var deleteRes = await _chatService.deleteChat(chatId);
+    if (!deleteRes.success) {
+      print('Failed to delete chat: ${deleteRes.errorMessage}');
+      return;
+    }
+
+    Provider.of<localChat.ChatModel>(context, listen: false)
+        .deleteChat(chatId);
   }
 
   @override
