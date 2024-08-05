@@ -181,7 +181,7 @@ func (t *Tutor) GoToMessage(
 func (t *Tutor) DeleteChat(
 	params operations.DeleteChatParams, principal *models.Principal,
 ) middleware.Responder {
-	err := t.svc.DeleteChat(params.HTTPRequest.Context(), *params.Body.ChatID, principal.UserID)
+	err := t.svc.DeleteChat(params.HTTPRequest.Context(), params.ChatID, principal.UserID)
 	if err != nil {
 		if errors.Is(err, service2.ErrUserNotAuthorizedToViewThisChat) {
 			return operations.NewDeleteChatUnauthorized()
@@ -191,5 +191,5 @@ func (t *Tutor) DeleteChat(
 		return operations.NewDeleteChatInternalServerError()
 	}
 
-	return operations.NewDeleteChatOK()
+	return operations.NewDeleteChatNoContent()
 }
