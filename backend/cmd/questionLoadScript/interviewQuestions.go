@@ -1,6 +1,14 @@
 package main
 
 var interviewQuestions = []string{
+	"Erzählen Sie mir von Zeiten, in denen Sie ein großes Gefühl der Erfüllung oder des Erfolgs verspürten.",
+	"Erzählen Sie mir von Zeiten, in denen Sie etwas repariert haben, das nicht funktioniert hat.",
+	"Erzählen Sie mir von einer Zeit, in der Sie eine schwierige Entscheidung treffen mussten.",
+	"Erzählen Sie mir von einer Zeit, in der Sie einen Führer oder ein Team beeinflussen mussten.",
+	"Erzählen Sie mir von Zeiten, in denen Sie von etwas überrascht wurden oder etwas übersehen haben.",
+}
+
+var oldQuesions = []string{
 	"Können Sie mir kurz von einigen Projekten erzählen, an denen Sie gearbeitet haben, und wie Sie diese von Anfang bis Ende umgesetzt haben?",
 	"Stellen Sie sich vor, ich bin ein Technik-Laie. Können Sie mir in einfachen Worten erklären, was Sie tun?",
 	"Haben Sie schon einmal eine Präsentation gehalten?",

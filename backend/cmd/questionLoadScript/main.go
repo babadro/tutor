@@ -9,56 +9,24 @@ import (
 	"time"
 
 	"cloud.google.com/go/firestore"
-	firebase "firebase.google.com/go"
 	"firebase.google.com/go/storage"
+	"github.com/babadro/tutor/cmd/common"
 	"github.com/babadro/tutor/internal/models"
-	"github.com/caarlos0/env"
-	"github.com/joho/godotenv"
 	"github.com/sashabaranov/go-openai"
-	"google.golang.org/api/option"
 )
-
-const (
-	mp3AudioPathTemplate = "prepared_messages/%d.mp3"
-)
-
-type envVars struct {
-	OpenaiAPIKey  string `env:"OPENAI_API_KEY,required"`
-	StorageBucket string `env:"STORAGE_BUCKET,required"`
-}
-
-type clients struct {
-	baranovOpenai   *openai.Client
-	storageClient   *storage.Client
-	firestoreClient *firestore.Client
-}
 
 func main() {
-	if err := godotenv.Load(".env.secrets", ".env"); err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
-	}
-
-	// set env
-	var envs envVars
-	if err := env.Parse(&envs); err != nil {
-		log.Fatalf("Unable to parse env vars: %v\n", err)
-	}
-
+	cl := common.InitClients()
 	ctx := context.Background()
 
-	cl, err := initClients(ctx, envs.StorageBucket, envs.OpenaiAPIKey)
-	if err != nil {
-		log.Fatalf("unable to init clients: %s", err.Error())
-	}
-
 	for _, txt := range interviewQuestions {
-		audio, err := getAudio(ctx, txt, cl.baranovOpenai)
+		audio, err := getAudio(ctx, txt, cl.BaranovOpenai)
 		if err != nil {
 			log.Fatalf("unable to get audio: %s", err.Error())
 		}
 
-		audioName := fmt.Sprintf(mp3AudioPathTemplate, time.Now().UnixNano())
-		audioURL, err := uploadFileToStorage(ctx, audio, audioName, cl.storageClient)
+		audioName := fmt.Sprintf(common.Mp3AudioPathTemplate, time.Now().UnixNano())
+		audioURL, err := uploadFileToStorage(ctx, audio, audioName, cl.StorageClient)
 		if err != nil {
 			log.Fatalf("unable to upload audio to storage: %s", err.Error())
 		}
@@ -69,40 +37,11 @@ func main() {
 			GermanAudio: audioURL,
 		}
 
-		err = saveDocToFirestore(ctx, cl.firestoreClient, message)
+		err = saveDocToFirestore(ctx, cl.FirestoreClient, message)
 		if err != nil {
 			log.Fatalf("unable to save doc to firestore: %s", err.Error())
 		}
 	}
-}
-
-func initClients(ctx context.Context, storageBucket, openaiAPIKey string) (clients, error) {
-	// Initialize Firebase SDK
-	firebaseConfig := &firebase.Config{
-		StorageBucket: storageBucket,
-	}
-	opt := option.WithCredentialsFile("secrets/tutor.json")
-	firebaseApp, err := firebase.NewApp(context.Background(), firebaseConfig, opt)
-	if err != nil {
-		return clients{}, fmt.Errorf("unable to init firebase app: %s", err.Error())
-	}
-
-	baranovClient := openai.NewClient(openaiAPIKey)
-	storageClient, err := firebaseApp.Storage(ctx)
-	if err != nil {
-		return clients{}, fmt.Errorf("unable to init storage client: %s", err.Error())
-	}
-
-	firestoreClient, err := firebaseApp.Firestore(ctx)
-	if err != nil {
-		return clients{}, fmt.Errorf("unable to init firestore client: %s", err.Error())
-	}
-
-	return clients{
-		baranovOpenai:   baranovClient,
-		storageClient:   storageClient,
-		firestoreClient: firestoreClient,
-	}, nil
 }
 
 func saveDocToFirestore(ctx context.Context, cl *firestore.Client, doc any) error {
