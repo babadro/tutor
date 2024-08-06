@@ -62,7 +62,7 @@ type llm interface {
 	GenerateContent(ctx context.Context, messages []llms.MessageContent, options ...llms.CallOption) (*llms.ContentResponse, error)
 }
 
-const llmModel = "gpt-3.5-turbo-0125"
+const llmModel = "gpt-4o-mini"
 
 func (s *Service) SendMessage(
 	ctx context.Context, userText, userID string, timestamp int64, chatID string,
@@ -273,7 +273,11 @@ func (s *Service) getLlmInput(userTxt string, chatType models.ChatType,
 
 func (s *Service) getInterviewSeparateQuestionsContent(userTxt string) ([]llms.MessageContent, error) {
 	return []llms.MessageContent{
-		llms.TextParts(llms.ChatMessageTypeSystem, "You are a German language teacher. You are preparing for a job interview. Correct the following text in case of mistakes:"),
+		llms.TextParts(llms.ChatMessageTypeSystem,
+			"You are a German language teacher. You are preparing for a job interview in German. "+
+				"Correct the following text in case of mistakes. "+
+				"If the text contains only minor mistakes, just say that it's okay, "+
+				"and we can move on to the next interview question."),
 		llms.TextParts(llms.ChatMessageTypeHuman, userTxt),
 	}, nil
 }
