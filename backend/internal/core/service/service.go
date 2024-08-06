@@ -191,8 +191,9 @@ func (s *Service) SendVoiceMessage(
 
 	req := azopenai.AudioTranscriptionOptions{
 		File:           userAudio,
-		ResponseFormat: to.Ptr(azopenai.AudioTranscriptionFormatText),
 		DeploymentName: to.Ptr("whisper-1"),
+		Language:       getTranscriptLang(chatType),
+		ResponseFormat: to.Ptr(azopenai.AudioTranscriptionFormatText),
 	}
 
 	userTranscript, err := s.azureOpenai.GetAudioTranscription(ctx, req, nil)
@@ -248,6 +249,16 @@ func (s *Service) SendVoiceMessage(
 		CreatedChat:  createdChat,
 		LLMTimestamp: llmReplyTimestamp,
 	}, nil
+}
+
+// The primary spoken language of the audio data to be transcribed, supplied as a two-letter ISO-639-1 language code such
+// as 'en' or 'fr'.
+func getTranscriptLang(chatType models.ChatType) *string {
+	if chatType == models.JobInterviewSeparateQuestionsChatType {
+		return to.Ptr("de")
+	}
+
+	return nil
 }
 
 type llmInput struct {
