@@ -758,6 +758,7 @@ func (s *Service) AnswerToMessages(ctx context.Context, chatID, userID string) (
 		}
 
 		if message.UserID == "" {
+			iter.Stop()
 			break
 		}
 
