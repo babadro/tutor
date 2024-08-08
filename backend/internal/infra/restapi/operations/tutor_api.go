@@ -45,6 +45,9 @@ func NewTutorAPI(spec *loads.Document) *TutorAPI {
 
 		JSONProducer: runtime.JSONProducer(),
 
+		AnswerToMessagesHandler: AnswerToMessagesHandlerFunc(func(params AnswerToMessagesParams, principal *models.Principal) middleware.Responder {
+			return middleware.NotImplemented("operation AnswerToMessages has not yet been implemented")
+		}),
 		CreateChatHandler: CreateChatHandlerFunc(func(params CreateChatParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation CreateChat has not yet been implemented")
 		}),
@@ -117,6 +120,8 @@ type TutorAPI struct {
 	// APIAuthorizer provides access control (ACL/RBAC/ABAC) by providing access to the request and authenticated principal
 	APIAuthorizer runtime.Authorizer
 
+	// AnswerToMessagesHandler sets the operation handler for the answer to messages operation
+	AnswerToMessagesHandler AnswerToMessagesHandler
 	// CreateChatHandler sets the operation handler for the create chat operation
 	CreateChatHandler CreateChatHandler
 	// DeleteChatHandler sets the operation handler for the delete chat operation
@@ -214,6 +219,9 @@ func (o *TutorAPI) Validate() error {
 		unregistered = append(unregistered, "AuthorizationAuth")
 	}
 
+	if o.AnswerToMessagesHandler == nil {
+		unregistered = append(unregistered, "AnswerToMessagesHandler")
+	}
 	if o.CreateChatHandler == nil {
 		unregistered = append(unregistered, "CreateChatHandler")
 	}
@@ -336,6 +344,10 @@ func (o *TutorAPI) initHandlerCache() {
 		o.handlers = make(map[string]map[string]http.Handler)
 	}
 
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/answer-to-messages"] = NewAnswerToMessages(o.context, o.AnswerToMessagesHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}

@@ -12,6 +12,11 @@ security:
   - key: []
 paths:
   /chat_messages:
+    get:
+      description: New endpoint
+      responses:
+        200:
+          description: New response
     post:
       summary: Sends a text message to the AI and receives a response.
       operationId: "SendChatMessage"
@@ -350,6 +355,50 @@ paths:
               type: integer
               format: int32
               description: The index of the message.
+      responses:
+        200:
+          description: Successful response
+          schema:
+            type: object
+            properties:
+              msg:
+                $ref: '#/definitions/ChatMessage'
+        400:
+          description: "Bad request"
+          schema:
+            $ref: "#/definitions/error"
+        '401':
+          description: unauthorized
+          schema:
+            $ref: "#/definitions/error"
+        500:
+          description: "Internal server error"
+          schema:
+            $ref: "#/definitions/error"
+        default:
+          description: error
+          schema:
+            $ref: "#/definitions/error"
+  /answer-to-messages:
+    post:
+      summary: Answers to messages in the chat.
+      description: By default it takes most recent unanswered messages from the user and answers them.
+      operationId: "AnswerToMessages"
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          schema:
+            type: object
+            required:
+              - chatId
+            properties:
+              chatId:
+                type: string
+                description: The chat ID.
       responses:
         200:
           description: Successful response

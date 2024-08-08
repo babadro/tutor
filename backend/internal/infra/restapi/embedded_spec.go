@@ -25,6 +25,74 @@ func init() {
     "version": "1.0.0"
   },
   "paths": {
+    "/answer-to-messages": {
+      "post": {
+        "description": "By default it takes most recent unanswered messages from the user and answers them.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Answers to messages in the chat.",
+        "operationId": "AnswerToMessages",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "required": [
+                "chatId"
+              ],
+              "properties": {
+                "chatId": {
+                  "description": "The chat ID.",
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "msg": {
+                  "$ref": "#/definitions/ChatMessage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
     "/chat/{chatId}": {
       "delete": {
         "description": "This endpoint deletes a chat.",
@@ -73,6 +141,14 @@ func init() {
       }
     },
     "/chat_messages": {
+      "get": {
+        "description": "New endpoint",
+        "responses": {
+          "200": {
+            "description": "New response"
+          }
+        }
+      },
       "post": {
         "description": "This endpoint receives a user's message and returns the AI's response.",
         "consumes": [
@@ -655,6 +731,74 @@ func init() {
     "version": "1.0.0"
   },
   "paths": {
+    "/answer-to-messages": {
+      "post": {
+        "description": "By default it takes most recent unanswered messages from the user and answers them.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Answers to messages in the chat.",
+        "operationId": "AnswerToMessages",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "required": [
+                "chatId"
+              ],
+              "properties": {
+                "chatId": {
+                  "description": "The chat ID.",
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "msg": {
+                  "$ref": "#/definitions/ChatMessage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
     "/chat/{chatId}": {
       "delete": {
         "description": "This endpoint deletes a chat.",
@@ -703,6 +847,14 @@ func init() {
       }
     },
     "/chat_messages": {
+      "get": {
+        "description": "New endpoint",
+        "responses": {
+          "200": {
+            "description": "New response"
+          }
+        }
+      },
       "post": {
         "description": "This endpoint receives a user's message and returns the AI's response.",
         "consumes": [
