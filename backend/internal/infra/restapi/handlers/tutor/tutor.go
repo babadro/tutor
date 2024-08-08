@@ -30,6 +30,7 @@ type service interface {
 		ctx context.Context, userID, chatID string, messageIDx int32,
 	) (swagger.ChatMessage, error)
 	DeleteChat(ctx context.Context, chatID, userID string) error
+	AnswerToMessages(ctx context.Context, chatID, userID string) (swagger.ChatMessage, error)
 }
 
 type Tutor struct {
@@ -192,4 +193,20 @@ func (t *Tutor) DeleteChat(
 	}
 
 	return operations.NewDeleteChatNoContent()
+}
+
+func (t *Tutor) AnswerToMessages(
+	params operations.AnswerToMessagesParams, principal *models.Principal,
+) middleware.Responder {
+	msg, err := t.svc.AnswerToMessages(params.HTTPRequest.Context(), *params.Body.ChatID, principal.UserID)
+	if err != nil {
+		if errors.Is(err, service2.ErrUserNotAuthorizedToViewThisChat) {
+			return operations.NewGetChatMessagesUnauthorized()
+		}
+
+		hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to answer to messages")
+		return operations.NewGoToMessageInternalServerError()
+	}
+
+	return operations.NewAnswerToMessagesOK().WithPayload(&operations.AnswerToMessagesOKBody{Msg: &msg})
 }

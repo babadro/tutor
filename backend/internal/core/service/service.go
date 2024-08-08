@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"net/url"
 	"os"
+	"slices"
 	"time"
 
 	"cloud.google.com/go/firestore"
@@ -719,4 +720,90 @@ func (s *Service) DeleteChat(ctx context.Context, chatID, userID string) error {
 	}
 
 	return nil
+}
+
+func (s *Service) AnswerToMessages(ctx context.Context, chatID, userID string) (swagger.ChatMessage, error) {
+	userChat, err := s.getChatIfUserAutorized(ctx, chatID, userID)
+	if err != nil {
+		return swagger.ChatMessage{}, fmt.Errorf("unable to get chat: %w", err)
+	}
+
+	const limitLastMessages = 20
+
+	query := s.firestoreClient.Collection("messages").
+		Where("chat_id", "==", chatID).
+		OrderBy("time", firestore.Desc).
+		Limit(limitLastMessages)
+
+	iter := query.Documents(ctx)
+	defer iter.Stop()
+
+	var texts []string
+
+	for {
+		var doc *firestore.DocumentSnapshot
+		doc, err = iter.Next()
+
+		if err != nil {
+			if errors.Is(err, iterator.Done) {
+				break
+			}
+
+			return swagger.ChatMessage{}, fmt.Errorf("unable to get messages from firestore: %s", err.Error())
+		}
+
+		var message ChatMessage
+		if err = doc.DataTo(&message); err != nil {
+			return swagger.ChatMessage{}, fmt.Errorf("unable to get message data: %s", err.Error())
+		}
+
+		if message.UserID == "" {
+			break
+		}
+
+		texts = append(texts, message.Text)
+	}
+
+	if len(texts) == 0 {
+		return swagger.ChatMessage{}, errors.New("no messages found")
+	}
+
+	slices.Reverse(texts)
+
+	in, err := s.getLlmInput(concatTexts(texts), userChat.Type)
+	if err != nil {
+		return swagger.ChatMessage{}, fmt.Errorf("unable to get llmInput: %s", err.Error())
+	}
+
+	llmReplyText, llmReplyAudioURL, err := s.generateTextAndAudioContent(ctx, in, userID, llmModel)
+	if err != nil {
+		return swagger.ChatMessage{}, fmt.Errorf("unable to get AI text and audio reply: %s", err.Error())
+	}
+
+	timestamp := time.Now().UnixMilli()
+
+	_, err = s.saveMessageToDB(ctx, llmReplyText, "", chatID, llmReplyAudioURL, userChat.Type, timestamp)
+	if err != nil {
+		return swagger.ChatMessage{}, fmt.Errorf("unable to save llm reply to db: %s", err.Error())
+	}
+
+	return swagger.ChatMessage{
+		AudioURL:          llmReplyAudioURL,
+		IsFromCurrentUser: false,
+		Text:              llmReplyText,
+		Timestamp:         timestamp,
+	}, nil
+}
+
+func concatTexts(arr []string) string {
+	var b []byte
+	for i, s := range arr {
+		if i > 0 {
+			b = append(b, ". "...)
+		}
+
+		b = append(b, s...)
+	}
+
+	return string(b)
 }
