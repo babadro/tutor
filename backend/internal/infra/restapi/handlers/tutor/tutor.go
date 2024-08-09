@@ -16,9 +16,7 @@ import (
 
 type service interface {
 	SendMessage(ctx context.Context, message, userID string, timestamp int64, chatID string) (string, swagger.Chat, error)
-	SendVoiceMessage(
-		ctx context.Context, voiceMsgBytes []byte, userID, chatID string, timestamp int64,
-	) (models.SendVoiceMessageResult, error)
+	SendVoiceMessage(ctx context.Context, voiceMsgBytes []byte, userID, chatID string, timestamp int64, typ models.VoiceMsgType) (models.SendVoiceMessageResult, error)
 	GetChatMessages(
 		ctx context.Context, chatID string, userID string, limit int32, timestamp int64,
 	) ([]*swagger.ChatMessage, error)
@@ -90,8 +88,14 @@ func (t *Tutor) SendVoiceMessage(
 		chatID = *params.ChatID
 	}
 
+	voiceMsgType := models.DefaultVoiceMsgType
+	if params.Typ != nil {
+		voiceMsgType = models.VoiceMsgType(*params.Typ)
+	}
+
 	result, err := t.svc.SendVoiceMessage(
-		params.HTTPRequest.Context(), voiceMsgBytes, principal.UserID, chatID, params.Timestamp,
+		params.HTTPRequest.Context(),
+		voiceMsgBytes, principal.UserID, chatID, params.Timestamp, voiceMsgType,
 	)
 	if err != nil {
 		if errors.Is(err, service2.ErrUserNotAuthorizedToViewThisChat) {

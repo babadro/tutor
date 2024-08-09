@@ -176,6 +176,7 @@ func (s *Service) SendVoiceMessage(
 	userID string,
 	chatID string,
 	userMsgTimestamp int64,
+	typ models.VoiceMsgType,
 ) (models.SendVoiceMessageResult, error) {
 	chatType := models.GeneralChatType
 	if chatID != "" {
@@ -208,16 +209,6 @@ func (s *Service) SendVoiceMessage(
 
 	userText := *userTranscript.Text
 
-	llmIn, err := s.getLlmInput(userText, chatType)
-	if err != nil {
-		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to get llmInput: %s", err.Error())
-	}
-
-	llmReplyText, llmReplyAudioURL, err := s.generateTextAndAudioContent(ctx, llmIn, userID, llmModel)
-	if err != nil {
-		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to get AI text and audio reply: %s", err.Error())
-	}
-
 	// for user audio we use webm
 	userAudioName := fmt.Sprintf(webmAudioPathTemplate, userID, time.Now().UnixNano())
 
@@ -233,6 +224,25 @@ func (s *Service) SendVoiceMessage(
 
 	if chatID == "" {
 		chatID = createdChat.ChatID
+	}
+
+	if typ == models.AwaitingCompletionVoiceMsgType {
+		// then we should not answer to the message now
+		return models.SendVoiceMessageResult{
+			UserAudioURL: userAudioURL,
+			UserText:     userText,
+			CreatedChat:  createdChat,
+		}, nil
+	}
+
+	llmIn, err := s.getLlmInput(userText, chatType)
+	if err != nil {
+		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to get llmInput: %s", err.Error())
+	}
+
+	llmReplyText, llmReplyAudioURL, err := s.generateTextAndAudioContent(ctx, llmIn, userID, llmModel)
+	if err != nil {
+		return models.SendVoiceMessageResult{}, fmt.Errorf("unable to get AI text and audio reply: %s", err.Error())
 	}
 
 	llmReplyTimestamp := time.Now().UnixMilli()
