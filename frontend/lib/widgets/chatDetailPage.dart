@@ -194,7 +194,9 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           ;
 
           _addMessage(res.userMessage);
-          _addMessage(res.replyMessage);
+          if (res.replyMessage.Text != '') {
+            _addMessage(res.replyMessage);
+          }
         }
       });
     });
