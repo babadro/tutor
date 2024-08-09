@@ -696,6 +696,18 @@ func init() {
         "Training specific questions from job interviews"
       ]
     },
+    "VoiceMessageType": {
+      "type": "integer",
+      "format": "int32",
+      "enum": [
+        1
+      ],
+      "x-enum-descriptions": [
+        {
+          "AwaitingCompletion": "Clearly indicates that the message is not yet complete\nand is awaiting further input before a final response or processing\n"
+        }
+      ]
+    },
     "error": {
       "type": "object",
       "properties": {
@@ -1400,6 +1412,18 @@ func init() {
       "x-enum-descriptions": [
         "General",
         "Training specific questions from job interviews"
+      ]
+    },
+    "VoiceMessageType": {
+      "type": "integer",
+      "format": "int32",
+      "enum": [
+        1
+      ],
+      "x-enum-descriptions": [
+        {
+          "AwaitingCompletion": "Clearly indicates that the message is not yet complete\nand is awaiting further input before a final response or processing\n"
+        }
       ]
     },
     "error": {
