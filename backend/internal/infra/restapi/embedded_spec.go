@@ -342,6 +342,20 @@ func init() {
             "name": "timestamp",
             "in": "formData",
             "required": true
+          },
+          {
+            "enum": [
+              1
+            ],
+            "type": "integer",
+            "format": "int32",
+            "x-enum-descriptions": [
+              {
+                "AwaitingCompletion": "Clearly indicates that the message is not yet complete\nand is awaiting further input before a final response or processing\n"
+              }
+            ],
+            "name": "typ",
+            "in": "formData"
           }
         ],
         "responses": {
@@ -694,18 +708,6 @@ func init() {
       "x-enum-descriptions": [
         "General",
         "Training specific questions from job interviews"
-      ]
-    },
-    "VoiceMessageType": {
-      "type": "integer",
-      "format": "int32",
-      "enum": [
-        1
-      ],
-      "x-enum-descriptions": [
-        {
-          "AwaitingCompletion": "Clearly indicates that the message is not yet complete\nand is awaiting further input before a final response or processing\n"
-        }
       ]
     },
     "error": {
@@ -1060,6 +1062,20 @@ func init() {
             "name": "timestamp",
             "in": "formData",
             "required": true
+          },
+          {
+            "enum": [
+              1
+            ],
+            "type": "integer",
+            "format": "int32",
+            "x-enum-descriptions": [
+              {
+                "AwaitingCompletion": "Clearly indicates that the message is not yet complete\nand is awaiting further input before a final response or processing\n"
+              }
+            ],
+            "name": "typ",
+            "in": "formData"
           }
         ],
         "responses": {
@@ -1412,18 +1428,6 @@ func init() {
       "x-enum-descriptions": [
         "General",
         "Training specific questions from job interviews"
-      ]
-    },
-    "VoiceMessageType": {
-      "type": "integer",
-      "format": "int32",
-      "enum": [
-        1
-      ],
-      "x-enum-descriptions": [
-        {
-          "AwaitingCompletion": "Clearly indicates that the message is not yet complete\nand is awaiting further input before a final response or processing\n"
-        }
       ]
     },
     "error": {

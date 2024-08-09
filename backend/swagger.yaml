@@ -283,6 +283,17 @@ paths:
           format: int64
           description: The timestamp of the message.
           required: true
+        - in: formData
+          name: typ
+          type: integer
+          format: int32
+          enum:
+            - 1
+          x-enum-descriptions:
+            - AwaitingCompletion: |
+                Clearly indicates that the message is not yet complete
+                and is awaiting further input before a final response or processing
+          required: false
       responses:
         '200':
           description: Successful response
@@ -458,15 +469,6 @@ definitions:
     x-enum-descriptions:
       - "General"
       - "Training specific questions from job interviews"
-  VoiceMessageType:
-    type: integer
-    format: int32
-    enum:
-      - 1
-    x-enum-descriptions:
-      - AwaitingCompletion: |
-          Clearly indicates that the message is not yet complete
-          and is awaiting further input before a final response or processing
   Chat:
     type: object
     properties:
