@@ -320,5 +320,36 @@ class ChatService {
       return ServiceResult.failure(errorMessage: 'Failed to delete chat: $e');
     }
   }
+
+  Future<ServiceResult<local.ChatMessage>> AnswerToMessages(String chatId) async {
+    final apiUrl = 'http://localhost:8080/answer-to-messages';
+    final uri = Uri.parse(apiUrl);
+    String? authToken = await AuthService().getCurrentUserIdToken();
+
+    try {
+      final response = await http.post(uri,
+          headers: {
+            'Authorization': 'Bearer $authToken',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({'chatId': chatId}));
+
+      if (response.statusCode == 200) {
+        final decodedResponseBody = utf8.decode(response.bodyBytes);
+        final msg = GoToMessageResponse.fromJson(jsonDecode(decodedResponseBody)).Message;
+        return ServiceResult.success(local.ChatMessage(
+          IsFromCurrentUser: msg.IsFromCurrentUser,
+          Text: msg.Text,
+          Timestamp: msg.Timestamp,
+          AudioUrl: msg.AudioUrl,
+        ));
+      } else {
+        return ServiceResult.failure(
+            errorMessage: 'Failed to answer to messages: ${response.statusCode}');
+      }
+    } catch (e) {
+      return ServiceResult.failure(errorMessage: 'Failed to answer to messages: $e');
+    }
+  }
 }
 

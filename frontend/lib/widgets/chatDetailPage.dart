@@ -91,6 +91,16 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     });
   }
 
+  Future<void> _handleTriggerAnswer() async {
+    var res = await _chatService.AnswerToMessages(chat.ChatId);
+    if (!res.success) {
+      print('Failed to answer to messages: ${res.errorMessage}');
+      return;
+    }
+
+    _addMessage(res.data!);
+  }
+
   void _loadMessages() async {
     var loadMessagesResult = await _chatService.loadMessages(chat.ChatId);
     if (!loadMessagesResult.success) {
@@ -319,7 +329,16 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                                 Icon(Icons.navigate_next, color: Colors.black),
                             label: Text("Next question",
                                 style: TextStyle(color: Colors.black)),
-                          ))
+                          ),
+                      ),
+                      TextButton.icon(
+                        onPressed: () {
+                          // todo;
+                        },
+                        icon: Icon(Icons.question_answer, color: Colors.black),
+                        label: Text("Answer",
+                            style: TextStyle(color: Colors.black)),
+                      )
                     ],
                   ),
                 ),
