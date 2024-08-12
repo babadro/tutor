@@ -21,12 +21,11 @@ class ChatDetailPage extends StatefulWidget {
 
   final AudioRecorderService mRecorder;
 
-  ChatDetailPage(
-      {Key? key,
-      required this.initialChat,
-      required this.mRecorder,
-      })
-      : super(key: key);
+  ChatDetailPage({
+    Key? key,
+    required this.initialChat,
+    required this.mRecorder,
+  }) : super(key: key);
 
   @override
   _ChatDetailPageState createState() => _ChatDetailPageState();
@@ -65,7 +64,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
   Future<void> _startDiscussionIfNeeded() async {
     if (chat.ChatId.isEmpty && chat.Type == localChat.ChatType.JobInterview) {
-      var createChatResult = await _chatService.createChat(widget.initialChat.Type);
+      var createChatResult =
+          await _chatService.createChat(widget.initialChat.Type);
 
       if (!createChatResult.success) {
         print('Failed to create chat: ${createChatResult.errorMessage}');
@@ -78,7 +78,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
   Future<void> _handleGoToNextMessage() async {
     var currPreparedMessageIDx = chat.CurrentMessageIDx;
-    var goToMessageResult = await _chatService.goToMessage(chat.ChatId, chat.CurrentMessageIDx + 1);
+    var goToMessageResult =
+        await _chatService.goToMessage(chat.ChatId, chat.CurrentMessageIDx + 1);
     if (!goToMessageResult.success) {
       print('Failed to go to next message: ${goToMessageResult.errorMessage}');
       return;
@@ -178,7 +179,15 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     });
 
     await _mRecorder.stopRecording().then((value) {
-      _chatService.sendVoiceMessage(value ?? '', chat.ChatId).then((value) {
+      _chatService
+          .sendVoiceMessage(
+        value ?? '',
+        chat.ChatId,
+        chat.Type == localChat.ChatType.General
+            ? local.VoiceMessageType.Default
+            : local.VoiceMessageType.AwaitingCompletion,
+      )
+          .then((value) {
         setState(() {
           _isSending = false;
         });
@@ -324,14 +333,15 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                         elevation: 0,
                       ),
                       Visibility(
-                          visible: widget.initialChat.Type == localChat.ChatType.JobInterview && !chat.ChatId.isEmpty,
-                          child: TextButton.icon(
-                            onPressed: _handleGoToNextMessage,
-                            icon:
-                                Icon(Icons.navigate_next, color: Colors.black),
-                            label: Text("Next question",
-                                style: TextStyle(color: Colors.black)),
-                          ),
+                        visible: widget.initialChat.Type ==
+                                localChat.ChatType.JobInterview &&
+                            !chat.ChatId.isEmpty,
+                        child: TextButton.icon(
+                          onPressed: _handleGoToNextMessage,
+                          icon: Icon(Icons.navigate_next, color: Colors.black),
+                          label: Text("Next question",
+                              style: TextStyle(color: Colors.black)),
+                        ),
                       ),
                       TextButton.icon(
                         onPressed: () {

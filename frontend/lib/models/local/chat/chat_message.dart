@@ -11,3 +11,17 @@ class ChatMessage {
     this.AudioUrl = '',
   });
 }
+
+enum VoiceMessageType {
+  Default,
+  AwaitingCompletion,
+}
+
+int voiceMessageTypeToInt(VoiceMessageType type) {
+  switch (type) {
+    case VoiceMessageType.AwaitingCompletion:
+      return 2;
+    default:
+      return 1;
+  }
+}

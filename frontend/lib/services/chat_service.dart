@@ -123,7 +123,7 @@ class ChatService {
   }
 
   Future<ServiceResult<sendVoiceMessageResult>> sendVoiceMessage(
-      String audioFilePath, String chatId) async {
+      String audioFilePath, String chatId, local.VoiceMessageType typ) async {
     final apiUrl = 'http://localhost:8080/chat_voice_messages';
     final uri = Uri.parse(apiUrl);
     String? authToken = await _authService.getCurrentUserIdToken();
@@ -140,6 +140,7 @@ class ChatService {
         ..headers['Authorization'] = 'Bearer $authToken'
         ..fields['chatId'] = chatId
         ..fields['timestamp'] = timestamp.millisecondsSinceEpoch.toString()
+        ..fields['typ'] = local.voiceMessageTypeToInt(typ).toString()
         ..files.add(
           await http.MultipartFile.fromBytes(
             'file',
@@ -153,6 +154,9 @@ class ChatService {
 
       if (response.statusCode == 200) {
         final decodedResponseBody = utf8.decode(response.bodyBytes);
+        // print decodedResponseBody
+        print(decodedResponseBody);
+
         final resp =
             SendVoiceMessageResponse.fromJson(jsonDecode(decodedResponseBody));
 
