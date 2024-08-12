@@ -345,8 +345,8 @@ func init() {
           },
           {
             "enum": [
-              0,
-              1
+              1,
+              2
             ],
             "type": "integer",
             "format": "int32",
@@ -1067,8 +1067,8 @@ func init() {
           },
           {
             "enum": [
-              0,
-              1
+              1,
+              2
             ],
             "type": "integer",
             "format": "int32",

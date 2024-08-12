@@ -288,8 +288,8 @@ paths:
           type: integer
           format: int32
           enum:
-            - 0
             - 1
+            - 2
           x-enum-descriptions:
             - "Default"
             - AwaitingCompletion: |
