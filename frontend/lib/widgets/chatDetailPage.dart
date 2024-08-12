@@ -344,9 +344,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                         ),
                       ),
                       TextButton.icon(
-                        onPressed: () {
-                          // todo;
-                        },
+                        onPressed: _handleTriggerAnswer,
                         icon: Icon(Icons.question_answer, color: Colors.black),
                         label: Text("Answer",
                             style: TextStyle(color: Colors.black)),
