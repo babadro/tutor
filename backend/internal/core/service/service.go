@@ -8,7 +8,9 @@ import (
 	"net/url"
 	"os"
 	"slices"
+	"strings"
 	"time"
+	"unicode"
 
 	"cloud.google.com/go/firestore"
 	"firebase.google.com/go/storage"
@@ -808,9 +810,18 @@ func (s *Service) AnswerToMessages(ctx context.Context, chatID, userID string) (
 
 func concatTexts(arr []string) string {
 	var b []byte
-	for i, s := range arr {
-		if i > 0 {
-			b = append(b, ". "...)
+	for _, s := range arr {
+		if s = strings.TrimSpace(s); s == "" {
+			continue
+		}
+
+		if len(b) > 0 {
+			b = append(b, ' ')
+		}
+
+		last := s[len(s)-1]
+		if unicode.IsLetter(rune(last)) {
+			s += "."
 		}
 
 		b = append(b, s...)
