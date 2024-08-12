@@ -182,7 +182,7 @@ func (o *SendVoiceMessageParams) bindTyp(rawData []string, hasKey bool, formats 
 // validateTyp carries on validations for parameter Typ
 func (o *SendVoiceMessageParams) validateTyp(formats strfmt.Registry) error {
 
-	if err := validate.EnumCase("typ", "formData", *o.Typ, []interface{}{1}, true); err != nil {
+	if err := validate.EnumCase("typ", "formData", *o.Typ, []interface{}{0, 1}, true); err != nil {
 		return err
 	}
 

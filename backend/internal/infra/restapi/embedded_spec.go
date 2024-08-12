@@ -345,11 +345,13 @@ func init() {
           },
           {
             "enum": [
+              0,
               1
             ],
             "type": "integer",
             "format": "int32",
             "x-enum-descriptions": [
+              "Default",
               {
                 "AwaitingCompletion": "Clearly indicates that the message is not yet complete\nand is awaiting further input before a final response or processing\n"
               }
@@ -1065,11 +1067,13 @@ func init() {
           },
           {
             "enum": [
+              0,
               1
             ],
             "type": "integer",
             "format": "int32",
             "x-enum-descriptions": [
+              "Default",
               {
                 "AwaitingCompletion": "Clearly indicates that the message is not yet complete\nand is awaiting further input before a final response or processing\n"
               }

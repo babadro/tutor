@@ -288,8 +288,10 @@ paths:
           type: integer
           format: int32
           enum:
+            - 0
             - 1
           x-enum-descriptions:
+            - "Default"
             - AwaitingCompletion: |
                 Clearly indicates that the message is not yet complete
                 and is awaiting further input before a final response or processing
