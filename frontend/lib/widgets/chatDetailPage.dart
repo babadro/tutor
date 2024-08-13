@@ -36,6 +36,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   late ChatService _chatService;
   List<local.ChatMessage> _messages = [];
   final ScrollController _scrollController = ScrollController();
+  final AudioPlayerService _audioPlayer = AudioPlayerService();
 
   TextEditingController _messageController = TextEditingController();
   AudioRecorderService get _mRecorder => widget.mRecorder;
@@ -206,6 +207,10 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           if (res.replyMessage.Text != '') {
             _addMessage(res.replyMessage);
           }
+          if (res.replyMessage.AudioUrl != '') {
+            _audioPlayer
+                .togglePlayPause(res.replyMessage.AudioUrl);
+          }
         }
       });
     });
@@ -236,7 +241,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-        create: (context) => AudioPlayerService(),
+        create: (context) => _audioPlayer,
         child: Scaffold(
           body: Stack(
             children: <Widget>[
