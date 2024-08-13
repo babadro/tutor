@@ -599,6 +599,15 @@ func (s *Service) generateTextAndAudioContent(
 		return "", "", fmt.Errorf("unable to get text from llm: %s", err.Error())
 	}
 
+	audioURL, err := s.generateAudioContent(ctx, userID, text)
+	if err != nil {
+		return "", "", fmt.Errorf("unable to get audio from text: %s", err.Error())
+	}
+
+	return text, audioURL, nil
+}
+
+func (s *Service) generateAudioContent(ctx context.Context, userID, text string) (string, error) {
 	/* todo unkomment when front is ready
 	textToSpeechReq := openai.CreateSpeechRequest{
 		Model:          "tts-1",
@@ -622,7 +631,7 @@ func (s *Service) generateTextAndAudioContent(
 
 	audio, err := os.ReadFile("cmd/server/sound_example.mp3")
 	if err != nil {
-		return "", "", fmt.Errorf("unable to read voice response: %s", err.Error())
+		return "", fmt.Errorf("unable to read voice response: %s", err.Error())
 	}
 
 	// for llm audio we use mp3
@@ -630,10 +639,10 @@ func (s *Service) generateTextAndAudioContent(
 
 	audioURL, err := s.uploadFileToStorage(ctx, audio, audioName)
 	if err != nil {
-		return "", "", fmt.Errorf("unable to upload voice message to storage: %s", err.Error())
+		return "", fmt.Errorf("unable to upload voice message to storage: %s", err.Error())
 	}
 
-	return text, audioURL, nil
+	return audioURL, nil
 }
 
 func (s *Service) GoToMessage(
@@ -645,7 +654,25 @@ func (s *Service) GoToMessage(
 	}
 
 	if int(messageIDx) >= len(userChat.PreparedMessages) {
-		return swagger.ChatMessage{}, fmt.Errorf("message index is out of range")
+		text := "Herzlichen Glückwunsch, Sie haben alle Interviewfragen beantwortet!"
+		timestamp := time.Now().UnixMilli()
+		audioUrl, err := s.generateAudioContent(ctx, userID, text)
+		if err != nil {
+			return swagger.ChatMessage{}, fmt.Errorf("unable to get audio from text: %s", err.Error())
+		}
+
+		_, err = s.saveMessageToDB(ctx, text, "", chatID, audioUrl, userChat.Type, timestamp)
+		if err != nil {
+			return swagger.ChatMessage{}, fmt.Errorf("unable to save message to db: %s", err.Error())
+		}
+
+		return swagger.ChatMessage{
+			AudioURL:          audioUrl,
+			IsFromCurrentUser: false,
+			Text:              text,
+			Timestamp:         timestamp,
+			UserID:            userID,
+		}, nil
 	}
 
 	messageID := userChat.PreparedMessages[messageIDx]
