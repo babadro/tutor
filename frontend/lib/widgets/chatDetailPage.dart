@@ -91,6 +91,9 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     setState(() {
       chat.CurrentMessageIDx = currPreparedMessageIDx + 1;
     });
+    if (goToMessageResult.data!.AudioUrl != '') {
+      _audioPlayer.togglePlayPause(goToMessageResult.data!.AudioUrl);
+    }
   }
 
   Future<void> _handleTriggerAnswer() async {
