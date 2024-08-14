@@ -69,6 +69,11 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
+    if (selectedChat?.ChatId == chatId) {
+      selectedChat = null;
+      selectedIndex = 0;
+    }
+
     Provider.of<localChat.ChatModel>(context, listen: false)
         .deleteChat(chatId);
   }
