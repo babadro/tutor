@@ -91,6 +91,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     setState(() {
       chat.CurrentMessageIDx = currPreparedMessageIDx + 1;
     });
+
     if (goToMessageResult.data!.AudioUrl != '') {
       _audioPlayer.togglePlayPause(goToMessageResult.data!.AudioUrl);
     }
@@ -198,22 +199,23 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
         if (!value.success) {
           print('Failed to send voice message: ${value.errorMessage}');
-        } else {
-          final res = value.data!;
+          return;
+        }
 
-          if (value.data!.createdChat.ChatId != '') {
-            switchToNewChat(value.data!.createdChat);
-          }
-          ;
+        final res = value.data!;
 
-          _addMessage(res.userMessage);
-          if (res.replyMessage.Text != '') {
-            _addMessage(res.replyMessage);
-          }
-          if (res.replyMessage.AudioUrl != '') {
-            _audioPlayer
-                .togglePlayPause(res.replyMessage.AudioUrl);
-          }
+        if (value.data!.createdChat.ChatId != '') {
+          switchToNewChat(value.data!.createdChat);
+        }
+        ;
+
+        _addMessage(res.userMessage);
+        if (res.replyMessage.Text != '') {
+          _addMessage(res.replyMessage);
+        }
+
+        if (res.replyMessage.AudioUrl != '') {
+          _audioPlayer.togglePlayPause(res.replyMessage.AudioUrl);
         }
       });
     });

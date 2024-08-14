@@ -131,8 +131,6 @@ class ChatService {
     // todo will not work on mobile app
     Uint8List fileBytes = await http.readBytes(Uri.parse(audioFilePath));
 
-    print('File size: ${fileBytes.length} bytes');
-
     try {
       final timestamp = DateTime.now();
 
@@ -154,8 +152,6 @@ class ChatService {
 
       if (response.statusCode == 200) {
         final decodedResponseBody = utf8.decode(response.bodyBytes);
-        // print decodedResponseBody
-        print(decodedResponseBody);
 
         final resp =
             SendVoiceMessageResponse.fromJson(jsonDecode(decodedResponseBody));
@@ -201,7 +197,6 @@ class ChatService {
     String? authToken = await _authService.getCurrentUserIdToken();
 
     try {
-      print('Fetching chats from $uri');
       final response = await http.get(
         uri,
         headers: {
@@ -314,7 +309,6 @@ class ChatService {
       );
 
       if (response.statusCode == 204) {
-        print('Chat deleted');
         return ServiceResult.success(null);
       } else {
         return ServiceResult.failure(
