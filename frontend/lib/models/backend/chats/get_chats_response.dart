@@ -4,7 +4,7 @@ part 'get_chats_response.g.dart';
 
 @JsonSerializable()
 class GetChatsResponse {
-  @JsonKey(name: 'chats')
+  @JsonKey(name: 'chats', defaultValue: <Chat>[])
   final List<Chat> Chats;
 
   GetChatsResponse({

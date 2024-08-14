@@ -8,9 +8,10 @@ part of 'get_chats_response.dart';
 
 GetChatsResponse _$GetChatsResponseFromJson(Map<String, dynamic> json) =>
     GetChatsResponse(
-      Chats: (json['chats'] as List<dynamic>)
-          .map((e) => Chat.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      Chats: (json['chats'] as List<dynamic>?)
+              ?.map((e) => Chat.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
     );
 
 Map<String, dynamic> _$GetChatsResponseToJson(GetChatsResponse instance) =>
