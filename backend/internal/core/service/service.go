@@ -422,7 +422,7 @@ type chat struct {
 	Title            string          `firestore:"title"`
 	PreparedMessages []string        `firestore:"prep_msgs"`
 	Type             models.ChatType `firestore:"type"`
-	CurrQuestionIDx  int32           `firestore:"curr_q"`
+	CurrQuestionIDx  int32           `firestore:"curr_m"`
 }
 
 func (c *chat) toSwagger() swagger.Chat {
@@ -693,6 +693,17 @@ func (s *Service) GoToMessage(
 	)
 	if err != nil {
 		return swagger.ChatMessage{}, fmt.Errorf("unable to save message to db: %s", err.Error())
+	}
+
+	// update messageIDx in chat
+	_, err = s.firestoreClient.Collection("chats").
+		Doc(chatID).
+		Update(ctx, []firestore.Update{
+			{Path: "curr_m", Value: messageIDx},
+		})
+
+	if err != nil {
+		return swagger.ChatMessage{}, fmt.Errorf("unable to update chat: %s", err.Error())
 	}
 
 	return swagger.ChatMessage{
