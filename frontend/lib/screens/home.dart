@@ -89,7 +89,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     localChat.ChatModel chatModel = context.watch<localChat.ChatModel>();
     List<localChat.Chat> chats = chatModel.chats;
-    if (chatModel.isNewChatCreated) {
+    var isNewChatCreated = chatModel.isNewChatCreated;
+    if (isNewChatCreated) {
       selectedIndex =
           3; // home, new generic chat, job interview chat, then old chats
       selectedChat = chats[0];
@@ -204,7 +205,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           destinations: getDestinations(),
                           selectedIndex: selectedIndex,
                           onDestinationSelected: (value) {
-                            print("Selected index: $value");
                             setState(() {
                               selectedIndex = value;
 
@@ -233,6 +233,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         key: Key(selectedChat!.ChatId),
                         initialChat: selectedChat!,
                         mRecorder: _audioRecorderService!,
+                        isNewChat: isNewChatCreated,
                       )
                     : Placeholder(),
               ),

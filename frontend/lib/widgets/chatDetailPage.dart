@@ -18,13 +18,14 @@ const theSource = AudioSource.microphone;
 
 class ChatDetailPage extends StatefulWidget {
   final localChat.Chat initialChat;
-
   final AudioRecorderService mRecorder;
+  final bool isNewChat;
 
   ChatDetailPage({
     Key? key,
     required this.initialChat,
     required this.mRecorder,
+    required this.isNewChat,
   }) : super(key: key);
 
   @override
@@ -43,18 +44,19 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
   bool _isRecording = false;
   bool _isSending = false;
+  bool _fistMessageWasPlayed = false;
 
   @override
   void initState() {
+    super.initState();
     chat = widget.initialChat;
     _chatService =
         ChatService(Provider.of<AuthService>(context, listen: false));
-    _loadMessages();
-    _mRecorder.init();
-
-    super.initState();
-
     _startDiscussionIfNeeded();
+    if (!chat.ChatId.isEmpty) {
+      _loadMessages();
+    }
+    _mRecorder.init();
   }
 
   @override
@@ -105,6 +107,10 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     }
 
     _addMessage(res.data!);
+
+    if (res.data!.AudioUrl != '') {
+      _audioPlayer.togglePlayPause(res.data!.AudioUrl);
+    }
   }
 
   void _loadMessages() async {
@@ -115,8 +121,19 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       return;
     }
 
+    var needToPlayFirstMessage = widget.isNewChat &&
+        loadMessagesResult.data!.length == 1 &&
+        !loadMessagesResult.data![0].IsFromCurrentUser &&
+        loadMessagesResult.data![0].AudioUrl != '' &&
+        !_fistMessageWasPlayed;
+
+    if (needToPlayFirstMessage) {
+      _audioPlayer.togglePlayPause(loadMessagesResult.data![0].AudioUrl);
+    }
+
     setState(() {
       _messages = loadMessagesResult.data!;
+      _fistMessageWasPlayed = needToPlayFirstMessage;
       _scrollToBottom();
     });
   }
@@ -183,42 +200,46 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       _scrollToBottom();
     });
 
-    await _mRecorder.stopRecording().then((value) {
-      _chatService
-          .sendVoiceMessage(
-        value ?? '',
+    try {
+      final recordedFile = await _mRecorder.stopRecording();
+      final response = await _chatService.sendVoiceMessage(
+        recordedFile ?? '',
         chat.ChatId,
         chat.Type == localChat.ChatType.General
             ? local.VoiceMessageType.Default
             : local.VoiceMessageType.AwaitingCompletion,
-      )
-          .then((value) {
-        setState(() {
-          _isSending = false;
-        });
+      );
 
-        if (!value.success) {
-          print('Failed to send voice message: ${value.errorMessage}');
-          return;
-        }
+      if (!response.success) {
+        print('Failed to send voice message: ${response.errorMessage}');
+        return;
+      }
 
-        final res = value.data!;
-
-        if (value.data!.createdChat.ChatId != '') {
-          switchToNewChat(value.data!.createdChat);
-        }
-        ;
-
-        _addMessage(res.userMessage);
-        if (res.replyMessage.Text != '') {
-          _addMessage(res.replyMessage);
-        }
-
-        if (res.replyMessage.AudioUrl != '') {
-          _audioPlayer.togglePlayPause(res.replyMessage.AudioUrl);
-        }
+      setState(() {
+        _isSending = false;
       });
-    });
+
+      final res = response.data!;
+
+      if (res.createdChat.ChatId.isNotEmpty) {
+        switchToNewChat(res.createdChat);
+      }
+
+      _addMessage(res.userMessage);
+
+      if (res.replyMessage.Text.isNotEmpty) {
+        _addMessage(res.replyMessage);
+      }
+
+      if (!res.replyMessage.AudioUrl.isEmpty) {
+        _audioPlayer.togglePlayPause(res.replyMessage.AudioUrl);
+      }
+    } catch (e) {
+      setState(() {
+        _isSending = false;
+      });
+      print('An error occurred: $e');
+    }
   }
 
   _Fn? getRecorderFn() {
