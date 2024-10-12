@@ -12,9 +12,9 @@ SendVoiceMessageResponse _$SendVoiceMessageResponseFromJson(
       UserText: json['usrTxt'] as String,
       UserAudioURL: json['usrAudio'] as String,
       UserMessageTime: (json['usrTime'] as num).toInt(),
-      ReplyText: json['replyTxt'] as String,
-      ReplyAudioURL: json['replyAudio'] as String,
-      ReplyTime: (json['replyTime'] as num).toInt(),
+      ReplyText: json['replyTxt'] as String? ?? '',
+      ReplyAudioURL: json['replyAudio'] as String? ?? '',
+      ReplyTime: (json['replyTime'] as num?)?.toInt() ?? 0,
       CreatedChat: json['chat'] == null
           ? null
           : Chat.fromJson(json['chat'] as Map<String, dynamic>),

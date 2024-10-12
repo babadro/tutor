@@ -48,6 +48,10 @@ type SendVoiceMessageParams struct {
 	  In: formData
 	*/
 	Timestamp int64
+	/*
+	  In: formData
+	*/
+	Typ *int32
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -85,6 +89,11 @@ func (o *SendVoiceMessageParams) BindRequest(r *http.Request, route *middleware.
 
 	fdTimestamp, fdhkTimestamp, _ := fds.GetOK("timestamp")
 	if err := o.bindTimestamp(fdTimestamp, fdhkTimestamp, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
+	fdTyp, fdhkTyp, _ := fds.GetOK("typ")
+	if err := o.bindTyp(fdTyp, fdhkTyp, route.Formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -140,6 +149,42 @@ func (o *SendVoiceMessageParams) bindTimestamp(rawData []string, hasKey bool, fo
 		return errors.InvalidType("timestamp", "formData", "int64", raw)
 	}
 	o.Timestamp = value
+
+	return nil
+}
+
+// bindTyp binds and validates parameter Typ from formData.
+func (o *SendVoiceMessageParams) bindTyp(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: false
+
+	if raw == "" { // empty values pass all other validations
+		return nil
+	}
+
+	value, err := swag.ConvertInt32(raw)
+	if err != nil {
+		return errors.InvalidType("typ", "formData", "int32", raw)
+	}
+	o.Typ = &value
+
+	if err := o.validateTyp(formats); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// validateTyp carries on validations for parameter Typ
+func (o *SendVoiceMessageParams) validateTyp(formats strfmt.Registry) error {
+
+	if err := validate.EnumCase("typ", "formData", *o.Typ, []interface{}{1, 2}, true); err != nil {
+		return err
+	}
 
 	return nil
 }

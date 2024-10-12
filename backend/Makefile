@@ -50,5 +50,5 @@ swag:
 	swagger generate server --exclude-main --server-package=internal/infra/restapi --model-package=internal/models/swagger -P github.com/babadro/tutor/internal/models.Principal -f swagger.yaml
 
 dev-tools:
-	go install github.com/cosmtrek/air@latest
+	go install github.com/air-verse/air@latest
 	go install github.com/go-delve/delve/cmd/dlv@latest

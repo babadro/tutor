@@ -15,7 +15,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   var selectedIndex = 0;
-  var selectedChatId = '';
+  localChat.Chat? selectedChat;
   late ChatService _chatService;
   AudioRecorderService? _audioRecorderService = AudioRecorderService();
 
@@ -58,10 +58,24 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    setState(() {
-      Provider.of<localChat.ChatModel>(context, listen: false)
-          .setChats(loadChatsRes.data!);
-    });
+    Provider.of<localChat.ChatModel>(context, listen: false)
+        .setChats(loadChatsRes.data!);
+  }
+
+  void _deleteChat(String chatId) async {
+    var deleteRes = await _chatService.deleteChat(chatId);
+    if (!deleteRes.success) {
+      print('Failed to delete chat: ${deleteRes.errorMessage}');
+      return;
+    }
+
+    if (selectedChat?.ChatId == chatId) {
+      selectedChat = null;
+      selectedIndex = 0;
+    }
+
+    Provider.of<localChat.ChatModel>(context, listen: false)
+        .deleteChat(chatId);
   }
 
   @override
@@ -73,12 +87,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    List<localChat.Chat> chats = context.watch<localChat.ChatModel>().chats;
     localChat.ChatModel chatModel = context.watch<localChat.ChatModel>();
-    if (chatModel.isNewChatCreated) {
+    List<localChat.Chat> chats = chatModel.chats;
+    var isNewChatCreated = chatModel.isNewChatCreated;
+    if (isNewChatCreated) {
       selectedIndex =
-          2; // 0 is home, 1 is 'new chat' button, so the first chat is at index 2
-      selectedChatId = chats[0].ChatId;
+          3; // home, new generic chat, job interview chat, then old chats
+      selectedChat = chats[0];
       chatModel.resetIsNewChatCreated();
     }
 
@@ -90,15 +105,49 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         NavigationRailDestination(
           icon: Icon(Icons.chat),
-          label: Text('New Chat'),
+          label: Text('New Generic Chat'),
+        ),
+        NavigationRailDestination(
+          icon: Icon(Icons.chat),
+          label: Text('New Job Interview Chat'),
         ),
       ];
 
       // Append old chats to the destinations
-      destinations.addAll(chats.map((chat) => NavigationRailDestination(
+      // Append old chats with three dots menu to the destinations
+      /*
+       destinations.addAll(chats.map((chat) => NavigationRailDestination(
             icon: Icon(Icons.chat),
             label: Text(chat.Title),
           )));
+       */
+      destinations.addAll(chats.map((chat) {
+        return NavigationRailDestination(
+          icon: Icon(Icons.chat),
+          label: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(chat.Title),
+              PopupMenuButton<int>(
+                icon: Icon(Icons.more_vert, size: 16),
+                onSelected: (value) {
+                  if (value == 0) {
+                    _deleteChat(chat.ChatId);
+                  }
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem<int>(
+                    value: 0,
+                    child: Text("Delete Chat"),
+                  ),
+                ],
+              ),
+              SizedBox(width: 4), // Add some spacing between icon and text
+              //Expanded(child: Text(chat.Title, overflow: TextOverflow.ellipsis)),
+            ],
+          ),
+        );
+      }));
 
       return destinations;
     }
@@ -148,8 +197,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 builder: (context, constraint) {
                   return SingleChildScrollView(
                     child: ConstrainedBox(
-                      constraints: BoxConstraints(minHeight: constraint
-                          .maxHeight),
+                      constraints:
+                          BoxConstraints(minHeight: constraint.maxHeight),
                       child: IntrinsicHeight(
                         child: NavigationRail(
                           extended: constraints.maxWidth >= 600,
@@ -158,8 +207,15 @@ class _HomeScreenState extends State<HomeScreen> {
                           onDestinationSelected: (value) {
                             setState(() {
                               selectedIndex = value;
-                              selectedChatId =
-                              (value > 1) ? chats[value - 2].ChatId : '';
+
+                              switch (value) {
+                                case 0 || 1:
+                                  selectedChat = localChat.Chat.emptyWithType(localChat.ChatType.General);
+                                case 2:
+                                  selectedChat = localChat.Chat.emptyWithType(localChat.ChatType.JobInterview);
+                                default:
+                                  selectedChat = chats[value - 3];
+                              }
                             });
                           },
                         ),
@@ -174,9 +230,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: Theme.of(context).colorScheme.primaryContainer,
                 child: (selectedIndex > 0)
                     ? ChatDetailPage(
-                        key: Key(selectedChatId),
-                        initialChatId: selectedChatId,
+                        key: Key(selectedChat!.ChatId),
+                        initialChat: selectedChat!,
                         mRecorder: _audioRecorderService!,
+                        isNewChat: isNewChatCreated,
                       )
                     : Placeholder(),
               ),

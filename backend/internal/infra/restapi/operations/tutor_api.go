@@ -45,11 +45,23 @@ func NewTutorAPI(spec *loads.Document) *TutorAPI {
 
 		JSONProducer: runtime.JSONProducer(),
 
+		AnswerToMessagesHandler: AnswerToMessagesHandlerFunc(func(params AnswerToMessagesParams, principal *models.Principal) middleware.Responder {
+			return middleware.NotImplemented("operation AnswerToMessages has not yet been implemented")
+		}),
+		CreateChatHandler: CreateChatHandlerFunc(func(params CreateChatParams, principal *models.Principal) middleware.Responder {
+			return middleware.NotImplemented("operation CreateChat has not yet been implemented")
+		}),
+		DeleteChatHandler: DeleteChatHandlerFunc(func(params DeleteChatParams, principal *models.Principal) middleware.Responder {
+			return middleware.NotImplemented("operation DeleteChat has not yet been implemented")
+		}),
 		GetChatMessagesHandler: GetChatMessagesHandlerFunc(func(params GetChatMessagesParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation GetChatMessages has not yet been implemented")
 		}),
 		GetChatsHandler: GetChatsHandlerFunc(func(params GetChatsParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation GetChats has not yet been implemented")
+		}),
+		GoToMessageHandler: GoToMessageHandlerFunc(func(params GoToMessageParams, principal *models.Principal) middleware.Responder {
+			return middleware.NotImplemented("operation GoToMessage has not yet been implemented")
 		}),
 		SendChatMessageHandler: SendChatMessageHandlerFunc(func(params SendChatMessageParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation SendChatMessage has not yet been implemented")
@@ -108,10 +120,18 @@ type TutorAPI struct {
 	// APIAuthorizer provides access control (ACL/RBAC/ABAC) by providing access to the request and authenticated principal
 	APIAuthorizer runtime.Authorizer
 
+	// AnswerToMessagesHandler sets the operation handler for the answer to messages operation
+	AnswerToMessagesHandler AnswerToMessagesHandler
+	// CreateChatHandler sets the operation handler for the create chat operation
+	CreateChatHandler CreateChatHandler
+	// DeleteChatHandler sets the operation handler for the delete chat operation
+	DeleteChatHandler DeleteChatHandler
 	// GetChatMessagesHandler sets the operation handler for the get chat messages operation
 	GetChatMessagesHandler GetChatMessagesHandler
 	// GetChatsHandler sets the operation handler for the get chats operation
 	GetChatsHandler GetChatsHandler
+	// GoToMessageHandler sets the operation handler for the go to message operation
+	GoToMessageHandler GoToMessageHandler
 	// SendChatMessageHandler sets the operation handler for the send chat message operation
 	SendChatMessageHandler SendChatMessageHandler
 	// SendVoiceMessageHandler sets the operation handler for the send voice message operation
@@ -199,11 +219,23 @@ func (o *TutorAPI) Validate() error {
 		unregistered = append(unregistered, "AuthorizationAuth")
 	}
 
+	if o.AnswerToMessagesHandler == nil {
+		unregistered = append(unregistered, "AnswerToMessagesHandler")
+	}
+	if o.CreateChatHandler == nil {
+		unregistered = append(unregistered, "CreateChatHandler")
+	}
+	if o.DeleteChatHandler == nil {
+		unregistered = append(unregistered, "DeleteChatHandler")
+	}
 	if o.GetChatMessagesHandler == nil {
 		unregistered = append(unregistered, "GetChatMessagesHandler")
 	}
 	if o.GetChatsHandler == nil {
 		unregistered = append(unregistered, "GetChatsHandler")
+	}
+	if o.GoToMessageHandler == nil {
+		unregistered = append(unregistered, "GoToMessageHandler")
 	}
 	if o.SendChatMessageHandler == nil {
 		unregistered = append(unregistered, "SendChatMessageHandler")
@@ -312,6 +344,18 @@ func (o *TutorAPI) initHandlerCache() {
 		o.handlers = make(map[string]map[string]http.Handler)
 	}
 
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/answer-to-messages"] = NewAnswerToMessages(o.context, o.AnswerToMessagesHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/chats"] = NewCreateChat(o.context, o.CreateChatHandler)
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/chat/{chatId}"] = NewDeleteChat(o.context, o.DeleteChatHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
@@ -320,6 +364,10 @@ func (o *TutorAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/chats"] = NewGetChats(o.context, o.GetChatsHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/go-to-message"] = NewGoToMessage(o.context, o.GoToMessageHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}

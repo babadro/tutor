@@ -25,7 +25,130 @@ func init() {
     "version": "1.0.0"
   },
   "paths": {
+    "/answer-to-messages": {
+      "post": {
+        "description": "By default it takes most recent unanswered messages from the user and answers them.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Answers to messages in the chat.",
+        "operationId": "AnswerToMessages",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "required": [
+                "chatId"
+              ],
+              "properties": {
+                "chatId": {
+                  "description": "The chat ID.",
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "msg": {
+                  "$ref": "#/definitions/ChatMessage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
+    "/chat/{chatId}": {
+      "delete": {
+        "description": "This endpoint deletes a chat.",
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Deletes a chat.",
+        "operationId": "DeleteChat",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "chatId",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful response"
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
     "/chat_messages": {
+      "get": {
+        "description": "New endpoint",
+        "responses": {
+          "200": {
+            "description": "New response"
+          }
+        }
+      },
       "post": {
         "description": "This endpoint receives a user's message and returns the AI's response.",
         "consumes": [
@@ -219,6 +342,22 @@ func init() {
             "name": "timestamp",
             "in": "formData",
             "required": true
+          },
+          {
+            "enum": [
+              1,
+              2
+            ],
+            "type": "integer",
+            "format": "int32",
+            "x-enum-descriptions": [
+              "Default",
+              {
+                "AwaitingCompletion": "Clearly indicates that the message is not yet complete\nand is awaiting further input before a final response or processing\n"
+              }
+            ],
+            "name": "typ",
+            "in": "formData"
           }
         ],
         "responses": {
@@ -352,6 +491,157 @@ func init() {
             }
           }
         }
+      },
+      "post": {
+        "description": "This endpoint creates a new chat.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Creates a new chat.",
+        "operationId": "CreateChat",
+        "parameters": [
+          {
+            "description": "Chat information",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "typ",
+                "time"
+              ],
+              "properties": {
+                "time": {
+                  "description": "The timestamp of the chat.",
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "typ": {
+                  "x-go-name": "ChatType",
+                  "$ref": "#/definitions/ChatType"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "chat": {
+                  "description": "The created chat.",
+                  "type": "object",
+                  "$ref": "#/definitions/Chat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
+    "/go-to-message": {
+      "post": {
+        "description": "This endpoint goes to a specific prepared message in the chat.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Goes to a specific prepared message in the chat.",
+        "operationId": "GoToMessage",
+        "parameters": [
+          {
+            "description": "Information about the chat and the message index",
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "required": [
+                "chatId",
+                "msgIdx"
+              ],
+              "properties": {
+                "chatId": {
+                  "description": "The chat ID.",
+                  "type": "string"
+                },
+                "msgIdx": {
+                  "description": "The index of the message.",
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "msg": {
+                  "$ref": "#/definitions/ChatMessage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
       }
     }
   },
@@ -362,12 +652,28 @@ func init() {
         "chatId": {
           "type": "string"
         },
+        "cur_m": {
+          "description": "The current message in the chat. 0 based index.",
+          "type": "integer",
+          "format": "int32",
+          "x-go-name": "CurrentMessageIDx"
+        },
+        "prep_msgs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "PreparedMessages"
+        },
         "time": {
           "type": "integer",
           "format": "int64"
         },
         "title": {
           "type": "string"
+        },
+        "typ": {
+          "$ref": "#/definitions/ChatType"
         }
       }
     },
@@ -393,6 +699,18 @@ func init() {
           "type": "string"
         }
       }
+    },
+    "ChatType": {
+      "type": "integer",
+      "format": "int32",
+      "enum": [
+        1,
+        2
+      ],
+      "x-enum-descriptions": [
+        "General",
+        "Training specific questions from job interviews"
+      ]
     },
     "error": {
       "type": "object",
@@ -429,7 +747,130 @@ func init() {
     "version": "1.0.0"
   },
   "paths": {
+    "/answer-to-messages": {
+      "post": {
+        "description": "By default it takes most recent unanswered messages from the user and answers them.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Answers to messages in the chat.",
+        "operationId": "AnswerToMessages",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "required": [
+                "chatId"
+              ],
+              "properties": {
+                "chatId": {
+                  "description": "The chat ID.",
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "msg": {
+                  "$ref": "#/definitions/ChatMessage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
+    "/chat/{chatId}": {
+      "delete": {
+        "description": "This endpoint deletes a chat.",
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Deletes a chat.",
+        "operationId": "DeleteChat",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "chatId",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful response"
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
     "/chat_messages": {
+      "get": {
+        "description": "New endpoint",
+        "responses": {
+          "200": {
+            "description": "New response"
+          }
+        }
+      },
       "post": {
         "description": "This endpoint receives a user's message and returns the AI's response.",
         "consumes": [
@@ -623,6 +1064,22 @@ func init() {
             "name": "timestamp",
             "in": "formData",
             "required": true
+          },
+          {
+            "enum": [
+              1,
+              2
+            ],
+            "type": "integer",
+            "format": "int32",
+            "x-enum-descriptions": [
+              "Default",
+              {
+                "AwaitingCompletion": "Clearly indicates that the message is not yet complete\nand is awaiting further input before a final response or processing\n"
+              }
+            ],
+            "name": "typ",
+            "in": "formData"
           }
         ],
         "responses": {
@@ -756,6 +1213,157 @@ func init() {
             }
           }
         }
+      },
+      "post": {
+        "description": "This endpoint creates a new chat.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Creates a new chat.",
+        "operationId": "CreateChat",
+        "parameters": [
+          {
+            "description": "Chat information",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "typ",
+                "time"
+              ],
+              "properties": {
+                "time": {
+                  "description": "The timestamp of the chat.",
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "typ": {
+                  "x-go-name": "ChatType",
+                  "$ref": "#/definitions/ChatType"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "chat": {
+                  "description": "The created chat.",
+                  "type": "object",
+                  "$ref": "#/definitions/Chat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
+    "/go-to-message": {
+      "post": {
+        "description": "This endpoint goes to a specific prepared message in the chat.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Goes to a specific prepared message in the chat.",
+        "operationId": "GoToMessage",
+        "parameters": [
+          {
+            "description": "Information about the chat and the message index",
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "required": [
+                "chatId",
+                "msgIdx"
+              ],
+              "properties": {
+                "chatId": {
+                  "description": "The chat ID.",
+                  "type": "string"
+                },
+                "msgIdx": {
+                  "description": "The index of the message.",
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "msg": {
+                  "$ref": "#/definitions/ChatMessage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
       }
     }
   },
@@ -766,12 +1374,28 @@ func init() {
         "chatId": {
           "type": "string"
         },
+        "cur_m": {
+          "description": "The current message in the chat. 0 based index.",
+          "type": "integer",
+          "format": "int32",
+          "x-go-name": "CurrentMessageIDx"
+        },
+        "prep_msgs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "PreparedMessages"
+        },
         "time": {
           "type": "integer",
           "format": "int64"
         },
         "title": {
           "type": "string"
+        },
+        "typ": {
+          "$ref": "#/definitions/ChatType"
         }
       }
     },
@@ -797,6 +1421,18 @@ func init() {
           "type": "string"
         }
       }
+    },
+    "ChatType": {
+      "type": "integer",
+      "format": "int32",
+      "enum": [
+        1,
+        2
+      ],
+      "x-enum-descriptions": [
+        "General",
+        "Training specific questions from job interviews"
+      ]
     },
     "error": {
       "type": "object",

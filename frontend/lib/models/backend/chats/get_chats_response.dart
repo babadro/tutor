@@ -4,7 +4,7 @@ part 'get_chats_response.g.dart';
 
 @JsonSerializable()
 class GetChatsResponse {
-  @JsonKey(name: 'chats')
+  @JsonKey(name: 'chats', defaultValue: <Chat>[])
   final List<Chat> Chats;
 
   GetChatsResponse({
@@ -26,10 +26,18 @@ class Chat {
   @JsonKey(name: 'title', defaultValue: '')
   final String Title;
 
+  @JsonKey(name: 'typ', defaultValue: 0)
+  final int ChatType;
+
+  @JsonKey(name: 'cur_m', defaultValue: 0)
+  final int CurrentMessageIDx;
+
   Chat({
     required this.ChatId,
     required this.Timestamp,
     required this.Title,
+    required this.ChatType,
+    required this.CurrentMessageIDx,
   });
 
   factory Chat.fromJson(Map<String, dynamic> json) => _$ChatFromJson(json);

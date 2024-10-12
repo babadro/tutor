@@ -15,13 +15,13 @@ class SendVoiceMessageResponse {
   @JsonKey(name: 'usrTime')
   final int UserMessageTime;
 
-  @JsonKey(name: 'replyTxt')
+  @JsonKey(name: 'replyTxt', defaultValue: '')
   final String ReplyText;
 
-  @JsonKey(name: 'replyAudio')
+  @JsonKey(name: 'replyAudio', defaultValue: '')
   final String ReplyAudioURL;
 
-  @JsonKey(name: 'replyTime')
+  @JsonKey(name: 'replyTime', defaultValue: 0)
   final int ReplyTime;
 
   @JsonKey(name: 'chat')

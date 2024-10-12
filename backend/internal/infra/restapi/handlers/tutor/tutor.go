@@ -16,13 +16,19 @@ import (
 
 type service interface {
 	SendMessage(ctx context.Context, message, userID string, timestamp int64, chatID string) (string, swagger.Chat, error)
-	SendVoiceMessage(
-		ctx context.Context, voiceMsgBytes []byte, userID, chatID string, timestamp int64,
-	) (models.SendVoiceMessageResult, error)
+	SendVoiceMessage(ctx context.Context, voiceMsgBytes []byte, userID, chatID string, timestamp int64, typ models.VoiceMsgType) (models.SendVoiceMessageResult, error)
 	GetChatMessages(
 		ctx context.Context, chatID string, userID string, limit int32, timestamp int64,
 	) ([]*swagger.ChatMessage, error)
 	GetChats(ctx context.Context, userID string, limit int32, timestamp int64) ([]*swagger.Chat, error)
+	CreateChat(
+		ctx context.Context, userID string, chatType models.ChatType, timestamp int64,
+	) (swagger.Chat, error)
+	GoToMessage(
+		ctx context.Context, userID, chatID string, messageIDx int32,
+	) (swagger.ChatMessage, error)
+	DeleteChat(ctx context.Context, chatID, userID string) error
+	AnswerToMessages(ctx context.Context, chatID, userID string) (swagger.ChatMessage, error)
 }
 
 type Tutor struct {
@@ -45,7 +51,12 @@ func (t *Tutor) SendChatMessage(
 		params.HTTPRequest.Context(), *params.Body.Text, principal.UserID, *params.Body.Timestamp, params.Body.ChatID,
 	)
 	if err != nil {
+		if errors.Is(err, service2.ErrUserNotAuthorizedToViewThisChat) {
+			return operations.NewGetChatMessagesUnauthorized()
+		}
+
 		hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to send message")
+		return operations.NewGoToMessageInternalServerError()
 	}
 
 	var chat *swagger.Chat
@@ -63,8 +74,6 @@ func (t *Tutor) SendChatMessage(
 func (t *Tutor) SendVoiceMessage(
 	params operations.SendVoiceMessageParams, principal *models.Principal,
 ) middleware.Responder {
-	// todo check if the userID matches with the chatID, otherwise return unauthorized
-	// read file to []byte
 	voiceMsgBytes, err := io.ReadAll(params.File)
 	if err != nil {
 		hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to read voice message")
@@ -79,12 +88,22 @@ func (t *Tutor) SendVoiceMessage(
 		chatID = *params.ChatID
 	}
 
+	voiceMsgType := models.DefaultVoiceMsgType
+	if params.Typ != nil {
+		voiceMsgType = models.VoiceMsgType(*params.Typ)
+	}
+
 	result, err := t.svc.SendVoiceMessage(
-		params.HTTPRequest.Context(), voiceMsgBytes, principal.UserID, chatID, params.Timestamp,
+		params.HTTPRequest.Context(),
+		voiceMsgBytes, principal.UserID, chatID, params.Timestamp, voiceMsgType,
 	)
 	if err != nil {
+		if errors.Is(err, service2.ErrUserNotAuthorizedToViewThisChat) {
+			return operations.NewGetChatMessagesUnauthorized()
+		}
+
 		hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to send voice message")
-		return operations.NewSendVoiceMessageBadRequest()
+		return operations.NewGoToMessageInternalServerError()
 	}
 
 	var chat *swagger.Chat
@@ -115,8 +134,7 @@ func (t *Tutor) GetChatMessages(
 		}
 
 		hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to get chat messages")
-
-		return operations.NewGetChatMessagesBadRequest()
+		return operations.NewGoToMessageInternalServerError()
 	}
 
 	return operations.NewGetChatMessagesOK().WithPayload(&operations.GetChatMessagesOKBody{Messages: messages})
@@ -126,8 +144,73 @@ func (t *Tutor) GetChats(params operations.GetChatsParams, principal *models.Pri
 	chats, err := t.svc.GetChats(params.HTTPRequest.Context(), principal.UserID, *params.Limit, *params.Timestamp)
 	if err != nil {
 		hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to get chats")
-		return operations.NewGetChatsBadRequest()
+		return operations.NewGoToMessageInternalServerError()
 	}
 
 	return operations.NewGetChatsOK().WithPayload(&operations.GetChatsOKBody{Chats: chats})
+}
+
+func (t *Tutor) CreateChat(
+	params operations.CreateChatParams, principal *models.Principal,
+) middleware.Responder {
+	chat, err := t.svc.CreateChat(
+		params.HTTPRequest.Context(), principal.UserID, models.ChatType(params.Body.ChatType), *params.Body.Time,
+	)
+	if err != nil {
+		hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to create chat")
+		return operations.NewGoToMessageInternalServerError()
+	}
+
+	return operations.NewCreateChatOK().WithPayload(&operations.CreateChatOKBody{Chat: &chat})
+}
+
+func (t *Tutor) GoToMessage(
+	params operations.GoToMessageParams, principal *models.Principal,
+) middleware.Responder {
+	msg, err := t.svc.GoToMessage(
+		params.HTTPRequest.Context(), principal.UserID, *params.Body.ChatID, *params.Body.MsgIdx,
+	)
+
+	if err != nil {
+		if errors.Is(err, service2.ErrUserNotAuthorizedToViewThisChat) {
+			return operations.NewGetChatMessagesUnauthorized()
+		}
+
+		hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to go to message")
+		return operations.NewGoToMessageInternalServerError()
+	}
+
+	return operations.NewGoToMessageOK().WithPayload(&operations.GoToMessageOKBody{Msg: &msg})
+}
+
+func (t *Tutor) DeleteChat(
+	params operations.DeleteChatParams, principal *models.Principal,
+) middleware.Responder {
+	err := t.svc.DeleteChat(params.HTTPRequest.Context(), params.ChatID, principal.UserID)
+	if err != nil {
+		if errors.Is(err, service2.ErrUserNotAuthorizedToViewThisChat) {
+			return operations.NewDeleteChatUnauthorized()
+		}
+
+		hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to delete chat")
+		return operations.NewDeleteChatInternalServerError()
+	}
+
+	return operations.NewDeleteChatNoContent()
+}
+
+func (t *Tutor) AnswerToMessages(
+	params operations.AnswerToMessagesParams, principal *models.Principal,
+) middleware.Responder {
+	msg, err := t.svc.AnswerToMessages(params.HTTPRequest.Context(), *params.Body.ChatID, principal.UserID)
+	if err != nil {
+		if errors.Is(err, service2.ErrUserNotAuthorizedToViewThisChat) {
+			return operations.NewGetChatMessagesUnauthorized()
+		}
+
+		hlog.FromRequest(params.HTTPRequest).Error().Err(err).Msg("Unable to answer to messages")
+		return operations.NewGoToMessageInternalServerError()
+	}
+
+	return operations.NewAnswerToMessagesOK().WithPayload(&operations.AnswerToMessagesOKBody{Msg: &msg})
 }

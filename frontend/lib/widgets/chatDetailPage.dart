@@ -17,35 +17,46 @@ typedef _Fn = void Function();
 const theSource = AudioSource.microphone;
 
 class ChatDetailPage extends StatefulWidget {
-  final String initialChatId;
+  final localChat.Chat initialChat;
   final AudioRecorderService mRecorder;
+  final bool isNewChat;
 
-  ChatDetailPage({Key? key, required this.initialChatId, required this.mRecorder}) : super(key: key);
+  ChatDetailPage({
+    Key? key,
+    required this.initialChat,
+    required this.mRecorder,
+    required this.isNewChat,
+  }) : super(key: key);
 
   @override
   _ChatDetailPageState createState() => _ChatDetailPageState();
 }
 
 class _ChatDetailPageState extends State<ChatDetailPage> {
-  late String chatId;
+  late localChat.Chat chat;
   late ChatService _chatService;
   List<local.ChatMessage> _messages = [];
   final ScrollController _scrollController = ScrollController();
+  final AudioPlayerService _audioPlayer = AudioPlayerService();
 
   TextEditingController _messageController = TextEditingController();
   AudioRecorderService get _mRecorder => widget.mRecorder;
 
   bool _isRecording = false;
   bool _isSending = false;
+  bool _fistMessageWasPlayed = false;
 
   @override
   void initState() {
-    chatId = widget.initialChatId;
-    _chatService = ChatService(Provider.of<AuthService>(context, listen: false));
-    _loadMessages();
-    _mRecorder.init();
-
     super.initState();
+    chat = widget.initialChat;
+    _chatService =
+        ChatService(Provider.of<AuthService>(context, listen: false));
+    _startDiscussionIfNeeded();
+    if (!chat.ChatId.isEmpty) {
+      _loadMessages();
+    }
+    _mRecorder.init();
   }
 
   @override
@@ -54,16 +65,75 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     super.dispose();
   }
 
+  Future<void> _startDiscussionIfNeeded() async {
+    if (chat.ChatId.isEmpty && chat.Type == localChat.ChatType.JobInterview) {
+      var createChatResult =
+          await _chatService.createChat(widget.initialChat.Type);
+
+      if (!createChatResult.success) {
+        print('Failed to create chat: ${createChatResult.errorMessage}');
+        return;
+      }
+
+      switchToNewChat(createChatResult.data!);
+    }
+  }
+
+  Future<void> _handleGoToNextMessage() async {
+    var currPreparedMessageIDx = chat.CurrentMessageIDx;
+    var goToMessageResult =
+        await _chatService.goToMessage(chat.ChatId, chat.CurrentMessageIDx + 1);
+    if (!goToMessageResult.success) {
+      print('Failed to go to next message: ${goToMessageResult.errorMessage}');
+      return;
+    }
+
+    _addMessage(goToMessageResult.data!);
+
+    setState(() {
+      chat.CurrentMessageIDx = currPreparedMessageIDx + 1;
+    });
+
+    if (goToMessageResult.data!.AudioUrl != '') {
+      _audioPlayer.togglePlayPause(goToMessageResult.data!.AudioUrl);
+    }
+  }
+
+  Future<void> _handleTriggerAnswer() async {
+    var res = await _chatService.AnswerToMessages(chat.ChatId);
+    if (!res.success) {
+      print('Failed to answer to messages: ${res.errorMessage}');
+      return;
+    }
+
+    _addMessage(res.data!);
+
+    if (res.data!.AudioUrl != '') {
+      _audioPlayer.togglePlayPause(res.data!.AudioUrl);
+    }
+  }
+
   void _loadMessages() async {
-    var loadMessagesResult = await _chatService.loadMessages(chatId);
+    var loadMessagesResult = await _chatService.loadMessages(chat.ChatId);
     if (!loadMessagesResult.success) {
       print('Failed to load messages: ${loadMessagesResult.errorMessage}');
       // todo: show error message
       return;
     }
 
+    var needToPlayFirstMessage = widget.isNewChat &&
+        loadMessagesResult.data!.length == 1 &&
+        !loadMessagesResult.data![0].IsFromCurrentUser &&
+        loadMessagesResult.data![0].AudioUrl != '' &&
+        !_fistMessageWasPlayed;
+
+    if (needToPlayFirstMessage) {
+      _audioPlayer.togglePlayPause(loadMessagesResult.data![0].AudioUrl);
+    }
+
     setState(() {
       _messages = loadMessagesResult.data!;
+      _fistMessageWasPlayed = needToPlayFirstMessage;
       _scrollToBottom();
     });
   }
@@ -78,18 +148,16 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   void _handleSendPressed(String text) async {
     var timestamp = DateTime.now().millisecondsSinceEpoch;
     var message = SendTextMessageRequest(
-      ChatId: chatId,
+      ChatId: chat.ChatId,
       Text: text,
       Timestamp: timestamp,
     );
 
-    _addMessage(
-        local.ChatMessage(
-          IsFromCurrentUser: true,
-          Text: text,
-          Timestamp: timestamp,
-        )
-    );
+    _addMessage(local.ChatMessage(
+      IsFromCurrentUser: true,
+      Text: text,
+      Timestamp: timestamp,
+    ));
 
     var sendResult = await _chatService.sendMessage(message);
     if (!sendResult.success) {
@@ -100,7 +168,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
     if (sendResult.data!.createdChat.ChatId != '') {
       switchToNewChat(sendResult.data!.createdChat);
-    };
+    }
+    ;
 
     _addMessage(sendResult.data!.message);
   }
@@ -111,13 +180,12 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     );
 
     setState(() {
-      chatId = createdChat.ChatId;
+      chat = createdChat;
     });
   }
 
   void record() {
-    _mRecorder.record(
-    ).then((_) {
+    _mRecorder.record().then((_) {
       setState(() {
         _isRecording = true;
         _scrollToBottom();
@@ -132,26 +200,46 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       _scrollToBottom();
     });
 
-    await _mRecorder.stopRecording().then((value) {
-      _chatService.sendVoiceMessage(value ?? '', chatId).then((value) {
-        setState(() {
-          _isSending = false;
-        });
+    try {
+      final recordedFile = await _mRecorder.stopRecording();
+      final response = await _chatService.sendVoiceMessage(
+        recordedFile ?? '',
+        chat.ChatId,
+        chat.Type == localChat.ChatType.General
+            ? local.VoiceMessageType.Default
+            : local.VoiceMessageType.AwaitingCompletion,
+      );
 
-        if (!value.success) {
-          print('Failed to send voice message: ${value.errorMessage}');
-        } else {
-          final res = value.data!;
+      if (!response.success) {
+        print('Failed to send voice message: ${response.errorMessage}');
+        return;
+      }
 
-          if (value.data!.createdChat.ChatId != '') {
-            switchToNewChat(value.data!.createdChat);
-          };
-
-          _addMessage(res.userMessage);
-          _addMessage(res.replyMessage);
-        }
+      setState(() {
+        _isSending = false;
       });
-    });
+
+      final res = response.data!;
+
+      if (res.createdChat.ChatId.isNotEmpty) {
+        switchToNewChat(res.createdChat);
+      }
+
+      _addMessage(res.userMessage);
+
+      if (res.replyMessage.Text.isNotEmpty) {
+        _addMessage(res.replyMessage);
+      }
+
+      if (!res.replyMessage.AudioUrl.isEmpty) {
+        _audioPlayer.togglePlayPause(res.replyMessage.AudioUrl);
+      }
+    } catch (e) {
+      setState(() {
+        _isSending = false;
+      });
+      print('An error occurred: $e');
+    }
   }
 
   _Fn? getRecorderFn() {
@@ -179,7 +267,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-        create: (context) => AudioPlayerService(),
+        create: (context) => _audioPlayer,
         child: Scaffold(
           body: Stack(
             children: <Widget>[
@@ -188,7 +276,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                   Expanded(
                     child: ListView.builder(
                       controller: _scrollController,
-                      itemCount: _messages.length + (_isRecording || _isSending ? 1 : 0),
+                      itemCount: _messages.length +
+                          (_isRecording || _isSending ? 1 : 0),
                       padding: EdgeInsets.only(top: 10, bottom: 70),
                       itemBuilder: (context, index) {
                         if (index < _messages.length) {
@@ -221,10 +310,15 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                             height: 30,
                             width: 30,
                             decoration: BoxDecoration(
-                              color: _mRecorder.isRecording ? Colors.red : Colors.lightBlue,
+                              color: _mRecorder.isRecording
+                                  ? Colors.red
+                                  : Colors.lightBlue,
                               borderRadius: BorderRadius.circular(30),
                             ),
-                            child: Icon(_mRecorder.isRecording ? Icons.stop : Icons.mic, color: Colors.white, size: 20),
+                            child: Icon(
+                                _mRecorder.isRecording ? Icons.stop : Icons.mic,
+                                color: Colors.white,
+                                size: 20),
                           ),
                         ),
                       ),
@@ -241,7 +335,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                                 color: Colors.black,
                                 borderRadius: BorderRadius.circular(30),
                               ),
-                              child: Icon(Icons.delete, color: Colors.white, size: 20),
+                              child: Icon(Icons.delete,
+                                  color: Colors.white, size: 20),
                             ),
                           ),
                         ),
@@ -252,8 +347,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                           decoration: InputDecoration(
                               hintText: "Write message...",
                               hintStyle: TextStyle(color: Colors.black54),
-                              border: InputBorder.none
-                          ),
+                              border: InputBorder.none),
                           controller: _messageController,
                         ),
                       ),
@@ -269,14 +363,29 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                         backgroundColor: Colors.blue,
                         elevation: 0,
                       ),
+                      Visibility(
+                        visible: widget.initialChat.Type ==
+                                localChat.ChatType.JobInterview &&
+                            !chat.ChatId.isEmpty,
+                        child: TextButton.icon(
+                          onPressed: _handleGoToNextMessage,
+                          icon: Icon(Icons.navigate_next, color: Colors.black),
+                          label: Text("Next question",
+                              style: TextStyle(color: Colors.black)),
+                        ),
+                      ),
+                      TextButton.icon(
+                        onPressed: _handleTriggerAnswer,
+                        icon: Icon(Icons.question_answer, color: Colors.black),
+                        label: Text("Answer",
+                            style: TextStyle(color: Colors.black)),
+                      )
                     ],
                   ),
                 ),
               ),
             ],
           ),
-        )
-    );
+        ));
   }
 }
-
