@@ -2,39 +2,70 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/url"
+	"os"
 	"time"
 
 	"cloud.google.com/go/firestore"
 	"firebase.google.com/go/storage"
 	"github.com/babadro/tutor/cmd/common"
 	"github.com/babadro/tutor/internal/models"
+	"github.com/google/uuid"
 	"github.com/sashabaranov/go-openai"
 )
+
+type interviewQuestion struct {
+	BaseText   string   `json:"base_text"`
+	Variations []string `json:"variations"`
+}
 
 func main() {
 	cl := common.InitClients()
 	ctx := context.Background()
 
-	for _, txt := range interviewQuestions {
-		audio, err := getAudio(ctx, txt, cl.BaranovOpenai)
-		if err != nil {
-			log.Fatalf("unable to get audio: %s", err.Error())
-		}
+	fileContent, err := os.ReadFile("questions_with_variations.json")
+	if err != nil {
+		log.Fatalf("unable to read file: %s", err.Error())
+	}
 
-		audioName := fmt.Sprintf(common.Mp3AudioPathTemplate, time.Now().UnixNano())
-		audioURL, err := uploadFileToStorage(ctx, audio, audioName, cl.StorageClient)
-		if err != nil {
-			log.Fatalf("unable to upload audio to storage: %s", err.Error())
-		}
+	var interviewQuestions []interviewQuestion
+	err = json.Unmarshal(fileContent, &interviewQuestions)
+	if err != nil {
+		log.Fatalf("unable to unmarshal file content: %s", err.Error())
+	}
 
+	for _, question := range interviewQuestions {
 		message := models.PreparedMessage{
-			Type:        models.JobInterviewQuestion,
-			GermanText:  txt,
-			GermanAudio: audioURL,
+			Type:     models.JobInterviewQuestion,
+			BaseText: question.BaseText,
+		}
+
+		for i, variation := range question.Variations {
+			if i == 5 {
+				break // so far 5 variations are enough
+			}
+
+			audio, err := getAudio(ctx, variation, cl.BaranovOpenai)
+			if err != nil {
+				log.Fatalf("unable to get audio: %s", err.Error())
+			}
+
+			audioName := fmt.Sprintf(common.Mp3AudioPathTemplate, time.Now().UnixNano())
+			audioURL, err := uploadFileToStorage(ctx, audio, audioName, cl.StorageClient)
+			if err != nil {
+				log.Fatalf("unable to upload audio to storage: %s", err.Error())
+			}
+
+			message.Variations = append(message.Variations, models.Variation{
+				Language: "de",
+				Text:     variation,
+				Audio:    audioURL,
+				ID:       uuid.New().String(),
+			})
 		}
 
 		err = saveDocToFirestore(ctx, cl.FirestoreClient, message)
