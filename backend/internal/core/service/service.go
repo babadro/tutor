@@ -528,6 +528,10 @@ func (s *Service) createSeparateJobQuestionsChat(
 		messageIDs[i], messageIDs[j] = messageIDs[j], messageIDs[i]
 	})
 
+	if len(messageIDs) == 0 {
+		return swagger.Chat{}, models.Variation{}, errors.New("no prepared messages found")
+	}
+
 	firstMsgID := messageIDs[0]
 
 	// get first message from firestore
@@ -692,9 +696,11 @@ func (s *Service) GoToMessage(
 		return swagger.ChatMessage{}, fmt.Errorf("unable to get prepared message data: %s", err.Error())
 	}
 
+	variation := message.Variations[rand.Intn(len(message.Variations))]
+
 	timestamp := time.Now().UnixMilli()
 	_, err = s.saveMessageToDB(
-		ctx, message.GermanText, "", chatID, message.GermanAudio, userChat.Type, timestamp,
+		ctx, variation.Text, "", chatID, variation.Audio, userChat.Type, timestamp,
 	)
 	if err != nil {
 		return swagger.ChatMessage{}, fmt.Errorf("unable to save message to db: %s", err.Error())
@@ -712,9 +718,9 @@ func (s *Service) GoToMessage(
 	}
 
 	return swagger.ChatMessage{
-		AudioURL:          message.GermanAudio,
+		AudioURL:          variation.Audio,
 		IsFromCurrentUser: false,
-		Text:              message.GermanText,
+		Text:              variation.Text,
 		Timestamp:         timestamp,
 		UserID:            userID,
 	}, nil

@@ -27,7 +27,7 @@ func main() {
 	cl := common.InitClients()
 	ctx := context.Background()
 
-	fileContent, err := os.ReadFile("questions_with_variations.json")
+	fileContent, err := os.ReadFile("cmd/questionLoadScript/questions_with_variations.json")
 	if err != nil {
 		log.Fatalf("unable to read file: %s", err.Error())
 	}
