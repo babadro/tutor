@@ -44,11 +44,7 @@ func main() {
 			BaseText: question.BaseText,
 		}
 
-		for i, variation := range question.Variations {
-			if i == 5 {
-				break // so far 5 variations are enough
-			}
-
+		for _, variation := range question.Variations {
 			audio, err := getAudio(ctx, variation, cl.BaranovOpenai)
 			if err != nil {
 				log.Fatalf("unable to get audio: %s", err.Error())
