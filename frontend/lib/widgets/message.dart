@@ -13,7 +13,13 @@ class MessageWidget extends StatefulWidget {
 }
 
 class _MessageWidgetState extends State<MessageWidget> {
-  bool _isTextVisible = false;
+  late bool _isTextVisible;
+
+  @override
+  void initState() {
+    super.initState();
+    _isTextVisible = widget.message.AudioUrl.isEmpty;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,11 +28,15 @@ class _MessageWidgetState extends State<MessageWidget> {
     return Container(
       padding: EdgeInsets.only(left: 14, right: 14, top: 10, bottom: 10),
       child: Align(
-        alignment: widget.message.IsFromCurrentUser ? Alignment.topRight : Alignment.topLeft,
+        alignment: widget.message.IsFromCurrentUser
+            ? Alignment.topRight
+            : Alignment.topLeft,
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
-            color: widget.message.IsFromCurrentUser ? Colors.blue[200] : Colors.grey.shade200,
+            color: widget.message.IsFromCurrentUser
+                ? Colors.blue[200]
+                : Colors.grey.shade200,
           ),
           padding: EdgeInsets.all(16),
           child: Column(
@@ -44,25 +54,32 @@ class _MessageWidgetState extends State<MessageWidget> {
                   if (widget.message.AudioUrl.isNotEmpty)
                     IconButton(
                       onPressed: () {
-                        audioPlayerService.togglePlayPause(widget.message.AudioUrl);
+                        audioPlayerService
+                            .togglePlayPause(widget.message.AudioUrl);
                       },
                       icon: Icon(
-                        audioPlayerService.isPlaying(widget.message.AudioUrl) ? Icons.stop : Icons.play_arrow,
-                        color: audioPlayerService.isPlaying(widget.message.AudioUrl) ? Colors.red : Colors.black,
+                        audioPlayerService.isPlaying(widget.message.AudioUrl)
+                            ? Icons.stop
+                            : Icons.play_arrow,
+                        color: audioPlayerService
+                                .isPlaying(widget.message.AudioUrl)
+                            ? Colors.red
+                            : Colors.black,
                       ),
                       iconSize: 24, // Adjust the size as needed
                     ),
-                  TextButton(
-                    onPressed: () {
-                      setState(() {
-                        _isTextVisible = !_isTextVisible;
-                      });
-                    },
-                    child: Text(
-                      _isTextVisible ? "Hide Text" : "Show Text",
-                      style: TextStyle(color: Colors.black54),
+                  if (widget.message.AudioUrl.isNotEmpty)
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _isTextVisible = !_isTextVisible;
+                        });
+                      },
+                      child: Text(
+                        _isTextVisible ? "Hide Text" : "Show Text",
+                        style: TextStyle(color: Colors.black54),
+                      ),
                     ),
-                  ),
                 ],
               ),
               // Show text only if _isTextVisible is true
@@ -73,5 +90,3 @@ class _MessageWidgetState extends State<MessageWidget> {
     );
   }
 }
-
-
