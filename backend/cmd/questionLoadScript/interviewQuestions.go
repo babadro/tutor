@@ -1,6 +1,6 @@
 package main
 
-var interviewQuestions = []string{
+var interviewQuestionsWithoutVariations = []string{
 	"Erzählen Sie mir von Zeiten, in denen Sie ein großes Gefühl der Erfüllung oder des Erfolgs verspürten.",
 	"Erzählen Sie mir von Zeiten, in denen Sie etwas repariert haben, das nicht funktioniert hat.",
 	"Erzählen Sie mir von einer Zeit, in der Sie eine schwierige Entscheidung treffen mussten.",

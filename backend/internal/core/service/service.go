@@ -488,7 +488,7 @@ func (s *Service) CreateChat(
 	}
 
 	_, err = s.saveMessageToDB(
-		ctx, firstQuestion.GermanText, "", createdChat.ChatID, firstQuestion.GermanAudio, chatType, timestamp)
+		ctx, firstQuestion.Text, "", createdChat.ChatID, firstQuestion.Audio, chatType, timestamp)
 
 	if err != nil {
 		return swagger.Chat{}, fmt.Errorf("unable to save first message to db: %s", err.Error())
@@ -499,7 +499,7 @@ func (s *Service) CreateChat(
 
 func (s *Service) createSeparateJobQuestionsChat(
 	ctx context.Context, userID string, timestamp int64,
-) (swagger.Chat, models.PreparedMessage, error) {
+) (swagger.Chat, models.Variation, error) {
 	query := s.firestoreClient.
 		Collection("prepared_messages").
 		Where("typ", "==", models.JobInterviewQuestion)
@@ -517,7 +517,7 @@ func (s *Service) createSeparateJobQuestionsChat(
 				break
 			}
 
-			return swagger.Chat{}, models.PreparedMessage{},
+			return swagger.Chat{}, models.Variation{},
 				fmt.Errorf("unable to get prepared_messages from firestore: %s", err.Error())
 		}
 
@@ -528,25 +528,34 @@ func (s *Service) createSeparateJobQuestionsChat(
 		messageIDs[i], messageIDs[j] = messageIDs[j], messageIDs[i]
 	})
 
+	if len(messageIDs) == 0 {
+		return swagger.Chat{}, models.Variation{}, errors.New("no prepared messages found")
+	}
+
 	firstMsgID := messageIDs[0]
 
 	// get first message from firestore
 	doc, err := s.firestoreClient.Collection("prepared_messages").Doc(firstMsgID).Get(ctx)
 	if err != nil {
-		return swagger.Chat{}, models.PreparedMessage{},
+		return swagger.Chat{}, models.Variation{},
 			fmt.Errorf("unable to get first message from firestore: %s", err.Error())
 	}
 
 	var firstMsg models.PreparedMessage
 	if err = doc.DataTo(&firstMsg); err != nil {
-		return swagger.Chat{}, models.PreparedMessage{},
+		return swagger.Chat{}, models.Variation{},
 			fmt.Errorf("unable to get first message data: %s", err.Error())
 	}
+
+	// pick random variation of the question
+	variation := firstMsg.Variations[rand.Intn(len(firstMsg.Variations))]
+
+	title := cutChatTitle(variation.Text)
 
 	createdChat := swagger.Chat{
 		PreparedMessages: messageIDs,
 		Time:             timestamp,
-		Title:            cutChatTitle(firstMsg.GermanText),
+		Title:            title,
 		Typ:              swagger.ChatType(models.JobInterviewSeparateQuestionsChatType),
 	}
 
@@ -556,18 +565,18 @@ func (s *Service) createSeparateJobQuestionsChat(
 			UserID:           userID,
 			Type:             models.JobInterviewSeparateQuestionsChatType,
 			Timestamp:        time.Now().UnixMilli(),
-			Title:            cutChatTitle(firstMsg.GermanText),
+			Title:            title,
 			PreparedMessages: messageIDs,
 		})
 
 	if err != nil {
-		return swagger.Chat{}, models.PreparedMessage{},
+		return swagger.Chat{}, models.Variation{},
 			fmt.Errorf("unable to create chat: %s", err.Error())
 	}
 
 	createdChat.ChatID = newChat.ID
 
-	return createdChat, firstMsg, nil
+	return createdChat, variation, nil
 }
 
 func (s *Service) generateTextContent(
@@ -687,9 +696,11 @@ func (s *Service) GoToMessage(
 		return swagger.ChatMessage{}, fmt.Errorf("unable to get prepared message data: %s", err.Error())
 	}
 
+	variation := message.Variations[rand.Intn(len(message.Variations))]
+
 	timestamp := time.Now().UnixMilli()
 	_, err = s.saveMessageToDB(
-		ctx, message.GermanText, "", chatID, message.GermanAudio, userChat.Type, timestamp,
+		ctx, variation.Text, "", chatID, variation.Audio, userChat.Type, timestamp,
 	)
 	if err != nil {
 		return swagger.ChatMessage{}, fmt.Errorf("unable to save message to db: %s", err.Error())
@@ -707,9 +718,9 @@ func (s *Service) GoToMessage(
 	}
 
 	return swagger.ChatMessage{
-		AudioURL:          message.GermanAudio,
+		AudioURL:          variation.Audio,
 		IsFromCurrentUser: false,
-		Text:              message.GermanText,
+		Text:              variation.Text,
 		Timestamp:         timestamp,
 		UserID:            userID,
 	}, nil
