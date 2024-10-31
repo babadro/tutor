@@ -32,36 +32,40 @@ class _MessageWidgetState extends State<MessageWidget> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              // Toggle button for showing/hiding text
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    _isTextVisible = !_isTextVisible;
-                  });
-                },
-                child: Text(
-                  _isTextVisible ? "Hide Text" : "Show Text",
-                  style: TextStyle(color: Colors.black54),
-                ),
-              ),
-              // Show text only if _isTextVisible is true
               if (_isTextVisible)
                 Text(
                   widget.message.Text,
                   style: TextStyle(fontSize: 15),
                 ),
-              // Audio play button
-              if (widget.message.AudioUrl.isNotEmpty)
-                IconButton(
-                  onPressed: () {
-                    audioPlayerService.togglePlayPause(widget.message.AudioUrl);
-                  },
-                  icon: Icon(
-                    audioPlayerService.isPlaying(widget.message.AudioUrl) ? Icons.stop : Icons.play_arrow,
-                    color: audioPlayerService.isPlaying(widget.message.AudioUrl) ? Colors.red : Colors.black,
+              // Row for play icon and show/hide text button
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (widget.message.AudioUrl.isNotEmpty)
+                    IconButton(
+                      onPressed: () {
+                        audioPlayerService.togglePlayPause(widget.message.AudioUrl);
+                      },
+                      icon: Icon(
+                        audioPlayerService.isPlaying(widget.message.AudioUrl) ? Icons.stop : Icons.play_arrow,
+                        color: audioPlayerService.isPlaying(widget.message.AudioUrl) ? Colors.red : Colors.black,
+                      ),
+                      iconSize: 24, // Adjust the size as needed
+                    ),
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _isTextVisible = !_isTextVisible;
+                      });
+                    },
+                    child: Text(
+                      _isTextVisible ? "Hide Text" : "Show Text",
+                      style: TextStyle(color: Colors.black54),
+                    ),
                   ),
-                  iconSize: 24, // Adjust the size as needed
-                ),
+                ],
+              ),
+              // Show text only if _isTextVisible is true
             ],
           ),
         ),
@@ -69,4 +73,5 @@ class _MessageWidgetState extends State<MessageWidget> {
     );
   }
 }
+
 
